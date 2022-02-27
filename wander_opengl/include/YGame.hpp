@@ -80,6 +80,7 @@ private:
 	unsigned int mCubeIndexBuffer;
 	int mNumCubeIndicies;
 	GLuint mCubeTexture;
+	GLuint mTestTexture;
 
 	// Sprite Vertices
 	unsigned int mSpriteVertexArray;

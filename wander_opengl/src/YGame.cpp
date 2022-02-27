@@ -246,8 +246,12 @@ bool YGame::LoadShaders()
 	mView = glm::translate(mView, glm::vec3(0.0f, 0, 0));
 	mProjection = glm::perspective(glm::radians(45.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
 	mCubeWorldTrans = glm::mat4(1.0);
-	mCubeWorldTrans = glm::translate(mCubeWorldTrans, glm::vec3(0.0f, 0.0f, -15.0f));
+	mCubeWorldTrans = glm::translate(mCubeWorldTrans, glm::vec3(0.0f, -35.0f, 0.0f));
 
+	glm::mat4 view2 = glm::lookAt(
+		glm::vec3(0, 0, 0),
+		glm::vec3(0, -35, 0),
+		glm::vec3(0, 0, 1.0f));
 
 	//mView = CreateLookAt(Eigen::Vector3d::Zero(), Eigen::Vector3d::UnitX(), Eigen::Vector3d::UnitZ());
 	//mProjection = CreatePerspectiveFOV(70 * M_PI / 180,
@@ -255,10 +259,9 @@ bool YGame::LoadShaders()
 
 	// Uniform ÇÃèâä˙íl
 	// Mesh
-	SetMatrixUniform("view", mView, mMeshShaderProgram);
+	SetMatrixUniform("view", view2, mMeshShaderProgram);
 	SetMatrixUniform("proj", mProjection, mMeshShaderProgram);
 	SetMatrixUniform("model", mCubeWorldTrans, mMeshShaderProgram);
-
 
 	
 	//{
@@ -538,7 +541,7 @@ bool YGame::LoadData()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mSpriteIndexBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(SpriteIndices), SpriteIndices, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ARRAY_BUFFER, mCubeVertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, mSpriteVertexBuffer);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
@@ -551,7 +554,9 @@ bool YGame::LoadData()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-	mSpritePos = glm::vec3(0, 0, 0);
+	LoadTexture(".\\resources\\test_picture.png", mTestTexture);
+
+	mSpritePos = glm::vec3(0, 0, -10.0f);
 
 
 	return true;
@@ -604,7 +609,7 @@ void YGame::ComputeWorldTransform()
 		//mReComputeWorldTransform = false;
 
 		//mCubeRotation += 0.001f;
-		mCubeWorldTrans = glm::rotate(mCubeWorldTrans, glm::radians(mCubeRotation), glm::vec3(0.0f, 1.0f, 0.0f));
+		mCubeWorldTrans = glm::rotate(mCubeWorldTrans, glm::radians(mCubeRotation), glm::vec3(0.0f, 1.0f, 1.0f));
 		
 
 		//Eigen::Translation3d trans = Eigen::Translation3d(mCubePos);
@@ -671,7 +676,8 @@ void YGame::Draw()
 	SetMatrixUniform("model", mCubeWorldTrans, mMeshShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
 
 	// ÉJÉÅÉâÇÃà íuÇîΩâf
-	glm::vec3 camera_pos = glm::vec3(mView[3].x, mView[3].y, mView[3].z);
+	//glm::vec3 camera_pos = glm::vec3(mView[3].x, mView[3].y, mView[3].z);
+	glm::vec3 camera_pos = glm::vec3(0);
 	SetVectorUniform("uCameraPos", camera_pos, mMeshShaderProgram);
 	// set lighting
 	SetVectorUniform("uAmbientLight", mAmbientLightColor, mMeshShaderProgram);
@@ -711,7 +717,7 @@ void YGame::Draw()
 	// spriteÇÃï`âÊà íuÇê›íË
 	glm::mat4 SpritePos = glm::translate(glm::mat4(1.0f), mSpritePos);
 	SetMatrixUniform("uWorldTransform", SpritePos, mSpriteShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
-	glBindTexture(GL_TEXTURE_2D, mCubeTexture);
+	glBindTexture(GL_TEXTURE_2D, mTestTexture);
 	glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
 
 	SDL_GL_SwapWindow(mWindow);
