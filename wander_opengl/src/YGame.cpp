@@ -129,7 +129,6 @@ bool YGame::Initialize()
 		printf("IMG_Init: Failed to init required jpg and png support!\n");
 		std::string error = IMG_GetError();
 		SDL_Log("IMG_Init: %s\n", IMG_GetError());
-
 	}
 
 	if (TTF_Init() != 0)
@@ -137,6 +136,16 @@ bool YGame::Initialize()
 		SDL_Log("Failed to initialize SDL_ttf");
 		return false;
 	}
+
+	// FREE TYPE
+	FT_Library library;
+	//FT_Face face;
+	FT_GlyphSlot slot;
+
+	FT_Init_FreeType(&library);
+	FT_New_Face(library, ".\\resources\\Carlito-Regular.ttf", 0, &mFontFace);
+	FT_Set_Pixel_Sizes(mFontFace, 0, 48);
+	slot = mFontFace->glyph;
 
 	if (!LoadShaders())
 	{
@@ -571,7 +580,8 @@ bool YGame::LoadData()
 
 
 	// Font ÇÃì«Ç›èoÇµ
-	mFont = TTF_OpenFont(".\\resources\\Carlito-Regular.ttf", 128);
+	//mFont = TTF_OpenFont(".\\resources\\Carlito-Regular.ttf", 128);
+	mFont = TTF_OpenFont(".\\resources\\VL-Gothic-Regular.ttf", 128);
 	// ï∂éöóÒÇ∆textureÇÃmapçÏê¨
 	int font_color[] = {
 		0x00, 0xdd, 0xdd, 255
@@ -587,6 +597,27 @@ bool YGame::LoadData()
 		mFontMap.insert(std::make_pair("PHASE_MOVE", tex));
 	}
 
+	{
+		const char* str = "ABC";
+		//FT_Load_Glyph(mFontFace, FT_Get_Char_Index(mFontFace, str[0]), FT_LOAD_RENDER);
+		FT_Load_Char(mFontFace, str[0], FT_LOAD_RENDER);
+		
+		glGenTextures(1, &FontTex);
+		glActiveTexture(GL_TEXTURE);
+		glBindTexture(GL_TEXTURE_2D, FontTex);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows,
+			0, GL_RGBA, GL_UNSIGNED_BYTE, mFontFace->glyph->bitmap.buffer);
+		mFontWidth = mFontFace->glyph->bitmap.width;
+		mFontHeight = mFontFace->glyph->bitmap.rows;
+
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glBindTexture(FontTex, 0);		// unbind
+
+
+	}
 
 
 	return true;
@@ -754,7 +785,7 @@ void YGame::Draw()
 	glBindVertexArray(mSpriteVertexArray);
 	
 	// spriteÇÃï`âÊà íuÇê›íË
-	// Draw Test Texture
+	 //Draw Test Texture
 	SetSpritePos(glm::vec3((float)mWindowWidth / 4.0f, 0, 0), mTestTexture, 0.5f, M_PI);
 	mTestTexture->BindTexture();
 	glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
@@ -768,6 +799,30 @@ void YGame::Draw()
 		glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
 		tex->UnBindTexture();
 	}
+	{
+		// Sprite Translation Matrix
+		glm::mat4 SpriteTrans = glm::mat4(1.0f);
+		SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3(-(float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0));
+
+		// spriteÇÃscaling matrix
+		glm::vec3 sprite_scale_vec = glm::vec3((float)mFontWidth, (float)mFontHeight, 1.0f);
+		sprite_scale_vec *= 0.25;
+		glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
+
+		// spriteÇÃrotation matrix
+		glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1.0f));
+		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+
+		SetMatrixUniform("uWorldTransform", SpriteTrans, mSpriteShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+		SetMatrixUniform("uScaling", SpriteScaling, mSpriteShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+		SetMatrixUniform("uRotate", SpriteRotate, mSpriteShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+
+		glBindTexture(GL_TEXTURE_2D, FontTex);
+		glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+		glBindTexture(FontTex, 0);
+	}
+
+
 
 
 
@@ -795,5 +850,5 @@ void YGame::RunLoop()
 
 void YGame::Shutdown()
 {
-
+	FT_Done_Face(mFontFace);
 }

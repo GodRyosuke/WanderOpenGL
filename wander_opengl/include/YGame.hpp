@@ -13,6 +13,8 @@
 #include "gtc/matrix_transform.hpp"
 #include "gtc/type_ptr.hpp"
 #include "Texture.hpp"
+#include "ft2build.h"
+#include FT_FREETYPE_H
 
 
 class YGame {
@@ -96,6 +98,11 @@ private:
 	glm::vec3 mSpritePos;
 
 	TTF_Font* mFont;
+	FT_Face mFontFace;
+	GLuint FontTex;
+	int mFontWidth;
+	int mFontHeight;
+
 	std::map<std::string, Texture*> mFontMap;
 
 	PHASE mPhase;
