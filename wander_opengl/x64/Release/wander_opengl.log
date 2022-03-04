@@ -1,0 +1,4 @@
+﻿  Game.cpp
+  Main.cpp
+Game.obj : error LNK2001: 外部シンボル __imp_glGetError は未解決です
+C:\Users\kusumoto\source\repos\wander_opengl\x64\Release\wander_opengl.exe : fatal error LNK1120: 1 件の未解決の外部参照

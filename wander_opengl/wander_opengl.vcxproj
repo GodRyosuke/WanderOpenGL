@@ -174,11 +174,13 @@ COPY "$(SolutionDir)wander_opengl\Shaders" "$(OutDir)"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Game.cpp" />
+    <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\YGame.cpp" />
     <ClCompile Include="test\Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Game.hpp" />
+    <ClInclude Include="include\Texture.hpp" />
     <ClInclude Include="include\YGame.hpp" />
   </ItemGroup>
   <ItemGroup>

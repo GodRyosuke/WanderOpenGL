@@ -24,17 +24,44 @@ GLuint indices[] =
 	3, 0, 4
 };
 
-float SpriteVertices[] = {
-	-0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 0.f, // top left
-	0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 1.f, 0.f, // top right
-	0.5f,-0.5f, 0.f, 0.f, 0.f, 0.0f, 1.f, 1.f, // bottom right
-	-0.5f,-0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 1.f  // bottom left
+//float SpriteVertices[] = {
+//	-0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 0.f, // top left
+//	0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 1.f, 0.f, // top right
+//	0.5f,-0.5f, 0.f, 0.f, 0.f, 0.0f, 1.f, 1.f, // bottom right
+//	-0.5f,-0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 1.f  // bottom left
+//};
+//
+//unsigned int SpriteIndices[] = {
+//	0, 1, 2,
+//	2, 3, 0
+//};
+
+//float SpriteVertices[] =
+//{ //     COORDINATES     /        COLORS      /   TexCoord  //
+//	-0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,	0.0f, 0.0f, // Lower left corner
+//	-0.5f,  0.5f, 0.0f,     0.0f, 1.0f, 0.0f,	0.0f, 1.0f, // Upper left corner
+//	 0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,	1.0f, 1.0f, // Upper right corner
+//	 0.5f, -0.5f, 0.0f,     1.0f, 1.0f, 1.0f,	1.0f, 0.0f  // Lower right corner
+//};
+float SpriteVertices[] =
+{ //     COORDINATES     /        COLORS      /   TexCoord  //
+	0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,	0.0f, 0.0f, // Lower left corner
+	0.5f,  0.5f, 0.0f,     0.0f, 1.0f, 0.0f,	0.0f, 1.0f, // Upper left corner
+	-0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,	1.0f, 1.0f, // Upper right corner
+	-0.5f, -0.5f, 0.0f,     1.0f, 1.0f, 1.0f,	1.0f, 0.0f  // Lower right corner
 };
 
-unsigned int SpriteIndices[] = {
-	0, 1, 2,
-	2, 3, 0
+
+
+unsigned int SpriteIndices[] =
+{
+	0, 2, 1, // Upper triangle
+	0, 3, 2 // Lower triangle
 };
+
+
+
+
 
 YGame::YGame()
 	:mWindowWidth(1024),
@@ -103,6 +130,12 @@ bool YGame::Initialize()
 		std::string error = IMG_GetError();
 		SDL_Log("IMG_Init: %s\n", IMG_GetError());
 
+	}
+
+	if (TTF_Init() != 0)
+	{
+		SDL_Log("Failed to initialize SDL_ttf");
+		return false;
 	}
 
 	if (!LoadShaders())
@@ -216,6 +249,7 @@ static bool CreateShaderProgram(std::string vertFilePath, std::string fragFilePa
 
 bool YGame::LoadShaders()
 {
+	// Sprite
 	std::string spriteVertFile = "./Shaders/Sprite.vert";
 	std::string spriteFragFile = "./Shaders/Sprite.frag";
 
@@ -223,13 +257,15 @@ bool YGame::LoadShaders()
 		return false;
 	}
 
-	// Sprite
 	glm::mat4 spriteViewProj = glm::mat4(1.0f);
 	spriteViewProj[0][0] = 2.0f / (float)mWindowWidth;
 	spriteViewProj[1][1] = 2.0f / (float)mWindowHeight;
 	spriteViewProj[3][2] = 1.0f;
+	//spriteViewProj = glm::ortho(0.0f, (float)mWindowWidth, (float)mWindowHeight, 0.0f, -1.0f, 1.0f);
 	SetMatrixUniform("uViewProj", spriteViewProj, mSpriteShaderProgram);
 
+
+	// Mesh
 	std::string meshVertFile = "./Shaders/YPhong.vert";
 	std::string meshFragFile = "./Shaders/YPhong.frag";
 
@@ -246,11 +282,11 @@ bool YGame::LoadShaders()
 	mView = glm::translate(mView, glm::vec3(0.0f, 0, 0));
 	mProjection = glm::perspective(glm::radians(45.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
 	mCubeWorldTrans = glm::mat4(1.0);
-	mCubeWorldTrans = glm::translate(mCubeWorldTrans, glm::vec3(0.0f, -35.0f, 0.0f));
+	mCubeWorldTrans = glm::translate(mCubeWorldTrans, glm::vec3(0.0f, 35.0f, 0.0f));
 
 	glm::mat4 view2 = glm::lookAt(
 		glm::vec3(0, 0, 0),
-		glm::vec3(0, -35, 0),
+		glm::vec3(0, 35, 0),
 		glm::vec3(0, 0, 1.0f));
 
 	//mView = CreateLookAt(Eigen::Vector3d::Zero(), Eigen::Vector3d::UnitX(), Eigen::Vector3d::UnitZ());
@@ -279,7 +315,7 @@ bool YGame::LoadShaders()
 	return true;
 }
 
-static void LoadTexture(std::string texFilePath, GLuint& texture)
+static void LoadTexture(std::string texFilePath, GLuint& texture, int& tex_w, int& tex_h)
 {
 	// Load from file
 	SDL_Surface* surf = IMG_Load(texFilePath.c_str());
@@ -301,20 +337,28 @@ static void LoadTexture(std::string texFilePath, GLuint& texture)
 	glActiveTexture(GL_TEXTURE);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	// Configures the way the texture repeats (if it does at all)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, surf->pixels);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	//// Configures the way the texture repeats (if it does at all)
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	tex_w = surf->w;
+	tex_h = surf->h;
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surf->pixels);
 	// Generates MipMaps
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	SDL_FreeSurface(surf);
 	glBindTexture(texture, 0);		// unbind
 }
+
+
 
 bool YGame::LoadData()
 {
@@ -484,42 +528,8 @@ bool YGame::LoadData()
 
 	// Cube‚ÌTexture‚ðÝ’è
 	// texture‚ð“Ç‚Ý‚¾‚·B
-	LoadTexture(".\\resources\\brick.png", mCubeTexture);
-	//SDL_Texture* tex = nullptr;
-	//std::string filePath = ".\\resources\\brick.png";
-	//// Load from file
-	//SDL_Surface* surf = IMG_Load(filePath.c_str());
-	//if (!surf)
-	//{
-	//	SDL_Log("Failed to load texture file %s", filePath.c_str());
-	//	return false;
-	//}
-
-	//// Create texture from surface
-	////tex = SDL_CreateTextureFromSurface(mCommonData->mRenderer, surf);
-	//
-	////if (!tex)
-	////{
-	////	SDL_Log("Failed to convert surface to texture for %s", filePath.c_str());
-	////	return false;
-	////}
-	//glGenTextures(1, &mCubeTexture);
-	//glActiveTexture(GL_TEXTURE);
-	//glBindTexture(GL_TEXTURE_2D, mCubeTexture);
-
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	//// Configures the way the texture repeats (if it does at all)
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, surf->pixels);
-	//// Generates MipMaps
-	//glGenerateMipmap(GL_TEXTURE_2D);
-
-	//SDL_FreeSurface(surf);
-	//glBindTexture(mCubeTexture, 0);		// unbind
+	mCubeTexture = new Texture(".\\resources\\brick.png");
+	//LoadTexture(".\\resources\\brick.png", mCubeTexture, cube_w, cube_h);
 
 	// lighting‚ÌÝ’è
 	mAmbientLightColor = glm::vec3(0.5, 0.5, 0.5);
@@ -554,9 +564,29 @@ bool YGame::LoadData()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-	LoadTexture(".\\resources\\test_picture.png", mTestTexture);
+	
+	mTestTexture = new Texture(".\\resources\\test_picture.png");
+	//LoadTexture(".\\resources\\test_picture.png", mTestTexture, test_w, test_h);
 
-	mSpritePos = glm::vec3(0, 0, -10.0f);
+
+
+	// Font ‚Ì“Ç‚Ýo‚µ
+	mFont = TTF_OpenFont(".\\resources\\Carlito-Regular.ttf", 128);
+	// •¶Žš—ñ‚Ætexture‚Ìmapì¬
+	int font_color[] = {
+		0x00, 0xdd, 0xdd, 255
+	};
+	{
+		Texture* tex = new Texture();
+		tex->CreateTextTexture("PHASE_IDLE", font_color, mFont);
+		mFontMap.insert(std::make_pair("PHASE_IDLE", tex));
+	}
+	{
+		Texture* tex = new Texture();
+		tex->CreateTextTexture("PHASE_MOVE", font_color, mFont);
+		mFontMap.insert(std::make_pair("PHASE_MOVE", tex));
+	}
+
 
 
 	return true;
@@ -610,23 +640,6 @@ void YGame::ComputeWorldTransform()
 
 		//mCubeRotation += 0.001f;
 		mCubeWorldTrans = glm::rotate(mCubeWorldTrans, glm::radians(mCubeRotation), glm::vec3(0.0f, 1.0f, 1.0f));
-		
-
-		//Eigen::Translation3d trans = Eigen::Translation3d(mCubePos);
-		//Eigen::Matrix3d scaleMat = Eigen::Matrix3d::Identity();
-		//scaleMat *= mCubeScale;
-		//Eigen::Affine3d mat;
-		//mat = trans * mCubeRot * scaleMat;
-		//mCubeWorldTrans = mat.matrix();
-
-		//Eigen::Vector3d pos;
-		//pos << 200, 0, 0;
-		//trans = Eigen::Translation3d(pos);
-		//mat = trans;
-		//mCubeWorldTrans = mat.matrix();
-
-		//mat = mCubeWorldTrans.transpose();
-		//mCubeWorldTrans = mat.matrix();
 	}
 }
 
@@ -653,6 +666,29 @@ void YGame::UpdateGame()
 	//std::cout << clock() - last << std::endl;
 	last = clock();
 	ComputeWorldTransform();	// Cube‚Ìtransform‚ðŒvŽZ
+}
+
+
+
+void YGame::SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale, float rotation)
+{
+	// Sprite Translation Matrix
+	glm::mat4 SpriteTrans = glm::mat4(1.0f);
+	SpriteTrans = glm::translate(glm::mat4(1.0f), spritePos);
+
+	// sprite‚Ìscaling matrix
+	glm::vec3 sprite_scale_vec = glm::vec3((float)tex->getWidth(), (float)tex->getHeight(), 1.0f);
+	sprite_scale_vec *= 0.25;
+	glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
+
+	// sprite‚Ìrotation matrix
+	glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0, 0, 1.0f));
+	//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+
+	SetMatrixUniform("uWorldTransform", SpriteTrans, mSpriteShaderProgram);	// cube‚ÌÀ•W‚ð”½‰f
+	SetMatrixUniform("uScaling", SpriteScaling, mSpriteShaderProgram);	// cube‚ÌÀ•W‚ð”½‰f
+	SetMatrixUniform("uRotate", SpriteRotate, mSpriteShaderProgram);	// cube‚ÌÀ•W‚ð”½‰f
+
 }
 
 void YGame::Draw()
@@ -697,11 +733,14 @@ void YGame::Draw()
 	glUniform1i(texUni, 0);
 
 	// bind cube texture
-	glBindTexture(GL_TEXTURE_2D, mCubeTexture);
+	mCubeTexture->BindTexture();
+	//glBindTexture(GL_TEXTURE_2D, mCubeTexture);
 
 	// draw
 	glDrawElements(GL_TRIANGLES, mNumCubeIndicies, GL_UNSIGNED_INT, 0);
-	//glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0);
+	mCubeTexture->UnBindTexture();
+	//glBindTexture(mCubeTexture, 0);
+	glBindVertexArray(0);
 
 
 	// --- draw sprites ---
@@ -715,10 +754,24 @@ void YGame::Draw()
 	glBindVertexArray(mSpriteVertexArray);
 	
 	// sprite‚Ì•`‰æˆÊ’u‚ðÝ’è
-	glm::mat4 SpritePos = glm::translate(glm::mat4(1.0f), mSpritePos);
-	SetMatrixUniform("uWorldTransform", SpritePos, mSpriteShaderProgram);	// cube‚ÌÀ•W‚ð”½‰f
-	glBindTexture(GL_TEXTURE_2D, mTestTexture);
+	// Draw Test Texture
+	SetSpritePos(glm::vec3((float)mWindowWidth / 4.0f, 0, 0), mTestTexture, 0.5f, M_PI);
+	mTestTexture->BindTexture();
 	glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+	mTestTexture->UnBindTexture();
+
+	// Draw Text Texture
+	{
+		Texture* tex = mFontMap["PHASE_IDLE"];
+		SetSpritePos(glm::vec3(-(float)mWindowWidth / 4.0f, 0, 0), tex);
+		tex->BindTexture();
+		glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+		tex->UnBindTexture();
+	}
+
+
+
+	glBindVertexArray(0);
 
 	SDL_GL_SwapWindow(mWindow);
 }

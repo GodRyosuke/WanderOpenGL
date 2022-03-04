@@ -3,6 +3,8 @@
 
 // Uniforms for world transform and view-proj
 uniform mat4 uWorldTransform;
+uniform mat4 uScaling;
+uniform mat4 uRotate;
 uniform mat4 uViewProj;
 
 // Attribute 0 is position, 1 is normal, 2 is tex coords.
@@ -19,7 +21,9 @@ void main()
 	vec4 pos = vec4(inPosition, 1.0);
 	// Transform to position world space, then clip space
 	// gl_Position = pos * uWorldTransform * uViewProj;
-	gl_Position = uViewProj * uWorldTransform * pos;
+	// gl_Position = uViewProj * uWorldTransform * pos;
+	gl_Position = uViewProj * uWorldTransform * uRotate * uScaling * pos;
+	// gl_Position = vec4(inPosition.x, inPosition.y, inPosition.z, 1.0);
 
 	// Pass along the texture coordinate to frag shader
 	fragTexCoord = inTexCoord;

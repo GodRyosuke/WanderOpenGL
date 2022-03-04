@@ -1,52 +1,53 @@
 ﻿  YGame.cpp
-C:\Users\ienvs\source\repos\WanderOpenGL\dependencies\eigen-3.4.0\Eigen\src\Core\arch\Default\Half.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
-C:\Users\ienvs\source\repos\WanderOpenGL\dependencies\eigen-3.4.0\Eigen\src\Core\arch\Default\BFloat16.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
-C:\Users\ienvs\source\repos\WanderOpenGL\dependencies\eigen-3.4.0\Eigen\src\Core\arch\Default\GenericPacketMathFunctions.h(676,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
-C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\src\YGame.cpp(350,31): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\dependencies\eigen-3.4.0\Eigen\src\Core\arch\Default\Half.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+C:\Users\kusumoto\source\repos\wander_opengl\dependencies\eigen-3.4.0\Eigen\src\Core\arch\Default\BFloat16.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+C:\Users\kusumoto\source\repos\wander_opengl\dependencies\eigen-3.4.0\Eigen\src\Core\arch\Default\GenericPacketMathFunctions.h(676,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(394,31): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
           with
           [
               _Ty=float
           ]
-C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\src\YGame.cpp(351,31): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(395,31): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
           with
           [
               _Ty=float
           ]
-C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\src\YGame.cpp(352,31): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(396,31): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
           with
           [
               _Ty=float
           ]
-C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\src\YGame.cpp(358,25): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(402,25): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
           with
           [
               _Ty=float
           ]
-C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\src\YGame.cpp(359,25): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(403,25): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
           with
           [
               _Ty=float
           ]
-C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\src\YGame.cpp(366,30): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(410,30): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
           with
           [
               _Ty=float
           ]
-C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\src\YGame.cpp(367,30): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(411,30): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
           with
           [
               _Ty=float
           ]
-C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\src\YGame.cpp(368,30): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(412,30): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
           with
           [
               _Ty=float
           ]
-C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\src\YGame.cpp(445,36): warning C4267: '=': 'size_t' から 'int' に変換しました。データが失われているかもしれません。
-C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\src\YGame.cpp(646,45): warning C4244: '=': 'double' から 'float' への変換です。データが失われる可能性があります。
-C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\src\YGame.cpp(662,32): warning C4305: '引数': 'double' から 'GLclampf' へ切り詰めます。
-C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\src\YGame.cpp(215): warning C4715: 'CreateShaderProgram': 値を返さないコントロール パスがあります。
-  wander_opengl.vcxproj -> C:\Users\ienvs\source\repos\WanderOpenGL\x64\Debug\wander_opengl.exe
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(489,36): warning C4267: '=': 'size_t' から 'int' に変換しました。データが失われているかもしれません。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(659,45): warning C4244: '=': 'double' から 'float' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(698,32): warning C4305: '引数': 'double' から 'GLclampf' へ切り詰めます。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(758,84): warning C4305: '引数': 'double' から 'float' へ切り詰めます。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(248): warning C4715: 'CreateShaderProgram': 値を返さないコントロール パスがあります。
+  wander_opengl.vcxproj -> C:\Users\kusumoto\source\repos\wander_opengl\x64\Debug\wander_opengl.exe
           1 個のファイルをコピーしました。
           1 個のファイルをコピーしました。
           1 個のファイルをコピーしました。
@@ -58,10 +59,10 @@ C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\src\YGame.cpp(215): warni
           1 個のファイルをコピーしました。
           1 個のファイルをコピーしました。
           1 個のファイルをコピーしました。
-  C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\Shaders\Phong.frag
-  C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\Shaders\Phong.vert
-  C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\Shaders\Sprite.frag
-  C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\Shaders\Sprite.vert
-  C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\Shaders\YPhong.frag
-  C:\Users\ienvs\source\repos\WanderOpenGL\wander_opengl\Shaders\YPhong.vert
+  C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\Shaders\Phong.frag
+  C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\Shaders\Phong.vert
+  C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\Shaders\Sprite.frag
+  C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\Shaders\Sprite.vert
+  C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\Shaders\YPhong.frag
+  C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\Shaders\YPhong.vert
           6 個のファイルをコピーしました。

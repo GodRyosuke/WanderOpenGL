@@ -8,9 +8,12 @@
 #include <vector>
 #include <map>
 #include "SDL_image.h"
+#include "SDL_ttf.h"
 #include "glm.hpp"
 #include "gtc/matrix_transform.hpp"
 #include "gtc/type_ptr.hpp"
+#include "Texture.hpp"
+
 
 class YGame {
 public:
@@ -28,7 +31,7 @@ private:
 	void ComputeWorldTransform();
 	bool LoadShaders();
 	bool LoadData();
-	void CreateSpriteVerts();
+	void SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale = 1.0f, float rotation = 0.0f);
 
 	enum PHASE{
 		PHASE_IDLE,
@@ -79,19 +82,25 @@ private:
 	unsigned int mCubeVertexBuffer;
 	unsigned int mCubeIndexBuffer;
 	int mNumCubeIndicies;
-	GLuint mCubeTexture;
-	GLuint mTestTexture;
+	Texture* mCubeTexture;
+	Texture* mTestTexture;
+	int test_w;
+	int test_h;
+
 
 	// Sprite Vertices
 	unsigned int mSpriteVertexArray;
 	unsigned int mSpriteVertexBuffer;
 	unsigned int mSpriteIndexBuffer;
 	int mNumSpriteIndicies;
-	GLuint mSpriteTexture;
 	glm::vec3 mSpritePos;
+
+	TTF_Font* mFont;
+	std::map<std::string, Texture*> mFontMap;
 
 	PHASE mPhase;
 	clock_t last;
 
 	FILE* fp;
 };
+
