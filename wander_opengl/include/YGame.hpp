@@ -39,6 +39,7 @@ private:
 	void SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale = 1.0f, float rotation = 0.0f);
 	void RenderText(std::string text, glm::vec3 pos, float scale = 1.0f);
 	void RenderText2(std::string text, glm::vec3 pos, glm::vec3 color, float scale = 1.0f);
+	void DrawText(std::string text, glm::vec3 pos, glm::vec3 color, float scale = 1.0f, float rot = 0.0f);
 
 	enum PHASE{
 		PHASE_IDLE,

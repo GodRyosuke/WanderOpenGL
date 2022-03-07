@@ -1015,6 +1015,72 @@ void YGame::RenderText2(std::string text, glm::vec3 pos, glm::vec3 color, float 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void YGame::DrawText(std::string text, glm::vec3 pos, glm::vec3 color, float scale, float rot)
+{
+	// ï∂éöÇÃtexcharÇÃëÂÇ´Ç≥ÇéÊìæ
+	int TexWidth = 0;
+	int TexHeight = 0;
+	for (auto c = text.begin(); c != text.end(); c++) {
+		TexChar ch = mTexChars[*c];
+		TexWidth += ch.Size.x;
+		TexHeight = (TexHeight < ch.Size.y) ? ch.Size.y : TexHeight;
+	}
+
+	glm::mat4 SpriteTrans = glm::mat4(1.0f);
+	glm::vec3 TexOffset = glm::vec3((float)TexWidth / 2.0f, (float)TexHeight / 2.0f, 0);
+	SpriteTrans = glm::translate(glm::mat4(1.0f), pos - TexOffset);
+
+	// spriteÇÃscaling matrix
+	//glm::vec3 sprite_scale_vec = glm::vec3((float)AtrasWidth, (float)AtrasHeight, 1.0f);
+	//sprite_scale_vec *= 1.0;
+	//glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
+
+	// spriteÇÃrotation matrix
+	glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), rot, glm::vec3(0, 0.0f, 1.0f));
+	//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+
+	SetMatrixUniform("uWorldTransform", SpriteTrans, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+	//SetMatrixUniform("uScaling", SpriteScaling, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+	SetMatrixUniform("uRotate", SpriteRotate, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+
+
+	glUniform3f(glGetUniformLocation(mTextShaderProgram, "textColor"), color.x, color.y, color.z);
+	glActiveTexture(GL_TEXTURE0);
+
+	int x2 = 0;
+	int y2 = 0;
+	for (auto c = text.begin(); c != text.end(); c++) {
+		TexChar ch = mTexChars[*c];
+
+		float xpos = x2 + ch.Bearing.x * scale;
+		float ypos = y2 - (ch.Size.y - ch.Bearing.y) * scale;
+		float w = ch.Size.x * scale;
+		float h = ch.Size.y * scale;
+
+		float textVertices[6][4] = {
+			{ xpos,     ypos + h,   0.0f, 0.0f },
+			{ xpos,     ypos,       0.0f, 1.0f },
+			{ xpos + w, ypos,       1.0f, 1.0f },
+
+			{ xpos,     ypos + h,   0.0f, 0.0f },
+			{ xpos + w, ypos,       1.0f, 1.0f },
+			{ xpos + w, ypos + h,   1.0f, 0.0f }
+		};
+
+		glBindTexture(GL_TEXTURE_2D, ch.texID);
+		// update content of VBO memory
+		glBindBuffer(GL_ARRAY_BUFFER, mTextVertexBuffer);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(textVertices), textVertices);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		// now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+		x2 += (ch.Advance >> 6) * scale;
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 
 void YGame::Draw()
 {
@@ -1153,26 +1219,28 @@ void YGame::Draw()
 	{
 		glUseProgram(mTextShaderProgram);
 		glBindVertexArray(mTextVertexArray);
-		glm::mat4 SpriteTrans = glm::mat4(1.0f);
-		SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3(-(float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0));
+		DrawText("hello, world!", glm::vec3(0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
 
-		// spriteÇÃscaling matrix
-		glm::vec3 sprite_scale_vec = glm::vec3((float)AtrasWidth, (float)AtrasHeight, 1.0f);
-		sprite_scale_vec *= 1.0;
-		glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
+		//glm::mat4 SpriteTrans = glm::mat4(1.0f);
+		//SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3(-(float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0));
 
-		// spriteÇÃrotation matrix
-		glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI / 4.0f, glm::vec3(0, 0.0f, 1.0f));
-		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+		//// spriteÇÃscaling matrix
+		//glm::vec3 sprite_scale_vec = glm::vec3((float)AtrasWidth, (float)AtrasHeight, 1.0f);
+		//sprite_scale_vec *= 1.0;
+		//glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
 
-		SetMatrixUniform("uWorldTransform", SpriteTrans, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
-		SetMatrixUniform("uScaling", SpriteScaling, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
-		SetMatrixUniform("uRotate", SpriteRotate, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+		//// spriteÇÃrotation matrix
+		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI / 4.0f, glm::vec3(0, 0.0f, 1.0f));
+		////glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+
+		//SetMatrixUniform("uWorldTransform", SpriteTrans, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+		//SetMatrixUniform("uScaling", SpriteScaling, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+		//SetMatrixUniform("uRotate", SpriteRotate, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
 
 
 
-		//RenderText2("hello, world!", glm::vec3(-(float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0.0f), glm::vec3(1.0f, 0.2f, 1.0f));
-		RenderText2("hello, world!", glm::vec3(0.0f), glm::vec3(1.0f, 0.2f, 1.0f));
+		////RenderText2("hello, world!", glm::vec3(-(float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0.0f), glm::vec3(1.0f, 0.2f, 1.0f));
+		//RenderText2("hello, world!", glm::vec3(0.0f), glm::vec3(1.0f, 0.2f, 1.0f));
 
 	}
 
