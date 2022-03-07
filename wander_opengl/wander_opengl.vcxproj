@@ -116,7 +116,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\freetype\include;$(SolutionDir)dependencies\SDL2\include;$(SolutionDir)dependencies\fmod\include;$(SolutionDir)dependencies\json\single_include\nlohmann;$(SolutionDir)dependencies\eigen-3.4.0;$(SolutionDir)wander_opengl\include;$(SolutionDir)dependencies\glew\include;$(SolutionDir)dependencies\glm\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\freetype\include;$(SolutionDir)dependencies\SDL2\include;$(SolutionDir)dependencies\fmod\include;$(SolutionDir)dependencies\json\single_include\nlohmann;$(SolutionDir)dependencies\eigen-3.4.0;$(SolutionDir)wander_opengl\include;$(SolutionDir)dependencies\glew\include;$(SolutionDir)dependencies\glm\glm;$(SolutionDir)dependencies\nlohmann;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,7 +148,7 @@ COPY "$(SolutionDir)wander_opengl\Shaders" "$(OutDir)"</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\freetype\include;$(SolutionDir)dependencies\SDL2\include;$(SolutionDir)dependencies\fmod\include;$(SolutionDir)dependencies\json\single_include\nlohmann;$(SolutionDir)dependencies\eigen-3.4.0;$(SolutionDir)wander_opengl\include;$(SolutionDir)dependencies\glew\include;$(SolutionDir)dependencies\glm\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\freetype\include;$(SolutionDir)dependencies\SDL2\include;$(SolutionDir)dependencies\fmod\include;$(SolutionDir)dependencies\json\single_include\nlohmann;$(SolutionDir)dependencies\eigen-3.4.0;$(SolutionDir)wander_opengl\include;$(SolutionDir)dependencies\glew\include;$(SolutionDir)dependencies\glm\glm;$(SolutionDir)dependencies\nlohmann;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -178,18 +178,22 @@ COPY "$(SolutionDir)wander_opengl\Shaders" "$(OutDir)"</Command>
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\YGame.cpp" />
+    <ClCompile Include="src\ZGame.cpp" />
     <ClCompile Include="test\Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Game.hpp" />
     <ClInclude Include="include\Texture.hpp" />
     <ClInclude Include="include\YGame.hpp" />
+    <ClInclude Include="include\ZGame.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Phong.frag" />
     <None Include="Shaders\Phong.vert" />
     <None Include="Shaders\Sprite.frag" />
     <None Include="Shaders\Sprite.vert" />
+    <None Include="Shaders\Text.frag" />
+    <None Include="Shaders\Text.vert" />
     <None Include="Shaders\YPhong.frag" />
     <None Include="Shaders\YPhong.vert" />
   </ItemGroup>

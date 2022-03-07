@@ -36,6 +36,7 @@ GLuint indices[] =
 //	2, 3, 0
 //};
 
+// default
 //float SpriteVertices[] =
 //{ //     COORDINATES     /        COLORS      /   TexCoord  //
 //	-0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,	0.0f, 0.0f, // Lower left corner
@@ -43,20 +44,48 @@ GLuint indices[] =
 //	 0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,	1.0f, 1.0f, // Upper right corner
 //	 0.5f, -0.5f, 0.0f,     1.0f, 1.0f, 1.0f,	1.0f, 0.0f  // Lower right corner
 //};
-float SpriteVertices[] =
+
+// 2d view
+//float SpriteVertices[] =
+//{ //     COORDINATES     /        COLORS      /   TexCoord  //
+//	0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,	0.0f, 0.0f, // Lower left corner
+//	0.5f,  0.5f, 0.0f,     0.0f, 1.0f, 0.0f,	0.0f, 1.0f, // Upper left corner
+//	-0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,	1.0f, 1.0f, // Upper right corner
+//	-0.5f, -0.5f, 0.0f,     1.0f, 1.0f, 1.0f,	1.0f, 0.0f  // Lower right corner
+//};
+
+static float SpriteVertices[] =
 { //     COORDINATES     /        COLORS      /   TexCoord  //
-	0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,	0.0f, 0.0f, // Lower left corner
-	0.5f,  0.5f, 0.0f,     0.0f, 1.0f, 0.0f,	0.0f, 1.0f, // Upper left corner
-	-0.5f,  0.5f, 0.0f,     0.0f, 0.0f, 1.0f,	1.0f, 1.0f, // Upper right corner
-	-0.5f, -0.5f, 0.0f,     1.0f, 1.0f, 1.0f,	1.0f, 0.0f  // Lower right corner
+	-0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 0.f, // top left
+	0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 1.f, 0.f, // top right
+	0.5f,-0.5f, 0.f, 0.f, 0.f, 0.0f, 1.f, 1.f, // bottom right
+	-0.5f,-0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 1.f  // bottom left
 };
 
 
+// uv : tetureのうち、どの領域を使うか？を指定
+//static float SpriteVertices[] =
+//{ //     COORDINATES     /        COLORS      /   TexCoord  //
+//	-0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 0.f, // top left
+//	0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 0.5f, 0.f, // top right
+//	0.5f,-0.5f, 0.f, 0.f, 0.f, 0.0f, 0.5f, 1.f, // bottom right
+//	-0.5f,-0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 1.f  // bottom left
+//};
 
-unsigned int SpriteIndices[] =
+
+
+
+// default
+//unsigned int SpriteIndices[] =
+//{
+//	0, 2, 1, // Upper triangle
+//	0, 3, 2 // Lower triangle
+//};
+
+static unsigned int SpriteIndices[] =
 {
-	0, 2, 1, // Upper triangle
-	0, 3, 2 // Lower triangle
+	0, 1, 2,
+	2, 3, 0
 };
 
 
@@ -141,7 +170,7 @@ bool YGame::Initialize()
 	FT_Library library;
 	//FT_Face face;
 	FT_GlyphSlot slot;
-
+	// Load Font
 	FT_Init_FreeType(&library);
 	FT_New_Face(library, ".\\resources\\Carlito-Regular.ttf", 0, &mFontFace);
 	FT_Set_Pixel_Sizes(mFontFace, 0, 48);
@@ -272,6 +301,17 @@ bool YGame::LoadShaders()
 	spriteViewProj[3][2] = 1.0f;
 	//spriteViewProj = glm::ortho(0.0f, (float)mWindowWidth, (float)mWindowHeight, 0.0f, -1.0f, 1.0f);
 	SetMatrixUniform("uViewProj", spriteViewProj, mSpriteShaderProgram);
+
+
+	// Text
+	{
+		std::string vert_file = "./Shaders/Text.vert";
+		std::string frag_file = "./Shaders/Text.frag";
+		if (!CreateShaderProgram(vert_file, frag_file, mTextShaderProgram)) {
+			return false;
+		}
+		SetMatrixUniform("uViewProj", spriteViewProj, mTextShaderProgram);
+	}
 
 
 	// Mesh
@@ -573,7 +613,26 @@ bool YGame::LoadData()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+
+	// Load Text Vertex Array
+	glUseProgram(mTextShaderProgram);
+	glGenVertexArrays(1, &mTextVertexArray);
+	glBindVertexArray(mTextVertexArray);
+
+	glGenBuffers(1, &mTextVertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, mTextVertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 	
+	//mTestTexture = new Texture(".\\resources\\forest23.jpg");
 	mTestTexture = new Texture(".\\resources\\test_picture.png");
 	//LoadTexture(".\\resources\\test_picture.png", mTestTexture, test_w, test_h);
 
@@ -586,8 +645,27 @@ bool YGame::LoadData()
 	int font_color[] = {
 		0x00, 0xdd, 0xdd, 255
 	};
+
+	// 文字列を取り出す
+	 {
+	 	std::string filePath = ".\\resources\\text_data.json";
+	 	std::ifstream ifs(filePath.c_str());
+	 	if (ifs.good())
+	 	{
+	 		ifs >> mTextData;
+	 		/*for (const auto& elem : mTextData.items())
+	 		{
+	 			std::cout << elem.value() << std::endl;
+	 		}*/
+	 		//std::cout << j["project name"] << std::endl;
+	 		//std::cout << j["intrinsics"]["cx"] << std::endl;
+	 	}
+	 }
+
 	{
 		Texture* tex = new Texture();
+		std::string str;
+		mTextData["Title"]["TitleText"]["ja"].get_to(str);
 		tex->CreateTextTexture("PHASE_IDLE", font_color, mFont);
 		mFontMap.insert(std::make_pair("PHASE_IDLE", tex));
 	}
@@ -597,26 +675,142 @@ bool YGame::LoadData()
 		mFontMap.insert(std::make_pair("PHASE_MOVE", tex));
 	}
 
+
+	// Atras Textureを生成
 	{
-		const char* str = "ABC";
+		std::string hello_str = "hello, world!";
+
+		// 生成する必要のある文字を導出
+		std::string create_str;
+		for (int i = 0; i < hello_str.length(); i++) {
+			char c = hello_str[i];
+			bool is_have = false;
+			for (int j = 0; j < create_str.length(); j++) {
+				if (c == create_str[j]) {
+					is_have = true;
+					break;
+				}
+			}
+			if (!is_have) {
+				create_str += c;
+			}
+		}
+
+		// Atras Textureの枠を生成
+		// Atras Textureの大きさを導出
+		for (int i = 0; i < create_str.length(); i++) {
+			char c = create_str[i];
+			if (FT_Load_Char(mFontFace, c, FT_LOAD_RENDER))
+			{
+				std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+				exit(-1);
+			}
+			AtrasWidth += mFontFace->glyph->bitmap.width;
+			AtrasHeight = (AtrasHeight < mFontFace->glyph->bitmap.rows) ? mFontFace->glyph->bitmap.rows : AtrasHeight;
+		}
+		// Texture 生成
+		glActiveTexture(GL_TEXTURE0);
+		glGenTextures(1, &AtrasTex);
+		glBindTexture(GL_TEXTURE_2D, AtrasTex);
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, AtrasWidth, AtrasHeight, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
+
+
+		// Atras Textureに文字データを書き込んでいく
+		int x = 0;
+		for (int i = 0; i < create_str.length(); i++) {
+			char c = create_str[i];
+			if (FT_Load_Char(mFontFace, c, FT_LOAD_RENDER))
+			{
+				std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+				exit(-1);
+			}
+			glTexSubImage2D(GL_TEXTURE_2D, 0, x, 0, mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows, GL_RED, GL_UNSIGNED_BYTE, mFontFace->glyph->bitmap.buffer);
+
+			Character Char;
+			auto glyph = mFontFace->glyph;
+			Char.ax = glyph->advance.x;
+			Char.ay = glyph->advance.y;
+			Char.bw = glyph->bitmap.width;
+			Char.bh = glyph->bitmap.rows;
+			Char.bl = glyph->bitmap_left;
+			Char.bt = glyph->bitmap_top;
+			Char.tx = (float)x / (float)AtrasWidth;
+			Characters.insert(std::make_pair(c, Char));
+
+			x += mFontFace->glyph->bitmap.width;
+		}
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glBindTexture(AtrasTex, 0);		// unbind
+	}
+
+	{
+		const char* str = "BBC";
+		char c = str[0];
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		//FT_Load_Glyph(mFontFace, FT_Get_Char_Index(mFontFace, str[0]), FT_LOAD_RENDER);
-		FT_Load_Char(mFontFace, str[0], FT_LOAD_RENDER);
+		if (FT_Load_Char(mFontFace, c, FT_LOAD_RENDER))
+		{
+			std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+			exit(-1);
+		}
+
+		//FT_Load_Char(mFontFace, c, FT_LOAD_RENDER);
 		
 		glGenTextures(1, &FontTex);
 		glActiveTexture(GL_TEXTURE);
 		glBindTexture(GL_TEXTURE_2D, FontTex);
 
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows,
-			0, GL_RGBA, GL_UNSIGNED_BYTE, mFontFace->glyph->bitmap.buffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows,
+			0, GL_RED, GL_UNSIGNED_BYTE, mFontFace->glyph->bitmap.buffer);
 		mFontWidth = mFontFace->glyph->bitmap.width;
 		mFontHeight = mFontFace->glyph->bitmap.rows;
 
 		glGenerateMipmap(GL_TEXTURE_2D);
 		glBindTexture(FontTex, 0);		// unbind
+	}
 
 
+	// Load Text Data
+	{
+		std::string hello_str = "hello, world!";
+		for (auto c = hello_str.begin(); c != hello_str.end(); c++) {
+			auto itr = mTexChars.find(*c);
+			if (itr == mTexChars.end()) {	// まだ配列に入っていなかったら
+				if (FT_Load_Char(mFontFace, *c, FT_LOAD_RENDER))
+				{
+					std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+					exit(-1);
+				}
+
+				GLuint tex_char;
+				glGenTextures(1, &tex_char);
+				glActiveTexture(GL_TEXTURE);
+				glBindTexture(GL_TEXTURE_2D, tex_char);
+
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows,
+					0, GL_RED, GL_UNSIGNED_BYTE, mFontFace->glyph->bitmap.buffer);
+				glGenerateMipmap(GL_TEXTURE_2D);
+				glBindTexture(tex_char, 0);		// unbind
+
+				TexChar	 tc = {
+					tex_char,
+					glm::ivec2(mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows),
+					glm::ivec2(mFontFace->glyph->bitmap_left, mFontFace->glyph->bitmap_top),
+					mFontFace->glyph->advance.x
+				};
+				mTexChars.insert(std::make_pair(*c, tc));
+			}
+		}
 	}
 
 
@@ -719,8 +913,108 @@ void YGame::SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale, float r
 	SetMatrixUniform("uWorldTransform", SpriteTrans, mSpriteShaderProgram);	// cubeの座標を反映
 	SetMatrixUniform("uScaling", SpriteScaling, mSpriteShaderProgram);	// cubeの座標を反映
 	SetMatrixUniform("uRotate", SpriteRotate, mSpriteShaderProgram);	// cubeの座標を反映
-
 }
+
+void YGame::RenderText(std::string text, glm::vec3 pos, float scale)
+{
+	unsigned int vertexArray;
+	glGenVertexArrays(1, &vertexArray);
+	glBindVertexArray(vertexArray);
+
+	struct point {
+		GLfloat x;
+		GLfloat y;
+		GLfloat s;
+		GLfloat t;
+	};
+	int len = text.length();
+	std::cout << len << std::endl;
+	point* coords = new point[len];
+	int n = 0;
+
+	for (int i = 0; i < text.length(); i++) {
+		char c = text[i];
+		float x2 = pos.x + Characters[c].bl * scale;
+		float y2 = -pos.y - Characters[c].bt * scale;
+		float w = Characters[c].bw * scale;
+		float h = Characters[c].bh * scale;
+
+		pos.x += Characters[c].ax * scale;
+		pos.y += Characters[c].ay * scale;
+
+		if (!w || !h)
+			continue;
+
+		coords[n++] = { x2,     -y2    , Characters[c].tx,                                            0 };
+		coords[n++] = { x2 + w, -y2    , Characters[c].tx + Characters[c].bw / AtrasWidth,   0 };
+		coords[n++] = { x2,     -y2 - h, Characters[c].tx,                                          Characters[c].bh / AtrasHeight }; //remember: each glyph occupies a different amount of vertical space
+		coords[n++] = { x2 + w, -y2    , Characters[c].tx + Characters[c].bw / AtrasWidth,   0 };
+		coords[n++] = { x2,     -y2 - h, Characters[c].tx,                                          Characters[c].bh / AtrasHeight };
+		coords[n++] = { x2 + w, -y2 - h, Characters[c].tx + Characters[c].bw / AtrasWidth,                 Characters[c].bh / AtrasHeight };
+	}
+	unsigned int vertexBuffer;
+	glGenBuffers(1, &vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof coords, coords, GL_DYNAMIC_DRAW);
+
+	glDrawArrays(GL_TRIANGLES, 0, n);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+
+	//glGenBuffers(1, &mSpriteVertexBuffer);
+	//glBindBuffer(GL_ARRAY_BUFFER, mSpriteVertexBuffer);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(SpriteVertices), SpriteVertices, GL_STATIC_DRAW);
+	//glBindVertexArray(0);
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+
+	coords = nullptr;
+	//free(coords);
+
+	//delete(coords);
+	
+}
+
+void YGame::RenderText2(std::string text, glm::vec3 pos, glm::vec3 color, float scale)
+{
+	glUniform3f(glGetUniformLocation(mTextShaderProgram, "textColor"), color.x, color.y, color.z);
+	glActiveTexture(GL_TEXTURE0);
+
+	for (auto c = text.begin(); c != text.end(); c++) {
+		TexChar ch = mTexChars[*c];
+
+		float xpos = pos.x + ch.Bearing.x * scale;
+		float ypos = pos.y - (ch.Size.y - ch.Bearing.y) * scale;
+		float w = ch.Size.x * scale;
+		float h = ch.Size.y * scale;
+
+		float textVertices[6][4] = {
+			{ xpos,     ypos + h,   0.0f, 0.0f },
+			{ xpos,     ypos,       0.0f, 1.0f },
+			{ xpos + w, ypos,       1.0f, 1.0f },
+
+			{ xpos,     ypos + h,   0.0f, 0.0f },
+			{ xpos + w, ypos,       1.0f, 1.0f },
+			{ xpos + w, ypos + h,   1.0f, 0.0f }
+		};
+
+		glBindTexture(GL_TEXTURE_2D, ch.texID);
+		// update content of VBO memory
+		glBindBuffer(GL_ARRAY_BUFFER, mTextVertexBuffer);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(textVertices), textVertices);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		// now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+		pos.x += (ch.Advance >> 6) * scale;
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 
 void YGame::Draw()
 {
@@ -786,19 +1080,22 @@ void YGame::Draw()
 	
 	// spriteの描画位置を設定
 	 //Draw Test Texture
-	SetSpritePos(glm::vec3((float)mWindowWidth / 4.0f, 0, 0), mTestTexture, 0.5f, M_PI);
-	mTestTexture->BindTexture();
-	glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
-	mTestTexture->UnBindTexture();
+	//SetSpritePos(glm::vec3((float)mWindowWidth / 4.0f, 0, 0), mTestTexture, 0.5f, 0);
+	//mTestTexture->BindTexture();
+	//glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+	//mTestTexture->UnBindTexture();
 
 	// Draw Text Texture
 	{
 		Texture* tex = mFontMap["PHASE_IDLE"];
+		//Texture* tex = mFontMap["PHASE_MOVE"];
 		SetSpritePos(glm::vec3(-(float)mWindowWidth / 4.0f, 0, 0), tex);
 		tex->BindTexture();
 		glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
 		tex->UnBindTexture();
 	}
+
+	// Draw Font
 	{
 		// Sprite Translation Matrix
 		glm::mat4 SpriteTrans = glm::mat4(1.0f);
@@ -806,7 +1103,7 @@ void YGame::Draw()
 
 		// spriteのscaling matrix
 		glm::vec3 sprite_scale_vec = glm::vec3((float)mFontWidth, (float)mFontHeight, 1.0f);
-		sprite_scale_vec *= 0.25;
+		sprite_scale_vec *= 1.0;
 		glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
 
 		// spriteのrotation matrix
@@ -822,6 +1119,61 @@ void YGame::Draw()
 		glBindTexture(FontTex, 0);
 	}
 
+	// Draw AtrasTexture
+	{
+		// Sprite Translation Matrix
+		glm::mat4 SpriteTrans = glm::mat4(1.0f);
+		SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3((float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0));
+
+		// spriteのscaling matrix
+		glm::vec3 sprite_scale_vec = glm::vec3((float)AtrasWidth, (float)AtrasHeight, 1.0f);
+		sprite_scale_vec *= 1.0;
+		glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
+
+		// spriteのrotation matrix
+		glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1.0f));
+		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+
+		SetMatrixUniform("uWorldTransform", SpriteTrans, mSpriteShaderProgram);	// cubeの座標を反映
+		SetMatrixUniform("uScaling", SpriteScaling, mSpriteShaderProgram);	// cubeの座標を反映
+		SetMatrixUniform("uRotate", SpriteRotate, mSpriteShaderProgram);	// cubeの座標を反映
+
+		glBindTexture(GL_TEXTURE_2D, AtrasTex);
+		glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+		glBindTexture(AtrasTex, 0);
+	}
+
+	// hello world表示
+	{
+		//glBindTexture(GL_TEXTURE_2D, AtrasTex);
+		//RenderText("hello", glm::vec3(-(float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0.0f), 1.0f);
+	}
+
+	// text 表示
+	{
+		glUseProgram(mTextShaderProgram);
+		glBindVertexArray(mTextVertexArray);
+		//glm::mat4 SpriteTrans = glm::mat4(1.0f);
+		//SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3((float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0));
+
+		//// spriteのscaling matrix
+		//glm::vec3 sprite_scale_vec = glm::vec3((float)AtrasWidth, (float)AtrasHeight, 1.0f);
+		//sprite_scale_vec *= 1.0;
+		//glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
+
+		//// spriteのrotation matrix
+		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1.0f));
+		////glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+
+		//SetMatrixUniform("uWorldTransform", SpriteTrans, mSpriteShaderProgram);	// cubeの座標を反映
+		//SetMatrixUniform("uScaling", SpriteScaling, mSpriteShaderProgram);	// cubeの座標を反映
+		//SetMatrixUniform("uRotate", SpriteRotate, mSpriteShaderProgram);	// cubeの座標を反映
+
+
+
+		RenderText2("hello, world!", glm::vec3(-(float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
+
+	}
 
 
 

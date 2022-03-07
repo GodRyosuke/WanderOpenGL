@@ -21,6 +21,7 @@ void main()
 	vec4 pos = vec4(inPosition, 1.0);
 	// Transform to position world space, then clip space
 	// gl_Position = pos * uWorldTransform * uViewProj;
+	// gl_Position = pos;
 	// gl_Position = uViewProj * uWorldTransform * pos;
 	gl_Position = uViewProj * uWorldTransform * uRotate * uScaling * pos;
 	// gl_Position = vec4(inPosition.x, inPosition.y, inPosition.z, 1.0);

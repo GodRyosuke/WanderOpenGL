@@ -27,6 +27,9 @@
     <ClCompile Include="src\Texture.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="src\ZGame.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Game.hpp">
@@ -38,6 +41,9 @@
     <ClInclude Include="include\Texture.hpp">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="include\ZGame.hpp">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Phong.vert" />
@@ -46,5 +52,7 @@
     <None Include="Shaders\YPhong.frag" />
     <None Include="Shaders\Sprite.vert" />
     <None Include="Shaders\Sprite.frag" />
+    <None Include="Shaders\Text.vert" />
+    <None Include="Shaders\Text.frag" />
   </ItemGroup>
 </Project>

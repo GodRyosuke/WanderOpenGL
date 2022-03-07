@@ -23,9 +23,9 @@ Texture::Texture(std::string filePath)
 void Texture::CreateTextTexture(std::string text_data, int* color, TTF_Font* font)
 {
 	SDL_Color color_data;
-	color_data.r = color[0];
-	color_data.g = color[1];
-	color_data.b = color[2];
+	color_data.r = static_cast<Uint8>(color[0]);
+	color_data.g = static_cast<Uint8>(color[1]);
+	color_data.b = static_cast<Uint8>(color[2]);
 	color_data.a = (Uint8)color[3];
 	SDL_Surface* font_surface = TTF_RenderUTF8_Blended(font, text_data.c_str(), color_data);
 	if (!font_surface)
@@ -73,7 +73,7 @@ void Texture::createFromSurf(SDL_Surface* surf)
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surf->pixels);
 	// Generates MipMaps
-	glGenerateMipmap(GL_TEXTURE_2D);
+	//glGenerateMipmap(GL_TEXTURE_2D);
 
 
 	glBindTexture(texture_data, 0);		// unbind

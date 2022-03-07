@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include "glew.h"
 #include "SDL_ttf.h"
