@@ -18,7 +18,9 @@ void main()
 {
 	// Convert position to homogeneous coordinates
 	vec4 pos = vec4(inPosition, 0.0, 1.0);
-	gl_Position = uViewProj * pos;
+	// gl_Position = pos;
+	// gl_Position = uViewProj * pos;
+	gl_Position = uViewProj * uWorldTransform  * uRotate * pos;
 	// gl_Position = uViewProj * uWorldTransform * uRotate * uScaling * pos;
 
 	// Pass along the texture coordinate to frag shader

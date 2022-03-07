@@ -1153,25 +1153,26 @@ void YGame::Draw()
 	{
 		glUseProgram(mTextShaderProgram);
 		glBindVertexArray(mTextVertexArray);
-		//glm::mat4 SpriteTrans = glm::mat4(1.0f);
-		//SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3((float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0));
+		glm::mat4 SpriteTrans = glm::mat4(1.0f);
+		SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3(-(float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0));
 
-		//// spriteÇÃscaling matrix
-		//glm::vec3 sprite_scale_vec = glm::vec3((float)AtrasWidth, (float)AtrasHeight, 1.0f);
-		//sprite_scale_vec *= 1.0;
-		//glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
+		// spriteÇÃscaling matrix
+		glm::vec3 sprite_scale_vec = glm::vec3((float)AtrasWidth, (float)AtrasHeight, 1.0f);
+		sprite_scale_vec *= 1.0;
+		glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
 
-		//// spriteÇÃrotation matrix
-		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1.0f));
-		////glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+		// spriteÇÃrotation matrix
+		glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI / 4.0f, glm::vec3(0, 0.0f, 1.0f));
+		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
 
-		//SetMatrixUniform("uWorldTransform", SpriteTrans, mSpriteShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
-		//SetMatrixUniform("uScaling", SpriteScaling, mSpriteShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
-		//SetMatrixUniform("uRotate", SpriteRotate, mSpriteShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+		SetMatrixUniform("uWorldTransform", SpriteTrans, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+		SetMatrixUniform("uScaling", SpriteScaling, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+		SetMatrixUniform("uRotate", SpriteRotate, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
 
 
 
-		RenderText2("hello, world!", glm::vec3(-(float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
+		//RenderText2("hello, world!", glm::vec3(-(float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0.0f), glm::vec3(1.0f, 0.2f, 1.0f));
+		RenderText2("hello, world!", glm::vec3(0.0f), glm::vec3(1.0f, 0.2f, 1.0f));
 
 	}
 
