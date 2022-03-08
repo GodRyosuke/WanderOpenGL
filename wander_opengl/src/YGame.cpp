@@ -290,36 +290,50 @@ bool YGame::LoadShaders()
 	// Sprite
 	std::string spriteVertFile = "./Shaders/Sprite.vert";
 	std::string spriteFragFile = "./Shaders/Sprite.frag";
-
-	if (!CreateShaderProgram(spriteVertFile, spriteFragFile, mSpriteShaderProgram)) {
-		return false;
+	{
+		std::string vertFile = "./Shaders/Sprite.vert";
+		std::string fragFile = "./Shaders/Sprite.frag";
+		mSpriteShaderProgram = new Shader();
+		if (!mSpriteShaderProgram->CreateShaderProgram(vertFile, fragFile)) {
+			return false;
+		}
 	}
 
-	glm::mat4 spriteViewProj = glm::mat4(1.0f);
-	spriteViewProj[0][0] = 2.0f / (float)mWindowWidth;
-	spriteViewProj[1][1] = 2.0f / (float)mWindowHeight;
-	spriteViewProj[3][2] = 1.0f;
-	//spriteViewProj = glm::ortho(0.0f, (float)mWindowWidth, (float)mWindowHeight, 0.0f, -1.0f, 1.0f);
-	SetMatrixUniform("uViewProj", spriteViewProj, mSpriteShaderProgram);
+	//if (!CreateShaderProgram(spriteVertFile, spriteFragFile, mSpriteShaderProgram)) {
+	//	return false;
+	//}
+
+
+	//SetMatrixUniform("uViewProj", spriteViewProj, mSpriteShaderProgram);
 
 
 	// Text
 	{
 		std::string vert_file = "./Shaders/Text.vert";
 		std::string frag_file = "./Shaders/Text.frag";
-		if (!CreateShaderProgram(vert_file, frag_file, mTextShaderProgram)) {
+		mTextShaderProgram = new Shader();
+		if (!mTextShaderProgram->CreateShaderProgram(vert_file, frag_file)) {
 			return false;
 		}
-		SetMatrixUniform("uViewProj", spriteViewProj, mTextShaderProgram);
 	}
+
+	glm::mat4 spriteViewProj = glm::mat4(1.0f);
+	spriteViewProj[0][0] = 2.0f / (float)mWindowWidth;
+	spriteViewProj[1][1] = 2.0f / (float)mWindowHeight;
+	spriteViewProj[3][2] = 1.0f;
+
+	mSpriteShaderProgram->SetMatrixUniform("uViewProj", spriteViewProj);
+	mTextShaderProgram->SetMatrixUniform("uViewProj", spriteViewProj);
 
 
 	// Mesh
-	std::string meshVertFile = "./Shaders/YPhong.vert";
-	std::string meshFragFile = "./Shaders/YPhong.frag";
-
-	if (!CreateShaderProgram(meshVertFile, meshFragFile, mMeshShaderProgram)) {
-		return false;
+	{
+		std::string vert_file = "./Shaders/YPhong.vert";
+		std::string frag_file = "./Shaders/YPhong.frag";
+		mMeshShaderProgram = new Shader();
+		if (!mMeshShaderProgram->CreateShaderProgram(vert_file, frag_file)) {
+			return false;
+		}
 	}
 
 
@@ -344,9 +358,9 @@ bool YGame::LoadShaders()
 
 	// Uniform の初期値
 	// Mesh
-	SetMatrixUniform("view", view2, mMeshShaderProgram);
-	SetMatrixUniform("proj", mProjection, mMeshShaderProgram);
-	SetMatrixUniform("model", mCubeWorldTrans, mMeshShaderProgram);
+	mMeshShaderProgram->SetMatrixUniform("view", view2);
+	mMeshShaderProgram->SetMatrixUniform("proj", mProjection);
+	mMeshShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
 
 	
 	//{
@@ -539,7 +553,7 @@ bool YGame::LoadData()
 
 
 	// Cubeのvertex arrayを設定
-	glUseProgram(mMeshShaderProgram);
+	mMeshShaderProgram->UseProgram();
 	glGenVertexArrays(1, &mCubeVertexArray);
 	glBindVertexArray(mCubeVertexArray);
 
@@ -588,7 +602,7 @@ bool YGame::LoadData()
 
 
 	// spriteのvertex arrayの設定
-	glUseProgram(mSpriteShaderProgram);
+	mSpriteShaderProgram->UseProgram();
 	glGenVertexArrays(1, &mSpriteVertexArray);
 	glBindVertexArray(mSpriteVertexArray);
 
@@ -615,7 +629,7 @@ bool YGame::LoadData()
 
 
 	// Load Text Vertex Array
-	glUseProgram(mTextShaderProgram);
+	mTextShaderProgram->UseProgram();
 	glGenVertexArrays(1, &mTextVertexArray);
 	glBindVertexArray(mTextVertexArray);
 
@@ -778,43 +792,61 @@ bool YGame::LoadData()
 
 	// Load Text Data
 	{
-		std::string hello_str = "hello, world!";
-		for (auto c = hello_str.begin(); c != hello_str.end(); c++) {
-			auto itr = mTexChars.find(*c);
-			if (itr == mTexChars.end()) {	// まだ配列に入っていなかったら
-				if (FT_Load_Char(mFontFace, *c, FT_LOAD_RENDER))
-				{
-					std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
-					exit(-1);
-				}
-
-				GLuint tex_char;
-				glGenTextures(1, &tex_char);
-				glActiveTexture(GL_TEXTURE);
-				glBindTexture(GL_TEXTURE_2D, tex_char);
-
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows,
-					0, GL_RED, GL_UNSIGNED_BYTE, mFontFace->glyph->bitmap.buffer);
-				glGenerateMipmap(GL_TEXTURE_2D);
-				glBindTexture(tex_char, 0);		// unbind
-
-				TexChar	 tc = {
-					tex_char,
-					glm::ivec2(mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows),
-					glm::ivec2(mFontFace->glyph->bitmap_left, mFontFace->glyph->bitmap_top),
-					mFontFace->glyph->advance.x
-				};
-				mTexChars.insert(std::make_pair(*c, tc));
+		// アルファベットすべて読み込む
+		for (char c = 'a'; c <= 'z'; c++) {
+			{	// 小文字
+				GLuint tex;
+				TexChar ch = LoadChar(c);
+				mTexChars.insert(std::make_pair(c, ch));
+			} 
+			{	// 大文字
+				GLuint tex;
+				char c2 = (char)(c - 'a' + 'A');
+				TexChar ch = LoadChar(c2);
+				mTexChars.insert(std::make_pair(c2, ch));
 			}
 		}
+		mTexChars.insert(std::make_pair(',', LoadChar(',')));
+		mTexChars.insert(std::make_pair(' ', LoadChar(' ')));
+		mTexChars.insert(std::make_pair('_', LoadChar('_')));
+		mTexChars.insert(std::make_pair('!', LoadChar('!')));
+		mTexChars.insert(std::make_pair('?', LoadChar('?')));
 	}
 
 
 	return true;
+}
+
+YGame::TexChar YGame::LoadChar(char c)
+{
+	if (FT_Load_Char(mFontFace, c, FT_LOAD_RENDER))
+	{
+		std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+		exit(-1);
+	}
+
+	GLuint tex;
+	glGenTextures(1, &tex);
+	glActiveTexture(GL_TEXTURE);
+	glBindTexture(GL_TEXTURE_2D, tex);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows,
+		0, GL_RED, GL_UNSIGNED_BYTE, mFontFace->glyph->bitmap.buffer);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(tex, 0);		// unbind
+
+	TexChar	 tc = {
+		tex,
+		glm::ivec2(mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows),
+		glm::ivec2(mFontFace->glyph->bitmap_left, mFontFace->glyph->bitmap_top),
+		mFontFace->glyph->advance.x
+	};
+
+	return tc;
 }
 
 void YGame::ProcessInput()
@@ -895,7 +927,7 @@ void YGame::UpdateGame()
 
 
 
-void YGame::SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale, float rotation)
+void YGame::SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale, float rotation, float alpha)
 {
 	// Sprite Translation Matrix
 	glm::mat4 SpriteTrans = glm::mat4(1.0f);
@@ -910,9 +942,13 @@ void YGame::SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale, float r
 	glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0, 0, 1.0f));
 	//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
 
-	SetMatrixUniform("uWorldTransform", SpriteTrans, mSpriteShaderProgram);	// cubeの座標を反映
-	SetMatrixUniform("uScaling", SpriteScaling, mSpriteShaderProgram);	// cubeの座標を反映
-	SetMatrixUniform("uRotate", SpriteRotate, mSpriteShaderProgram);	// cubeの座標を反映
+	// Textureのalpha値を設定
+	mSpriteShaderProgram->SetFloatUniform("uSpriteAlpha", alpha);
+	//glUniform1f(glGetUniformLocation(mSpriteShaderProgram, "uSpriteAlpha"), alpha);
+
+	mSpriteShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);	// cubeの座標を反映
+	mSpriteShaderProgram->SetMatrixUniform("uScaling", SpriteScaling);	// cubeの座標を反映
+	mSpriteShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);	// cubeの座標を反映
 }
 
 void YGame::RenderText(std::string text, glm::vec3 pos, float scale)
@@ -980,7 +1016,8 @@ void YGame::RenderText(std::string text, glm::vec3 pos, float scale)
 
 void YGame::RenderText2(std::string text, glm::vec3 pos, glm::vec3 color, float scale)
 {
-	glUniform3f(glGetUniformLocation(mTextShaderProgram, "textColor"), color.x, color.y, color.z);
+	//glUniform3f(glGetUniformLocation(mTextShaderProgram, "textColor"), color.x, color.y, color.z);
+	mTextShaderProgram->SetVectorUniform("textColor", color);
 	glActiveTexture(GL_TEXTURE0);
 
 	for (auto c = text.begin(); c != text.end(); c++) {
@@ -1017,10 +1054,18 @@ void YGame::RenderText2(std::string text, glm::vec3 pos, glm::vec3 color, float 
 
 void YGame::DrawText(std::string text, glm::vec3 pos, glm::vec3 color, float scale, float rot)
 {
+	mTextShaderProgram->UseProgram();
+	glBindVertexArray(mTextVertexArray);
+
 	// 文字のtexcharの大きさを取得
 	int TexWidth = 0;
 	int TexHeight = 0;
 	for (auto c = text.begin(); c != text.end(); c++) {
+		auto itr = mTexChars.find(*c);
+		if (itr == mTexChars.end()) {
+			std::cout << "error: Tex Char hasnt been loaded yet\n";
+			exit(-1);
+		}
 		TexChar ch = mTexChars[*c];
 		TexWidth += ch.Size.x;
 		TexHeight = (TexHeight < ch.Size.y) ? ch.Size.y : TexHeight;
@@ -1039,12 +1084,14 @@ void YGame::DrawText(std::string text, glm::vec3 pos, glm::vec3 color, float sca
 	glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), rot, glm::vec3(0, 0.0f, 1.0f));
 	//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
 
-	SetMatrixUniform("uWorldTransform", SpriteTrans, mTextShaderProgram);	// cubeの座標を反映
+	//SetMatrixUniform("uWorldTransform", SpriteTrans, mTextShaderProgram);	// cubeの座標を反映
+	mTextShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);
 	//SetMatrixUniform("uScaling", SpriteScaling, mTextShaderProgram);	// cubeの座標を反映
-	SetMatrixUniform("uRotate", SpriteRotate, mTextShaderProgram);	// cubeの座標を反映
+	//SetMatrixUniform("uRotate", SpriteRotate, mTextShaderProgram);	// cubeの座標を反映
+	mTextShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);
 
-
-	glUniform3f(glGetUniformLocation(mTextShaderProgram, "textColor"), color.x, color.y, color.z);
+	//glUniform3f(glGetUniformLocation(mTextShaderProgram, "textColor"), color.x, color.y, color.z);
+	mTextShaderProgram->SetVectorUniform("textColor", color);
 	glActiveTexture(GL_TEXTURE0);
 
 	int x2 = 0;
@@ -1096,32 +1143,39 @@ void YGame::Draw()
 	glDisable(GL_BLEND);
 
 	// draw meshes
-	glUseProgram(mMeshShaderProgram);	// activate
+	mMeshShaderProgram->UseProgram();
 	// bindcube vertex array
 	glBindVertexArray(mCubeVertexArray);
 
-	SetMatrixUniform("model", mCubeWorldTrans, mMeshShaderProgram);	// cubeの座標を反映
+	mMeshShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
+	//SetMatrixUniform("model", mCubeWorldTrans, mMeshShaderProgram);	// cubeの座標を反映
 
 	// カメラの位置を反映
 	//glm::vec3 camera_pos = glm::vec3(mView[3].x, mView[3].y, mView[3].z);
 	glm::vec3 camera_pos = glm::vec3(0);
-	SetVectorUniform("uCameraPos", camera_pos, mMeshShaderProgram);
+	//SetVectorUniform("uCameraPos", camera_pos, mMeshShaderProgram);
+	mMeshShaderProgram->SetVectorUniform("uCameraPos", camera_pos);
 	// set lighting
-	SetVectorUniform("uAmbientLight", mAmbientLightColor, mMeshShaderProgram);
-	SetVectorUniform("uDirLight.mDirection", mDirectionalLight.direction, mMeshShaderProgram);
-	SetVectorUniform("uDirLight.mDiffuseColor", mDirectionalLight.diffuseColor, mMeshShaderProgram);
-	SetVectorUniform("uDirLight.mSpecColor", mDirectionalLight.specColor, mMeshShaderProgram);
+	mMeshShaderProgram->SetVectorUniform("uAmbientLight", mAmbientLightColor);
+	mMeshShaderProgram->SetVectorUniform("uDirLight.mDirection", mDirectionalLight.direction);
+	mMeshShaderProgram->SetVectorUniform("uDirLight.mDiffuseColor", mDirectionalLight.diffuseColor);
+	mMeshShaderProgram->SetVectorUniform("uDirLight.mSpecColorr", mDirectionalLight.specColor);
+	//SetVectorUniform("uAmbientLight", mAmbientLightColor, mMeshShaderProgram);
+	//SetVectorUniform("uDirLight.mDirection", mDirectionalLight.direction, mMeshShaderProgram);
+	//SetVectorUniform("uDirLight.mDiffuseColor", mDirectionalLight.diffuseColor, mMeshShaderProgram);
+	//SetVectorUniform("uDirLight.mSpecColor", mDirectionalLight.specColor, mMeshShaderProgram);
 
 	// cubeのspecular power
-	{
-		GLuint loc = glGetUniformLocation(mMeshShaderProgram, "uSpecPower");
-		glUniform1f(loc, 100.0f);
-	}
+	mMeshShaderProgram->SetFloatUniform("uSpecPower", 100.0f);
+	//{
+	//	GLuint loc = glGetUniformLocation(mMeshShaderProgram, "uSpecPower");
+	//	glUniform1f(loc, 100.0f);
+	//}
 
 	// Gets the location of the uniform
-	GLuint texUni = glGetUniformLocation(mMeshShaderProgram, "tex0");
+	//GLuint texUni = glGetUniformLocation(mMeshShaderProgram, "tex0");
 	// Sets the value of the uniform
-	glUniform1i(texUni, 0);
+	//glUniform1i(texUni, 0);
 
 	// bind cube texture
 	mCubeTexture->BindTexture();
@@ -1141,107 +1195,88 @@ void YGame::Draw()
 	glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
 	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
 
-	glUseProgram(mSpriteShaderProgram);
+	//glUseProgram(mSpriteShaderProgram);
+	mSpriteShaderProgram->UseProgram();
 	glBindVertexArray(mSpriteVertexArray);
 	
 	// spriteの描画位置を設定
 	 //Draw Test Texture
-	//SetSpritePos(glm::vec3((float)mWindowWidth / 4.0f, 0, 0), mTestTexture, 0.5f, 0);
-	//mTestTexture->BindTexture();
-	//glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
-	//mTestTexture->UnBindTexture();
+	SetSpritePos(glm::vec3((float)mWindowWidth / 4.0f, 0, 0), mTestTexture, 0.5f, 0, 0.2f);
+	mTestTexture->BindTexture();
+	glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+	mTestTexture->UnBindTexture();
 
 	// Draw Text Texture
 	{
-		Texture* tex = mFontMap["PHASE_IDLE"];
-		//Texture* tex = mFontMap["PHASE_MOVE"];
-		SetSpritePos(glm::vec3(-(float)mWindowWidth / 4.0f, 0, 0), tex);
-		tex->BindTexture();
-		glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
-		tex->UnBindTexture();
+		//Texture* tex = mFontMap["PHASE_IDLE"];
+		////Texture* tex = mFontMap["PHASE_MOVE"];
+		//SetSpritePos(glm::vec3(-(float)mWindowWidth / 4.0f, 0, 0), tex);
+		//tex->BindTexture();
+		//glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+		//tex->UnBindTexture();
 	}
 
 	// Draw Font
 	{
-		// Sprite Translation Matrix
-		glm::mat4 SpriteTrans = glm::mat4(1.0f);
-		SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3(-(float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0));
+	//	// Sprite Translation Matrix
+	//	glm::mat4 SpriteTrans = glm::mat4(1.0f);
+	//	SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3(-(float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0));
 
-		// spriteのscaling matrix
-		glm::vec3 sprite_scale_vec = glm::vec3((float)mFontWidth, (float)mFontHeight, 1.0f);
-		sprite_scale_vec *= 1.0;
-		glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
+	//	// spriteのscaling matrix
+	//	glm::vec3 sprite_scale_vec = glm::vec3((float)mFontWidth, (float)mFontHeight, 1.0f);
+	//	sprite_scale_vec *= 1.0;
+	//	glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
 
-		// spriteのrotation matrix
-		glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1.0f));
-		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+	//	// spriteのrotation matrix
+	//	glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1.0f));
+	//	//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
 
-		SetMatrixUniform("uWorldTransform", SpriteTrans, mSpriteShaderProgram);	// cubeの座標を反映
-		SetMatrixUniform("uScaling", SpriteScaling, mSpriteShaderProgram);	// cubeの座標を反映
-		SetMatrixUniform("uRotate", SpriteRotate, mSpriteShaderProgram);	// cubeの座標を反映
+	//	SetMatrixUniform("uWorldTransform", SpriteTrans, mSpriteShaderProgram);	// cubeの座標を反映
+	//	SetMatrixUniform("uScaling", SpriteScaling, mSpriteShaderProgram);	// cubeの座標を反映
+	//	SetMatrixUniform("uRotate", SpriteRotate, mSpriteShaderProgram);	// cubeの座標を反映
 
-		glBindTexture(GL_TEXTURE_2D, FontTex);
-		glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
-		glBindTexture(FontTex, 0);
+	//	glBindTexture(GL_TEXTURE_2D, FontTex);
+	//	glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+	//	glBindTexture(FontTex, 0);
+	//}
+
+	//// Draw AtrasTexture
+	//{
+	//	// Sprite Translation Matrix
+	//	glm::mat4 SpriteTrans = glm::mat4(1.0f);
+	//	SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3((float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0));
+
+	//	// spriteのscaling matrix
+	//	glm::vec3 sprite_scale_vec = glm::vec3((float)AtrasWidth, (float)AtrasHeight, 1.0f);
+	//	sprite_scale_vec *= 1.0;
+	//	glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
+
+	//	// spriteのrotation matrix
+	//	glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1.0f));
+	//	//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+
+	//	SetMatrixUniform("uWorldTransform", SpriteTrans, mSpriteShaderProgram);	// cubeの座標を反映
+	//	SetMatrixUniform("uScaling", SpriteScaling, mSpriteShaderProgram);	// cubeの座標を反映
+	//	SetMatrixUniform("uRotate", SpriteRotate, mSpriteShaderProgram);	// cubeの座標を反映
+	//	glUniform1f(glGetUniformLocation(mSpriteShaderProgram, "uSpriteAlpha"), 1.0f);
+
+
+	//	glBindTexture(GL_TEXTURE_2D, AtrasTex);
+	//	glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+	//	glBindTexture(AtrasTex, 0);
 	}
 
-	// Draw AtrasTexture
-	{
-		// Sprite Translation Matrix
-		glm::mat4 SpriteTrans = glm::mat4(1.0f);
-		SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3((float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0));
-
-		// spriteのscaling matrix
-		glm::vec3 sprite_scale_vec = glm::vec3((float)AtrasWidth, (float)AtrasHeight, 1.0f);
-		sprite_scale_vec *= 1.0;
-		glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
-
-		// spriteのrotation matrix
-		glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1.0f));
-		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
-
-		SetMatrixUniform("uWorldTransform", SpriteTrans, mSpriteShaderProgram);	// cubeの座標を反映
-		SetMatrixUniform("uScaling", SpriteScaling, mSpriteShaderProgram);	// cubeの座標を反映
-		SetMatrixUniform("uRotate", SpriteRotate, mSpriteShaderProgram);	// cubeの座標を反映
-
-		glBindTexture(GL_TEXTURE_2D, AtrasTex);
-		glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
-		glBindTexture(AtrasTex, 0);
-	}
-
-	// hello world表示
-	{
-		//glBindTexture(GL_TEXTURE_2D, AtrasTex);
-		//RenderText("hello", glm::vec3(-(float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0.0f), 1.0f);
-	}
 
 	// text 表示
-	{
-		glUseProgram(mTextShaderProgram);
-		glBindVertexArray(mTextVertexArray);
-		DrawText("hello, world!", glm::vec3(0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
-
-		//glm::mat4 SpriteTrans = glm::mat4(1.0f);
-		//SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3(-(float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0));
-
-		//// spriteのscaling matrix
-		//glm::vec3 sprite_scale_vec = glm::vec3((float)AtrasWidth, (float)AtrasHeight, 1.0f);
-		//sprite_scale_vec *= 1.0;
-		//glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
-
-		//// spriteのrotation matrix
-		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI / 4.0f, glm::vec3(0, 0.0f, 1.0f));
-		////glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
-
-		//SetMatrixUniform("uWorldTransform", SpriteTrans, mTextShaderProgram);	// cubeの座標を反映
-		//SetMatrixUniform("uScaling", SpriteScaling, mTextShaderProgram);	// cubeの座標を反映
-		//SetMatrixUniform("uRotate", SpriteRotate, mTextShaderProgram);	// cubeの座標を反映
+	DrawText("hello, world!", glm::vec3(0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
 
 
-
-		////RenderText2("hello, world!", glm::vec3(-(float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0.0f), glm::vec3(1.0f, 0.2f, 1.0f));
-		//RenderText2("hello, world!", glm::vec3(0.0f), glm::vec3(1.0f, 0.2f, 1.0f));
-
+	// 現在のフェーズ表示
+	if (mPhase == PHASE_IDLE) {
+		DrawText("PHASE_IDLE", glm::vec3(-(float)mWindowWidth * 3.0f / 8.0f, (float)mWindowHeight * 3.0f / 8.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
+	}
+	else if (mPhase == PHASE_MOVE) {
+		DrawText("PHASE_MOVE", glm::vec3(-(float)mWindowWidth * 3.0f / 8.0f, (float)mWindowHeight * 3.0f / 8.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
 	}
 
 

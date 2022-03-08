@@ -15,6 +15,7 @@
 #include "Texture.hpp"
 #include "json.hpp"
 #include "ft2build.h"
+#include "Shader.hpp"
 #include FT_FREETYPE_H
 
 
@@ -28,6 +29,13 @@ public:
 	void Shutdown();
 
 private:
+	struct TexChar {
+		GLuint texID;
+		glm::ivec2 Size;
+		glm::ivec2 Bearing;
+		unsigned int Advance;
+	};
+
 	void ProcessInput();
 	void UpdateGame();
 	void Draw();
@@ -36,7 +44,8 @@ private:
 	void ComputeWorldTransform();
 	bool LoadShaders();
 	bool LoadData();
-	void SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale = 1.0f, float rotation = 0.0f);
+	TexChar LoadChar(char c);
+	void SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale = 1.0f, float rotation = 0.0f, float alpha = 1.0f);
 	void RenderText(std::string text, glm::vec3 pos, float scale = 1.0f);
 	void RenderText2(std::string text, glm::vec3 pos, glm::vec3 color, float scale = 1.0f);
 	void DrawText(std::string text, glm::vec3 pos, glm::vec3 color, float scale = 1.0f, float rot = 0.0f);
@@ -60,9 +69,9 @@ private:
 
 	//GLuint mVertexShader;
 	//GLuint mFragShader;
-	GLuint mMeshShaderProgram;
-	GLuint mSpriteShaderProgram;
-	GLuint mTextShaderProgram;
+	Shader* mMeshShaderProgram;
+	Shader* mSpriteShaderProgram;
+	Shader* mTextShaderProgram;
 
 	glm::mat4 mView;
 	glm::mat4 mProjection;
@@ -130,12 +139,7 @@ private:
 	};
 	std::map<char, Character> Characters;
 
-	struct TexChar {
-		GLuint texID;
-		glm::ivec2 Size;
-		glm::ivec2 Bearing;
-		unsigned int Advance;
-	};
+
 	std::map<char, TexChar> mTexChars;
 
 	std::map<std::string, Texture*> mFontMap;
