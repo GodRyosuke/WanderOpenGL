@@ -99,7 +99,9 @@ YGame::YGame()
 	mReComputeWorldTransform(true),
 	mCubeRotation(0.0f),
 	mCubeRotateVel(1),
-	mPhase(PHASE_IDLE)
+	mPhase(PHASE_IDLE),
+	mMoveSpeed(0.1),
+	mMoveSensitivity(100.0f)
 {
 
 }
@@ -196,17 +198,6 @@ bool YGame::Initialize()
 	return true;
 }
 
-static void SetMatrixUniform(std::string uniformName, glm::mat4 mat, GLuint shaderProgram)
-{
-	GLuint loc = glGetUniformLocation(shaderProgram, uniformName.c_str());
-	glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mat));
-}
-
-static void SetVectorUniform(std::string uniformName, glm::vec3 vec, GLuint shaderProgram)
-{
-	GLuint loc = glGetUniformLocation(shaderProgram, uniformName.c_str());
-	glUniform3fv(loc, 1, glm::value_ptr(vec));
-}
 
 static bool CompileShader(std::string filepath, GLenum shaderType, GLuint& shader)
 {
@@ -299,13 +290,6 @@ bool YGame::LoadShaders()
 		}
 	}
 
-	//if (!CreateShaderProgram(spriteVertFile, spriteFragFile, mSpriteShaderProgram)) {
-	//	return false;
-	//}
-
-
-	//SetMatrixUniform("uViewProj", spriteViewProj, mSpriteShaderProgram);
-
 
 	// Text
 	{
@@ -340,21 +324,17 @@ bool YGame::LoadShaders()
 
 	// View Projection行列を設定する
 	// View行列の計算
-	mView = glm::mat4(1.0f);
 	mProjection = glm::mat4(1.0f);
-	mView = glm::translate(mView, glm::vec3(0.0f, 0, 0));
+	//mView = glm::translate(mView, glm::vec3(0.0f, 0, 0));
 	mProjection = glm::perspective(glm::radians(45.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
 	mCubeWorldTrans = glm::mat4(1.0);
 	mCubeWorldTrans = glm::translate(mCubeWorldTrans, glm::vec3(0.0f, 35.0f, 0.0f));
 
 	glm::mat4 view2 = glm::lookAt(
-		glm::vec3(0, 0, 0),
-		glm::vec3(0, 35, 0),
-		glm::vec3(0, 0, 1.0f));
+		mCameraPos,
+		mCameraPos + mCameraOrientation,
+		mCameraUP);
 
-	//mView = CreateLookAt(Eigen::Vector3d::Zero(), Eigen::Vector3d::UnitX(), Eigen::Vector3d::UnitZ());
-	//mProjection = CreatePerspectiveFOV(70 * M_PI / 180,
-	//	mWindowWidth, mWindowHeight, 25.0, 10000.0);
 
 	// Uniform の初期値
 	// Mesh
@@ -363,64 +343,8 @@ bool YGame::LoadShaders()
 	mMeshShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
 
 	
-	//{
-	//{ 2.0f / width, 0.0f, 0.0f, 0.0f },
-	//{ 0.0f, 2.0f / height, 0.0f, 0.0f },
-	//{ 0.0f, 0.0f, 1.0f, 0.0f },
-	//{ 0.0f, 0.0f, 1.0f, 1.0f }
-	//};
-
-	//GLuint loc = glGetUniformLocation(mMeshShaderProgram, "uViewProj");
-	//// Send the matrix data to the uniform
-	//Eigen::Matrix4d viewProj = mView * mProjection;
-	//glUniformMatrix4fv(loc, 1, GL_TRUE, reinterpret_cast<const float*>(viewProj.data()));
-
 	return true;
 }
-
-static void LoadTexture(std::string texFilePath, GLuint& texture, int& tex_w, int& tex_h)
-{
-	// Load from file
-	SDL_Surface* surf = IMG_Load(texFilePath.c_str());
-	if (!surf)
-	{
-		SDL_Log("Failed to load texture file %s", texFilePath.c_str());
-		return;
-	}
-
-	// Create texture from surface
-	//tex = SDL_CreateTextureFromSurface(mCommonData->mRenderer, surf);
-
-	//if (!tex)
-	//{
-	//	SDL_Log("Failed to convert surface to texture for %s", filePath.c_str());
-	//	return false;
-	//}
-	glGenTextures(1, &texture);
-	glActiveTexture(GL_TEXTURE);
-	glBindTexture(GL_TEXTURE_2D, texture);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	//// Configures the way the texture repeats (if it does at all)
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	tex_w = surf->w;
-	tex_h = surf->h;
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surf->pixels);
-	// Generates MipMaps
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	SDL_FreeSurface(surf);
-	glBindTexture(texture, 0);		// unbind
-}
-
 
 
 bool YGame::LoadData()
@@ -576,12 +500,6 @@ bool YGame::LoadData()
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	//glEnableVertexAttribArray(1);
-	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	//glEnableVertexAttribArray(2);
 
 	// unbind cube vertex arrays
 	glBindVertexArray(0);
@@ -599,6 +517,11 @@ bool YGame::LoadData()
 	mDirectionalLight.direction = glm::vec3(0, -0.707, -0.707);
 	mDirectionalLight.diffuseColor = glm::vec3(0.78, 0.88, 1);
 	mDirectionalLight.specColor = glm::vec3(0.8, 0.2, 0.8);
+
+	// Camera Settings
+	mCameraPos = glm::vec3(0.0f);
+	mCameraUP = glm::vec3(0.0f, 0.0f, 1.0f);
+	mCameraOrientation = glm::vec3(0, 1.0f, 0);
 
 
 	// spriteのvertex arrayの設定
@@ -770,7 +693,6 @@ bool YGame::LoadData()
 			exit(-1);
 		}
 
-		//FT_Load_Char(mFontFace, c, FT_LOAD_RENDER);
 		
 		glGenTextures(1, &FontTex);
 		glActiveTexture(GL_TEXTURE);
@@ -851,6 +773,12 @@ YGame::TexChar YGame::LoadChar(char c)
 
 void YGame::ProcessInput()
 {
+	SDL_Point mouse_position = { mWindowWidth / 2, mWindowHeight / 2 };
+	SDL_GetMouseState(&mouse_position.x, &mouse_position.y);
+	mMousePos.x = mouse_position.x;
+	mMousePos.y = mouse_position.y;
+	//printf("%d %d\n", mMousePos.x, mMousePos.y);
+
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
 	{
@@ -865,6 +793,10 @@ void YGame::ProcessInput()
 				//mLastMousePos = mMousePos;
 				//mSwipingDropPos = mMousePos / GRID_SIZE;
 				mPhase = PHASE_MOVE;
+				
+				SDL_WarpMouseInWindow(mWindow, mWindowWidth / 2, mWindowHeight / 2);
+				SDL_ShowCursor(SDL_DISABLE);
+				std::cout << "----------------------------------------------called\n";
 			}
 		}
 		break;
@@ -878,6 +810,7 @@ void YGame::ProcessInput()
 				else {
 					phase = PHASE_IDLE;
 				}*/
+				SDL_ShowCursor(SDL_ENABLE);
 			}
 			break;
 		}
@@ -887,6 +820,19 @@ void YGame::ProcessInput()
 	if (keyState[SDL_SCANCODE_ESCAPE] || keyState[SDL_SCANCODE_Q])	// escapeキーを押下すると終了
 	{
 		mIsRunning = false;
+	}
+
+	if (keyState[SDL_SCANCODE_W]) {	
+		mCameraPos += (float)mMoveSpeed * mCameraOrientation;
+	}
+	if (keyState[SDL_SCANCODE_S]) {
+		mCameraPos -= (float)mMoveSpeed * mCameraOrientation;
+	}
+	if (keyState[SDL_SCANCODE_A]) {
+		mCameraPos -= (float)mMoveSpeed * glm::normalize(glm::cross(mCameraOrientation, mCameraUP));
+	}
+	if (keyState[SDL_SCANCODE_D]) {
+		mCameraPos += (float)mMoveSpeed * glm::normalize(glm::cross(mCameraOrientation, mCameraUP));
 	}
 }
 
@@ -914,17 +860,35 @@ void YGame::UpdateGame()
 	mTicksCount = SDL_GetTicks();
 
 	mCubeRotation = deltaTime * mCubeRotateVel * 10;
-	/*if (deltaTime > 0.015) {
-		mCubeRotation += 0.0001f;
-	}*/
-	//std::string out_str = std::to_string(clock()) + "\t" + std::to_string(mCubeRotation) + "\n";
-	//fprintf(fp, out_str.c_str());
 
-	//std::cout << clock() - last << std::endl;
 	last = clock();
 	ComputeWorldTransform();	// Cubeのtransformを計算
-}
 
+	if (mPhase == PHASE_MOVE) {
+		//printf("%d %d\n", mMousePos.x, mMousePos.y);
+
+		float rotX = mMoveSensitivity * (float)(mMousePos.y - (mWindowHeight / 2.0f)) / mWindowHeight;
+		float rotY = mMoveSensitivity * (float)(mMousePos.x - (mWindowWidth / 2.0f)) / mWindowWidth;
+		printf("rotX: %f rotY: %f\t", rotX, rotY);
+		// Calculates upcoming vertical change in the Orientation
+		glm::vec3 newOrientation = glm::rotate(mCameraOrientation, glm::radians(-rotX), glm::normalize(glm::cross(mCameraOrientation, mCameraUP)));
+
+		// Decides whether or not the next vertical Orientation is legal or not
+		int rad = abs(glm::angle(newOrientation, mCameraUP) - glm::radians(90.0f));
+		std::cout << rad * 180 / M_PI << std::endl;
+		if (abs(glm::angle(newOrientation, mCameraUP) - glm::radians(90.0f)) <= glm::radians(85.0f))
+		{
+			mCameraOrientation = newOrientation;
+		}
+
+		// Rotates the Orientation left and right
+		mCameraOrientation = glm::rotate(mCameraOrientation, glm::radians(-rotY), mCameraUP);
+
+		if ((mMousePos.x != mWindowWidth / 2) || (mMousePos.y != mWindowHeight / 2)) {
+			SDL_WarpMouseInWindow(mWindow, mWindowWidth / 2, mWindowHeight / 2);
+		}
+	}
+}
 
 
 void YGame::SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale, float rotation, float alpha)
@@ -944,7 +908,6 @@ void YGame::SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale, float r
 
 	// Textureのalpha値を設定
 	mSpriteShaderProgram->SetFloatUniform("uSpriteAlpha", alpha);
-	//glUniform1f(glGetUniformLocation(mSpriteShaderProgram, "uSpriteAlpha"), alpha);
 
 	mSpriteShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);	// cubeの座標を反映
 	mSpriteShaderProgram->SetMatrixUniform("uScaling", SpriteScaling);	// cubeの座標を反映
@@ -1152,25 +1115,26 @@ void YGame::Draw()
 
 	// カメラの位置を反映
 	//glm::vec3 camera_pos = glm::vec3(mView[3].x, mView[3].y, mView[3].z);
-	glm::vec3 camera_pos = glm::vec3(0);
-	//SetVectorUniform("uCameraPos", camera_pos, mMeshShaderProgram);
-	mMeshShaderProgram->SetVectorUniform("uCameraPos", camera_pos);
+	//glm::vec3 camera_pos = glm::vec3(0);
+	mMeshShaderProgram->SetVectorUniform("uCameraPos", mCameraPos);
+	//glm::mat4 CameraView = glm::mat4(glm::mat3(glm::lookAt(
+	//	mCameraPos,
+	//	mCameraPos + mCameraOrientation,
+	//	mCameraUP)));
+	glm::mat4 CameraView = glm::lookAt(
+		mCameraPos,
+		mCameraPos + mCameraOrientation,
+		mCameraUP
+	);
+	mMeshShaderProgram->SetMatrixUniform("view", CameraView);
 	// set lighting
 	mMeshShaderProgram->SetVectorUniform("uAmbientLight", mAmbientLightColor);
 	mMeshShaderProgram->SetVectorUniform("uDirLight.mDirection", mDirectionalLight.direction);
 	mMeshShaderProgram->SetVectorUniform("uDirLight.mDiffuseColor", mDirectionalLight.diffuseColor);
 	mMeshShaderProgram->SetVectorUniform("uDirLight.mSpecColorr", mDirectionalLight.specColor);
-	//SetVectorUniform("uAmbientLight", mAmbientLightColor, mMeshShaderProgram);
-	//SetVectorUniform("uDirLight.mDirection", mDirectionalLight.direction, mMeshShaderProgram);
-	//SetVectorUniform("uDirLight.mDiffuseColor", mDirectionalLight.diffuseColor, mMeshShaderProgram);
-	//SetVectorUniform("uDirLight.mSpecColor", mDirectionalLight.specColor, mMeshShaderProgram);
 
 	// cubeのspecular power
 	mMeshShaderProgram->SetFloatUniform("uSpecPower", 100.0f);
-	//{
-	//	GLuint loc = glGetUniformLocation(mMeshShaderProgram, "uSpecPower");
-	//	glUniform1f(loc, 100.0f);
-	//}
 
 	// Gets the location of the uniform
 	//GLuint texUni = glGetUniformLocation(mMeshShaderProgram, "tex0");
@@ -1179,12 +1143,10 @@ void YGame::Draw()
 
 	// bind cube texture
 	mCubeTexture->BindTexture();
-	//glBindTexture(GL_TEXTURE_2D, mCubeTexture);
 
 	// draw
 	glDrawElements(GL_TRIANGLES, mNumCubeIndicies, GL_UNSIGNED_INT, 0);
 	mCubeTexture->UnBindTexture();
-	//glBindTexture(mCubeTexture, 0);
 	glBindVertexArray(0);
 
 
@@ -1195,7 +1157,6 @@ void YGame::Draw()
 	glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
 	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
 
-	//glUseProgram(mSpriteShaderProgram);
 	mSpriteShaderProgram->UseProgram();
 	glBindVertexArray(mSpriteVertexArray);
 	
@@ -1268,7 +1229,7 @@ void YGame::Draw()
 
 
 	// text 表示
-	DrawText("hello, world!", glm::vec3(0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
+	DrawText("hello, world!", glm::vec3(0.0f), glm::vec3(1.0f, 0.3f, 0.2f));
 
 
 	// 現在のフェーズ表示

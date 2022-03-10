@@ -12,6 +12,8 @@
 #include "glm.hpp"
 #include "gtc/matrix_transform.hpp"
 #include "gtc/type_ptr.hpp"
+#include "gtx/rotate_vector.hpp"
+#include "gtx/vector_angle.hpp"
 #include "Texture.hpp"
 #include "json.hpp"
 #include "ft2build.h"
@@ -67,13 +69,14 @@ private:
 	int mWindowWidth;
 	int mWindowHeight;
 
+	glm::ivec3 mMousePos;
+
 	//GLuint mVertexShader;
 	//GLuint mFragShader;
 	Shader* mMeshShaderProgram;
 	Shader* mSpriteShaderProgram;
 	Shader* mTextShaderProgram;
 
-	glm::mat4 mView;
 	glm::mat4 mProjection;
 
 	// lighting
@@ -104,6 +107,13 @@ private:
 	Texture* mTestTexture;
 	int test_w;
 	int test_h;
+
+	// Camera
+	glm::vec3 mCameraPos;
+	glm::vec3 mCameraUP;
+	glm::vec3 mCameraOrientation;
+	float mMoveSpeed;
+	float mMoveSensitivity;
 
 
 	// Sprite Vertices
