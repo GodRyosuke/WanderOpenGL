@@ -3,37 +3,27 @@ C:\Users\kusumoto\source\repos\wander_opengl\dependencies\eigen-3.4.0\Eigen\src\
 C:\Users\kusumoto\source\repos\wander_opengl\dependencies\eigen-3.4.0\Eigen\src\Core\arch\Default\BFloat16.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
 C:\Users\kusumoto\source\repos\wander_opengl\dependencies\eigen-3.4.0\Eigen\src\Core\arch\Default\GenericPacketMathFunctions.h(676,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
 C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(105,1): warning C4305: '初期化中': 'double' から 'float' へ切り詰めます。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(381,31): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
-          with
-          [
-              _Ty=float
-          ]
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(382,31): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
-          with
-          [
-              _Ty=float
-          ]
 C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(383,31): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
           with
           [
               _Ty=float
           ]
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(389,25): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(384,31): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
           with
           [
               _Ty=float
           ]
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(390,25): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(385,31): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
           with
           [
               _Ty=float
           ]
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(397,30): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(391,25): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
           with
           [
               _Ty=float
           ]
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(398,30): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(392,25): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
           with
           [
               _Ty=float
@@ -43,22 +33,32 @@ C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(399,30)
           [
               _Ty=float
           ]
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(476,36): warning C4267: '=': 'size_t' から 'int' に変換しました。データが失われているかもしれません。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(646,31): warning C4018: '<': signed と unsigned の数値を比較しようとしました。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(670,28): warning C4244: '=': 'FT_Pos' から 'float' への変換です。データが失われる可能性があります。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(671,28): warning C4244: '=': 'FT_Pos' から 'float' への変換です。データが失われる可能性があります。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(672,27): warning C4244: '=': 'unsigned int' から 'float' への変換です。データが失われる可能性があります。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(673,27): warning C4244: '=': 'unsigned int' から 'float' への変換です。データが失われる可能性があります。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(674,19): warning C4244: '=': 'FT_Int' から 'float' への変換です。データが失われる可能性があります。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(675,19): warning C4244: '=': 'FT_Int' から 'float' への変換です。データが失われる可能性があります。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(720,12): warning C4101: 'tex': ローカル変数は 1 度も使われていません。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(725,12): warning C4101: 'tex': ローカル変数は 1 度も使われていません。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(768,28): warning C4838: 'FT_Pos' から 'unsigned int' への変換には縮小変換が必要です
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(862,45): warning C4244: '=': 'double' から 'float' への変換です。データが失われる可能性があります。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(877,11): warning C4244: '初期化中': 'float' から 'int' への変換です。データが失われる可能性があります。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(929,25): warning C4267: '初期化中': 'size_t' から 'int' に変換しました。データが失われているかもしれません。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(1088,34): warning C4244: '+=': 'float' から 'int' への変換です。データが失われる可能性があります。
-C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(1099,32): warning C4305: '引数': 'double' から 'GLclampf' へ切り詰めます。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(400,30): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
+          with
+          [
+              _Ty=float
+          ]
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(401,30): warning C4244: '引数': 'double' から '_Ty' への変換です。データが失われる可能性があります。
+          with
+          [
+              _Ty=float
+          ]
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(478,36): warning C4267: '=': 'size_t' から 'int' に変換しました。データが失われているかもしれません。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(648,31): warning C4018: '<': signed と unsigned の数値を比較しようとしました。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(672,28): warning C4244: '=': 'FT_Pos' から 'float' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(673,28): warning C4244: '=': 'FT_Pos' から 'float' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(674,27): warning C4244: '=': 'unsigned int' から 'float' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(675,27): warning C4244: '=': 'unsigned int' から 'float' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(676,19): warning C4244: '=': 'FT_Int' から 'float' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(677,19): warning C4244: '=': 'FT_Int' から 'float' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(722,12): warning C4101: 'tex': ローカル変数は 1 度も使われていません。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(727,12): warning C4101: 'tex': ローカル変数は 1 度も使われていません。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(795,28): warning C4838: 'FT_Pos' から 'unsigned int' への変換には縮小変換が必要です
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(891,45): warning C4244: '=': 'double' から 'float' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(906,11): warning C4244: '初期化中': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(966,25): warning C4267: '初期化中': 'size_t' から 'int' に変換しました。データが失われているかもしれません。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(1125,34): warning C4244: '+=': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\kusumoto\source\repos\wander_opengl\wander_opengl\src\YGame.cpp(1136,32): warning C4305: '引数': 'double' から 'GLclampf' へ切り詰めます。
   wander_opengl.vcxproj -> C:\Users\kusumoto\source\repos\wander_opengl\x64\Debug\wander_opengl.exe
           1 個のファイルをコピーしました。
           1 個のファイルをコピーしました。

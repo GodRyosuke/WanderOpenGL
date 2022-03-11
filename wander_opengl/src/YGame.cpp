@@ -306,7 +306,9 @@ bool YGame::LoadShaders()
 	spriteViewProj[1][1] = 2.0f / (float)mWindowHeight;
 	spriteViewProj[3][2] = 1.0f;
 
+	mSpriteShaderProgram->UseProgram();
 	mSpriteShaderProgram->SetMatrixUniform("uViewProj", spriteViewProj);
+	mTextShaderProgram->UseProgram();
 	mTextShaderProgram->SetMatrixUniform("uViewProj", spriteViewProj);
 
 
@@ -683,32 +685,32 @@ bool YGame::LoadData()
 	}
 
 	{
-		const char* str = "BBC";
-		char c = str[0];
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		//FT_Load_Glyph(mFontFace, FT_Get_Char_Index(mFontFace, str[0]), FT_LOAD_RENDER);
-		if (FT_Load_Char(mFontFace, c, FT_LOAD_RENDER))
-		{
-			std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
-			exit(-1);
-		}
+		//const char* str = "BBC";
+		//char c = str[0];
+		//glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		////FT_Load_Glyph(mFontFace, FT_Get_Char_Index(mFontFace, str[0]), FT_LOAD_RENDER);
+		//if (FT_Load_Char(mFontFace, c, FT_LOAD_RENDER))
+		//{
+		//	std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+		//	exit(-1);
+		//}
 
-		
-		glGenTextures(1, &FontTex);
-		glActiveTexture(GL_TEXTURE);
-		glBindTexture(GL_TEXTURE_2D, FontTex);
+		//
+		//glGenTextures(1, &FontTex);
+		//glActiveTexture(GL_TEXTURE);
+		//glBindTexture(GL_TEXTURE_2D, FontTex);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows,
-			0, GL_RED, GL_UNSIGNED_BYTE, mFontFace->glyph->bitmap.buffer);
-		mFontWidth = mFontFace->glyph->bitmap.width;
-		mFontHeight = mFontFace->glyph->bitmap.rows;
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows,
+		//	0, GL_RED, GL_UNSIGNED_BYTE, mFontFace->glyph->bitmap.buffer);
+		//mFontWidth = mFontFace->glyph->bitmap.width;
+		//mFontHeight = mFontFace->glyph->bitmap.rows;
 
-		glGenerateMipmap(GL_TEXTURE_2D);
-		glBindTexture(FontTex, 0);		// unbind
+		//glGenerateMipmap(GL_TEXTURE_2D);
+		//glBindTexture(FontTex, 0);		// unbind
 	}
 
 
@@ -733,6 +735,31 @@ bool YGame::LoadData()
 		mTexChars.insert(std::make_pair('_', LoadChar('_')));
 		mTexChars.insert(std::make_pair('!', LoadChar('!')));
 		mTexChars.insert(std::make_pair('?', LoadChar('?')));
+	}
+
+	// ì˙ñ{åÍï\é¶
+	{
+		FT_ULong Char = wchar_t(L'ÇÌ');
+		FT_UInt char_index = FT_Get_Char_Index(mFontFace, Char);
+		if (FT_Load_Glyph(mFontFace, char_index, FT_LOAD_RENDER)) {
+			std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+			exit(-1);
+		}
+		glGenTextures(1, &FontTex);
+		glActiveTexture(GL_TEXTURE);
+		glBindTexture(GL_TEXTURE_2D, FontTex);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows,
+			0, GL_RED, GL_UNSIGNED_BYTE, mFontFace->glyph->bitmap.buffer);
+		mFontWidth = mFontFace->glyph->bitmap.width;
+		mFontHeight = mFontFace->glyph->bitmap.rows;
+
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glBindTexture(FontTex, 0);		// unbind
 	}
 
 
@@ -795,6 +822,8 @@ void YGame::ProcessInput()
 				mPhase = PHASE_MOVE;
 				
 				SDL_WarpMouseInWindow(mWindow, mWindowWidth / 2, mWindowHeight / 2);
+				mMousePos.x = mWindowWidth / 2;
+				mMousePos.y = mWindowHeight / 2;
 				SDL_ShowCursor(SDL_DISABLE);
 				std::cout << "----------------------------------------------called\n";
 			}
@@ -893,13 +922,21 @@ void YGame::UpdateGame()
 
 void YGame::SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale, float rotation, float alpha)
 {
+	glm::mat4 spriteViewProj = glm::mat4(1.0f);
+	spriteViewProj[0][0] = 2.0f / (float)mWindowWidth;
+	spriteViewProj[1][1] = 2.0f / (float)mWindowHeight;
+	spriteViewProj[3][2] = 1.0f;
+
+	//mSpriteShaderProgram->UseProgram();
+	mSpriteShaderProgram->SetMatrixUniform("uViewProj", spriteViewProj);
+
 	// Sprite Translation Matrix
 	glm::mat4 SpriteTrans = glm::mat4(1.0f);
 	SpriteTrans = glm::translate(glm::mat4(1.0f), spritePos);
 
 	// spriteÇÃscaling matrix
 	glm::vec3 sprite_scale_vec = glm::vec3((float)tex->getWidth(), (float)tex->getHeight(), 1.0f);
-	sprite_scale_vec *= 0.25;
+	sprite_scale_vec *= scale;
 	glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
 
 	// spriteÇÃrotation matrix
@@ -1162,7 +1199,7 @@ void YGame::Draw()
 	
 	// spriteÇÃï`âÊà íuÇê›íË
 	 //Draw Test Texture
-	SetSpritePos(glm::vec3((float)mWindowWidth / 4.0f, 0, 0), mTestTexture, 0.5f, 0, 0.2f);
+	SetSpritePos(glm::vec3((float)mWindowWidth / 4.0f, 0, 0), mTestTexture, 0.25f, 0.5, 0.2f);
 	mTestTexture->BindTexture();
 	glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
 	mTestTexture->UnBindTexture();
@@ -1179,27 +1216,44 @@ void YGame::Draw()
 
 	// Draw Font
 	{
-	//	// Sprite Translation Matrix
-	//	glm::mat4 SpriteTrans = glm::mat4(1.0f);
-	//	SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3(-(float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0));
+		//mTextShaderProgram->UseProgram();
+		//glBindVertexArray(mTextVertexArray);
 
-	//	// spriteÇÃscaling matrix
-	//	glm::vec3 sprite_scale_vec = glm::vec3((float)mFontWidth, (float)mFontHeight, 1.0f);
-	//	sprite_scale_vec *= 1.0;
-	//	glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
+		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0.0f, 1.0f));
+		////glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
 
-	//	// spriteÇÃrotation matrix
-	//	glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1.0f));
-	//	//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+		////SetMatrixUniform("uWorldTransform", SpriteTrans, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+		//mTextShaderProgram->SetMatrixUniform("uWorldTransform", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f)));
+		////SetMatrixUniform("uScaling", SpriteScaling, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+		////SetMatrixUniform("uRotate", SpriteRotate, mTextShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+		//mTextShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);
 
-	//	SetMatrixUniform("uWorldTransform", SpriteTrans, mSpriteShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
-	//	SetMatrixUniform("uScaling", SpriteScaling, mSpriteShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
-	//	SetMatrixUniform("uRotate", SpriteRotate, mSpriteShaderProgram);	// cubeÇÃç¿ïWÇîΩâf
+		////glUniform3f(glGetUniformLocation(mTextShaderProgram, "textColor"), color.x, color.y, color.z);
+		//mTextShaderProgram->SetVectorUniform("textColor", glm::vec3(0.2f, 1.0f, 0.2f));
+		//glActiveTexture(GL_TEXTURE0);
 
-	//	glBindTexture(GL_TEXTURE_2D, FontTex);
-	//	glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
-	//	glBindTexture(FontTex, 0);
-	//}
+		// Sprite Translation Matrix
+		mSpriteShaderProgram->UseProgram();
+		glm::mat4 SpriteTrans = glm::mat4(1.0f);
+		SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3(-(float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0));
+
+		// spriteÇÃscaling matrix
+		glm::vec3 sprite_scale_vec = glm::vec3((float)mFontWidth, (float)mFontHeight, 1.0f);
+		sprite_scale_vec *= 1.0;
+		glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
+
+		// spriteÇÃrotation matrix
+		glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1.0f));
+		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+
+		mSpriteShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);	// cubeÇÃç¿ïWÇîΩâf
+		mSpriteShaderProgram->SetMatrixUniform("uScaling", SpriteScaling);	// cubeÇÃç¿ïWÇîΩâf
+		mSpriteShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);	// cubeÇÃç¿ïWÇîΩâf
+
+		glBindTexture(GL_TEXTURE_2D, FontTex);
+		//glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+		glBindTexture(FontTex, 0);
+	}
 
 	//// Draw AtrasTexture
 	//{
@@ -1225,7 +1279,7 @@ void YGame::Draw()
 	//	glBindTexture(GL_TEXTURE_2D, AtrasTex);
 	//	glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
 	//	glBindTexture(AtrasTex, 0);
-	}
+	//}
 
 
 	// text ï\é¶
