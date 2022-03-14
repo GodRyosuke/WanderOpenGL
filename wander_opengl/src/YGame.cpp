@@ -354,11 +354,11 @@ bool YGame::LoadShaders()
 	return true;
 }
 
-
-bool YGame::LoadData()
+static bool LoadObjFile(std::string FilePath, std::vector<float>& vertices,
+	std::vector<int>& indices)
 {
 	// obj fileを読みだす
-	FILE* file = fopen(".\\resources\\cube2.obj", "r");
+	FILE* file = fopen(FilePath.c_str(), "r");
 	if (file == NULL) {
 		printf("error: failed to open mesh file\n");
 		return false;
@@ -479,40 +479,98 @@ bool YGame::LoadData()
 		newVertices.push_back(CubeUV[uvI + 1]);
 	}
 
+	vertices = newVertices;
+	indices = newIndex;
 
-	//mNumCubeIndicies = CubeVertexI.size();
-	mNumCubeIndicies = newIndex.size();
+	return true;
+}
+
+bool YGame::LoadData()
+{
+	{
+		std::string filepath = "./resources/cube2.obj";
+		std::vector<float> cubeVert;
+		std::vector<int> cubeIndex;
+		LoadObjFile(filepath, cubeVert, cubeIndex);
+
+		mNumCubeIndicies = cubeIndex.size();
 
 
-	// Cubeのvertex arrayを設定
-	mMeshShaderProgram->UseProgram();
-	glGenVertexArrays(1, &mCubeVertexArray);
-	glBindVertexArray(mCubeVertexArray);
+		// Cubeのvertex arrayを設定
+		mMeshShaderProgram->UseProgram();
+		glGenVertexArrays(1, &mCubeVertexArray);
+		glBindVertexArray(mCubeVertexArray);
 
-	glGenBuffers(1, &mCubeVertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, mCubeVertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, newVertices.size() * sizeof(float), newVertices.data(), GL_STATIC_DRAW);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		glGenBuffers(1, &mCubeVertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, mCubeVertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, cubeVert.size() * sizeof(float), cubeVert.data(), GL_STATIC_DRAW);
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glGenBuffers(1, &mCubeIndexBuffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mCubeIndexBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, newIndex.size() * sizeof(int), newIndex.data(), GL_STATIC_DRAW);
+		glGenBuffers(1, &mCubeIndexBuffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mCubeIndexBuffer);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, cubeIndex.size() * sizeof(int), cubeIndex.data(), GL_STATIC_DRAW);
 
-	// link attribution
-	glBindBuffer(GL_ARRAY_BUFFER, mCubeVertexBuffer);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	//glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
+		// link attribution
+		glBindBuffer(GL_ARRAY_BUFFER, mCubeVertexBuffer);
+		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		//glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(2);
 
-	// unbind cube vertex arrays
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		// unbind cube vertex arrays
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+
+	}
+
+	{
+		std::string filepath = "./resources/sphare.obj";
+		std::vector<float> cubeVert;
+		std::vector<int> cubeIndex;
+		LoadObjFile(filepath, cubeVert, cubeIndex);
+
+		mNumSphareIndicies = cubeIndex.size();
+
+
+		// Sphareのvertex arrayを設定
+		mMeshShaderProgram->UseProgram();
+		glGenVertexArrays(1, &mSphareVertexArray);
+		glBindVertexArray(mSphareVertexArray);
+
+		glGenBuffers(1, &mSphareVertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, mSphareVertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, cubeVert.size() * sizeof(float), cubeVert.data(), GL_STATIC_DRAW);
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		glGenBuffers(1, &mSphareIndexBuffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mSphareIndexBuffer);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, cubeIndex.size() * sizeof(int), cubeIndex.data(), GL_STATIC_DRAW);
+
+		// link attribution
+		glBindBuffer(GL_ARRAY_BUFFER, mSphareVertexBuffer);
+		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		//glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+
+		// unbind cube vertex arrays
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+
+	}
+
 
 
 	// CubeのTextureを設定
@@ -525,6 +583,13 @@ bool YGame::LoadData()
 	mDirectionalLight.direction = glm::vec3(0, -0.707, -0.707);
 	mDirectionalLight.diffuseColor = glm::vec3(0.78, 0.88, 1);
 	mDirectionalLight.specColor = glm::vec3(0.8, 0.2, 0.8);
+
+	mMeshShaderProgram->SetVectorUniform("uAmbientLight", mAmbientLightColor);
+	mMeshShaderProgram->SetVectorUniform("uDirLight.mDirection", mDirectionalLight.direction);
+	mMeshShaderProgram->SetVectorUniform("uDirLight.mDiffuseColor", mDirectionalLight.diffuseColor);
+	mMeshShaderProgram->SetVectorUniform("uDirLight.mSpecColorr", mDirectionalLight.specColor);
+
+
 
 	// Camera Settings
 	mCameraPos = glm::vec3(0.0f);
@@ -1367,15 +1432,8 @@ void YGame::Draw()
 
 	// draw meshes
 	mMeshShaderProgram->UseProgram();
-	// bindcube vertex array
-	glBindVertexArray(mCubeVertexArray);
 
-	mMeshShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
-	//SetMatrixUniform("model", mCubeWorldTrans, mMeshShaderProgram);	// cubeの座標を反映
-
-	// カメラの位置を反映
-	//glm::vec3 camera_pos = glm::vec3(mView[3].x, mView[3].y, mView[3].z);
-	//glm::vec3 camera_pos = glm::vec3(0);
+	// カメラの位置情報を設定
 	mMeshShaderProgram->SetVectorUniform("uCameraPos", mCameraPos);
 	//glm::mat4 CameraView = glm::mat4(glm::mat3(glm::lookAt(
 	//	mCameraPos,
@@ -1387,14 +1445,39 @@ void YGame::Draw()
 		mCameraUP
 	);
 	mMeshShaderProgram->SetMatrixUniform("view", CameraView);
-	// set lighting
-	mMeshShaderProgram->SetVectorUniform("uAmbientLight", mAmbientLightColor);
-	mMeshShaderProgram->SetVectorUniform("uDirLight.mDirection", mDirectionalLight.direction);
-	mMeshShaderProgram->SetVectorUniform("uDirLight.mDiffuseColor", mDirectionalLight.diffuseColor);
-	mMeshShaderProgram->SetVectorUniform("uDirLight.mSpecColorr", mDirectionalLight.specColor);
 
-	// cubeのspecular power
+	// bindcube vertex array
+
+	// cubeを描画
+	glBindVertexArray(mCubeVertexArray);
+	mMeshShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
 	mMeshShaderProgram->SetFloatUniform("uSpecPower", 100.0f);
+	mCubeTexture->BindTexture();
+	//glDrawElements(GL_TRIANGLES, mNumCubeIndicies, GL_UNSIGNED_INT, 0);
+	mCubeTexture->UnBindTexture();
+	glBindVertexArray(0);
+
+	// sphareを描画
+	{
+		mMeshShaderProgram->UseProgram();
+		glBindVertexArray(mSphareVertexArray);
+		glm::mat4 sphareTrans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 35.0f, 0.0f));
+		mMeshShaderProgram->SetMatrixUniform("model", sphareTrans);
+		mMeshShaderProgram->SetFloatUniform("uSpecPower", 100.0f);
+		mCubeTexture->BindTexture();
+		glDrawElements(GL_TRIANGLES, mNumSphareIndicies, GL_UNSIGNED_INT, 0);
+		mCubeTexture->UnBindTexture();
+		glBindVertexArray(0);
+	}
+
+
+
+	// カメラの位置を反映
+	//glm::vec3 camera_pos = glm::vec3(mView[3].x, mView[3].y, mView[3].z);
+	//glm::vec3 camera_pos = glm::vec3(0);
+
+	// set lighting
+	// cubeのspecular power
 
 	// Gets the location of the uniform
 	//GLuint texUni = glGetUniformLocation(mMeshShaderProgram, "tex0");
@@ -1402,12 +1485,8 @@ void YGame::Draw()
 	//glUniform1i(texUni, 0);
 
 	// bind cube texture
-	mCubeTexture->BindTexture();
 
 	// draw
-	glDrawElements(GL_TRIANGLES, mNumCubeIndicies, GL_UNSIGNED_INT, 0);
-	mCubeTexture->UnBindTexture();
-	glBindVertexArray(0);
 
 
 	// --- draw sprites ---

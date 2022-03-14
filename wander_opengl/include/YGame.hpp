@@ -46,6 +46,7 @@ private:
 	void ComputeWorldTransform();
 	bool LoadShaders();
 	bool LoadData();
+
 	TexChar LoadChar(char c);
 	TexChar LoadUTFChar(char16_t c);
 	void SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale = 1.0f, float rotation = 0.0f, float alpha = 1.0f);
@@ -106,6 +107,13 @@ private:
 	unsigned int mCubeVertexBuffer;
 	unsigned int mCubeIndexBuffer;
 	int mNumCubeIndicies;
+
+	unsigned int mSphareVertexArray;
+	unsigned int mSphareVertexBuffer;
+	unsigned int mSphareIndexBuffer;
+	int mNumSphareIndicies;
+
+
 	Texture* mCubeTexture;
 	Texture* mTestTexture;
 	int test_w;
