@@ -18,5 +18,8 @@
             "ja":"エンターキーを押してゲーム開始！",
             "en": "Press The Enter Key to Start!"
         }
+    },
+    "WanderOpenGL": {
+        "test":"あいうえお"
     }
 }

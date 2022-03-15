@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS
+ï»¿#define _CRT_SECURE_NO_WARNINGS
 
 #include "YGame.hpp"
 #include <time.h>
@@ -63,7 +63,7 @@ static float SpriteVertices[] =
 };
 
 
-// uv : teture‚Ì‚¤‚¿A‚Ç‚Ì—Ìˆæ‚ğg‚¤‚©H‚ğw’è
+// uv : tetureã®ã†ã¡ã€ã©ã®é ˜åŸŸã‚’ä½¿ã†ã‹ï¼Ÿã‚’æŒ‡å®š
 //static float SpriteVertices[] =
 //{ //     COORDINATES     /        COLORS      /   TexCoord  //
 //	-0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 0.f, // top left
@@ -168,13 +168,19 @@ bool YGame::Initialize()
 		return false;
 	}
 
+	setlocale(LC_CTYPE, "");
+
 	// FREE TYPE
 	FT_Library library;
 	//FT_Face face;
 	FT_GlyphSlot slot;
 	// Load Font
 	FT_Init_FreeType(&library);
-	FT_New_Face(library, ".\\resources\\Carlito-Regular.ttf", 0, &mFontFace);
+	//FT_New_Face(library, ".\\resources\\Carlito-Regular.ttf", 0, &mFontFace);
+	FT_New_Face(library, ".\\resources\\arialuni.ttf", 0, &mFontFace);
+	FT_Select_Charmap(mFontFace, ft_encoding_unicode);
+	//FT_Select_Charmap(mFontFace, ft_encoding_sjis);
+	//FT_Select_Charmapï¼ˆm_faceã€FT_ENCODING_UNICODEï¼‰;
 	FT_Set_Pixel_Sizes(mFontFace, 0, 48);
 	slot = mFontFace->glyph;
 
@@ -253,6 +259,7 @@ static bool CreateShaderProgram(std::string vertFilePath, std::string fragFilePa
 		return false;
 	}
 
+	// 
 	// Now create a shader program that
 	// links together the vertex/frag shaders
 	shaderProgram = glCreateProgram();
@@ -324,8 +331,8 @@ bool YGame::LoadShaders()
 
 
 
-	// View Projections—ñ‚ğİ’è‚·‚é
-	// Views—ñ‚ÌŒvZ
+	// View Projectionè¡Œåˆ—ã‚’è¨­å®šã™ã‚‹
+	// Viewè¡Œåˆ—ã®è¨ˆç®—
 	mProjection = glm::mat4(1.0f);
 	//mView = glm::translate(mView, glm::vec3(0.0f, 0, 0));
 	mProjection = glm::perspective(glm::radians(45.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
@@ -338,7 +345,7 @@ bool YGame::LoadShaders()
 		mCameraUP);
 
 
-	// Uniform ‚Ì‰Šú’l
+	// Uniform ã®åˆæœŸå€¤
 	// Mesh
 	mMeshShaderProgram->SetMatrixUniform("view", view2);
 	mMeshShaderProgram->SetMatrixUniform("proj", mProjection);
@@ -348,11 +355,11 @@ bool YGame::LoadShaders()
 	return true;
 }
 
-
-bool YGame::LoadData()
+static bool LoadObjFile(std::string FilePath, std::vector<float>& vertices,
+	std::vector<int>& indices)
 {
-	// obj file‚ğ“Ç‚İ‚¾‚·
-	FILE* file = fopen(".\\resources\\cube2.obj", "r");
+	// obj fileã‚’èª­ã¿ã ã™
+	FILE* file = fopen(FilePath.c_str(), "r");
 	if (file == NULL) {
 		printf("error: failed to open mesh file\n");
 		return false;
@@ -365,12 +372,12 @@ bool YGame::LoadData()
 	std::vector<int>CubeUVI;
 	std::vector<int>CubeNormalI;
 	std::vector<glm::ivec3>FaceVec;
-	std::vector<glm::ivec3>RFaceVec(0);		// d•¡‚µ‚½index‚ªœ‹‚³‚ê‚½”z—ñ
+	std::vector<glm::ivec3>RFaceVec(0);		// é‡è¤‡ã—ãŸindexãŒé™¤å»ã•ã‚ŒãŸé…åˆ—
 
 	while (1) {
 
 		char lineHeader[128];
-		// s‚ÌÅ‰‚Ì•¶š—ñ‚ğ“Ç‚İ‚İ‚Ü‚·B
+		// è¡Œã®æœ€åˆã®æ–‡å­—åˆ—ã‚’èª­ã¿è¾¼ã¿ã¾ã™ã€‚
 		int res = fscanf(file, "%s", lineHeader);
 		if (res == EOF)
 			break;
@@ -428,8 +435,8 @@ bool YGame::LoadData()
 		}
 	}
 
-	// ƒf[ƒ^\‘¢‚ğ•ÏX‚·‚éˆ—
-	// FaceVec‚Ìd•¡index‚ğ”rœ
+	// ãƒ‡ãƒ¼ã‚¿æ§‹é€ ã‚’å¤‰æ›´ã™ã‚‹å‡¦ç†
+	// FaceVecã®é‡è¤‡indexã‚’æ’é™¤
 	for (int i = 0; i < FaceVec.size(); i++) {
 		bool IsHaving = false;
 		for (int j = 0; j < RFaceVec.size(); j++) {
@@ -442,7 +449,7 @@ bool YGame::LoadData()
 		}
 	}
 
-	// Šeindex‚É‘Î‰‚·‚éV‚µ‚¢indexì¬
+	// å„indexã«å¯¾å¿œã™ã‚‹æ–°ã—ã„indexä½œæˆ
 	std::map<glm::ivec3, int> vec_i_map;
 	std::vector<int> newIndex;
 	for (int i = 0; i < FaceVec.size(); i++) {
@@ -456,7 +463,7 @@ bool YGame::LoadData()
 		newIndex.push_back(Idx);
 	}
 
-	// RFaceVec‚É‘Î‰‚·‚é verticesì¬
+	// RFaceVecã«å¯¾å¿œã™ã‚‹ verticesä½œæˆ
 	std::vector<float>newVertices;
 	for (int i = 0; i < RFaceVec.size(); i++) {
 		glm::ivec3 this_vec = RFaceVec[i];
@@ -473,52 +480,117 @@ bool YGame::LoadData()
 		newVertices.push_back(CubeUV[uvI + 1]);
 	}
 
+	vertices = newVertices;
+	indices = newIndex;
 
-	//mNumCubeIndicies = CubeVertexI.size();
-	mNumCubeIndicies = newIndex.size();
+	return true;
+}
 
+bool YGame::LoadData()
+{
+	{
+		std::string filepath = "./resources/cube2.obj";
+		std::vector<float> cubeVert;
+		std::vector<int> cubeIndex;
+		LoadObjFile(filepath, cubeVert, cubeIndex);
 
-	// Cube‚Ìvertex array‚ğİ’è
-	mMeshShaderProgram->UseProgram();
-	glGenVertexArrays(1, &mCubeVertexArray);
-	glBindVertexArray(mCubeVertexArray);
-
-	glGenBuffers(1, &mCubeVertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, mCubeVertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, newVertices.size() * sizeof(float), newVertices.data(), GL_STATIC_DRAW);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glGenBuffers(1, &mCubeIndexBuffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mCubeIndexBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, newIndex.size() * sizeof(int), newIndex.data(), GL_STATIC_DRAW);
-
-	// link attribution
-	glBindBuffer(GL_ARRAY_BUFFER, mCubeVertexBuffer);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	//glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	// unbind cube vertex arrays
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		mNumCubeIndicies = cubeIndex.size();
 
 
-	// Cube‚ÌTexture‚ğİ’è
-	// texture‚ğ“Ç‚İ‚¾‚·B
+		// Cubeã®vertex arrayã‚’è¨­å®š
+		mMeshShaderProgram->UseProgram();
+		glGenVertexArrays(1, &mCubeVertexArray);
+		glBindVertexArray(mCubeVertexArray);
+
+		glGenBuffers(1, &mCubeVertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, mCubeVertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, cubeVert.size() * sizeof(float), cubeVert.data(), GL_STATIC_DRAW);
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		glGenBuffers(1, &mCubeIndexBuffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mCubeIndexBuffer);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, cubeIndex.size() * sizeof(int), cubeIndex.data(), GL_STATIC_DRAW);
+
+		// link attribution
+		glBindBuffer(GL_ARRAY_BUFFER, mCubeVertexBuffer);
+		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		//glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+
+		// unbind cube vertex arrays
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+
+	}
+
+	{
+		std::string filepath = "./resources/sphare.obj";
+		std::vector<float> cubeVert;
+		std::vector<int> cubeIndex;
+		LoadObjFile(filepath, cubeVert, cubeIndex);
+
+		mNumSphareIndicies = cubeIndex.size();
+
+
+		// Sphareã®vertex arrayã‚’è¨­å®š
+		mMeshShaderProgram->UseProgram();
+		glGenVertexArrays(1, &mSphareVertexArray);
+		glBindVertexArray(mSphareVertexArray);
+
+		glGenBuffers(1, &mSphareVertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, mSphareVertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, cubeVert.size() * sizeof(float), cubeVert.data(), GL_STATIC_DRAW);
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		glGenBuffers(1, &mSphareIndexBuffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mSphareIndexBuffer);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, cubeIndex.size() * sizeof(int), cubeIndex.data(), GL_STATIC_DRAW);
+
+		// link attribution
+		glBindBuffer(GL_ARRAY_BUFFER, mSphareVertexBuffer);
+		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		//glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+
+		// unbind cube vertex arrays
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+
+	}
+
+
+
+	// Cubeã®Textureã‚’è¨­å®š
+	// textureã‚’èª­ã¿ã ã™ã€‚
 	mCubeTexture = new Texture(".\\resources\\brick.png");
 	//LoadTexture(".\\resources\\brick.png", mCubeTexture, cube_w, cube_h);
 
-	// lighting‚Ìİ’è
+	// lightingã®è¨­å®š
 	mAmbientLightColor = glm::vec3(0.5, 0.5, 0.5);
 	mDirectionalLight.direction = glm::vec3(0, -0.707, -0.707);
 	mDirectionalLight.diffuseColor = glm::vec3(0.78, 0.88, 1);
 	mDirectionalLight.specColor = glm::vec3(0.8, 0.2, 0.8);
+
+	mMeshShaderProgram->SetVectorUniform("uAmbientLight", mAmbientLightColor);
+	mMeshShaderProgram->SetVectorUniform("uDirLight.mDirection", mDirectionalLight.direction);
+	mMeshShaderProgram->SetVectorUniform("uDirLight.mDiffuseColor", mDirectionalLight.diffuseColor);
+	mMeshShaderProgram->SetVectorUniform("uDirLight.mSpecColorr", mDirectionalLight.specColor);
+
+
 
 	// Camera Settings
 	mCameraPos = glm::vec3(0.0f);
@@ -526,7 +598,7 @@ bool YGame::LoadData()
 	mCameraOrientation = glm::vec3(0, 1.0f, 0);
 
 
-	// sprite‚Ìvertex array‚Ìİ’è
+	// spriteã®vertex arrayã®è¨­å®š
 	mSpriteShaderProgram->UseProgram();
 	glGenVertexArrays(1, &mSpriteVertexArray);
 	glBindVertexArray(mSpriteVertexArray);
@@ -571,21 +643,39 @@ bool YGame::LoadData()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	
+	// Load Atras Vertex Array
+	mTextShaderProgram->UseProgram();
+	glGenVertexArrays(1, &mAtrasVertexArray);
+	glBindVertexArray(mAtrasVertexArray);
+
+	glGenBuffers(1, &mAtrasVertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, mAtrasVertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	
 	//mTestTexture = new Texture(".\\resources\\forest23.jpg");
 	mTestTexture = new Texture(".\\resources\\test_picture.png");
 	//LoadTexture(".\\resources\\test_picture.png", mTestTexture, test_w, test_h);
 
 
 
-	// Font ‚Ì“Ç‚İo‚µ
+	// Font ã®èª­ã¿å‡ºã—
 	//mFont = TTF_OpenFont(".\\resources\\Carlito-Regular.ttf", 128);
 	mFont = TTF_OpenFont(".\\resources\\VL-Gothic-Regular.ttf", 128);
-	// •¶š—ñ‚Ætexture‚Ìmapì¬
+	// æ–‡å­—åˆ—ã¨textureã®mapä½œæˆ
 	int font_color[] = {
 		0x00, 0xdd, 0xdd, 255
 	};
 
-	// •¶š—ñ‚ğæ‚èo‚·
+	// æ–‡å­—åˆ—ã‚’å–ã‚Šå‡ºã™
 	 {
 	 	std::string filePath = ".\\resources\\text_data.json";
 	 	std::ifstream ifs(filePath.c_str());
@@ -615,11 +705,11 @@ bool YGame::LoadData()
 	}
 
 
-	// Atras Texture‚ğ¶¬
+	// Atras Textureã‚’ç”Ÿæˆ
 	{
 		std::string hello_str = "hello, world!";
 
-		// ¶¬‚·‚é•K—v‚Ì‚ ‚é•¶š‚ğ“±o
+		// ç”Ÿæˆã™ã‚‹å¿…è¦ã®ã‚ã‚‹æ–‡å­—ã‚’å°å‡º
 		std::string create_str;
 		for (int i = 0; i < hello_str.length(); i++) {
 			char c = hello_str[i];
@@ -635,8 +725,8 @@ bool YGame::LoadData()
 			}
 		}
 
-		// Atras Texture‚Ì˜g‚ğ¶¬
-		// Atras Texture‚Ì‘å‚«‚³‚ğ“±o
+		// Atras Textureã®æ ã‚’ç”Ÿæˆ
+		// Atras Textureã®å¤§ãã•ã‚’å°å‡º
 		for (int i = 0; i < create_str.length(); i++) {
 			char c = create_str[i];
 			if (FT_Load_Char(mFontFace, c, FT_LOAD_RENDER))
@@ -647,7 +737,7 @@ bool YGame::LoadData()
 			AtrasWidth += mFontFace->glyph->bitmap.width;
 			AtrasHeight = (AtrasHeight < mFontFace->glyph->bitmap.rows) ? mFontFace->glyph->bitmap.rows : AtrasHeight;
 		}
-		// Texture ¶¬
+		// Texture ç”Ÿæˆ
 		glActiveTexture(GL_TEXTURE0);
 		glGenTextures(1, &AtrasTex);
 		glBindTexture(GL_TEXTURE_2D, AtrasTex);
@@ -656,7 +746,7 @@ bool YGame::LoadData()
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, AtrasWidth, AtrasHeight, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
 
 
-		// Atras Texture‚É•¶šƒf[ƒ^‚ğ‘‚«‚ñ‚Å‚¢‚­
+		// Atras Textureã«æ–‡å­—ãƒ‡ãƒ¼ã‚¿ã‚’æ›¸ãè¾¼ã‚“ã§ã„ã
 		int x = 0;
 		for (int i = 0; i < create_str.length(); i++) {
 			char c = create_str[i];
@@ -716,14 +806,14 @@ bool YGame::LoadData()
 
 	// Load Text Data
 	{
-		// ƒAƒ‹ƒtƒ@ƒxƒbƒg‚·‚×‚Ä“Ç‚İ‚Ş
+		// ã‚¢ãƒ«ãƒ•ã‚¡ãƒ™ãƒƒãƒˆã™ã¹ã¦èª­ã¿è¾¼ã‚€
 		for (char c = 'a'; c <= 'z'; c++) {
-			{	// ¬•¶š
+			{	// å°æ–‡å­—
 				GLuint tex;
 				TexChar ch = LoadChar(c);
 				mTexChars.insert(std::make_pair(c, ch));
 			} 
-			{	// ‘å•¶š
+			{	// å¤§æ–‡å­—
 				GLuint tex;
 				char c2 = (char)(c - 'a' + 'A');
 				TexChar ch = LoadChar(c2);
@@ -737,9 +827,11 @@ bool YGame::LoadData()
 		mTexChars.insert(std::make_pair('?', LoadChar('?')));
 	}
 
-	// “ú–{Œê•\¦
+	// æ—¥æœ¬èªè¡¨ç¤º
 	{
-		FT_ULong Char = wchar_t(L'‚í');
+		std::string str;
+		mTextData["WanderOpenGL"]["test"].get_to(str);
+		FT_ULong Char = wchar_t(str.c_str());
 		FT_UInt char_index = FT_Get_Char_Index(mFontFace, Char);
 		if (FT_Load_Glyph(mFontFace, char_index, FT_LOAD_RENDER)) {
 			std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
@@ -761,6 +853,57 @@ bool YGame::LoadData()
 		glGenerateMipmap(GL_TEXTURE_2D);
 		glBindTexture(FontTex, 0);		// unbind
 	}
+
+	// æ—¥æœ¬èªæ–‡å­—åˆ—texturesä½œæˆ
+	{
+		std::u16string u16str = u"ã‚ã„ã†ãˆãŠ";
+		//u16str << "abc";
+		//char16_t str[] = u"ã‚ã„ã†ãˆãŠ";
+		const char16_t str[] = u"æ¥ æœ¬å´šä»‹";
+		//const char16_t* str = u16str.c_str();
+		//std::string str;
+		//mTextData["WanderOpenGL"]["test"].get_to(str);
+
+		for (int i = 0; str[i] != '\0'; i++) {
+			//if (FT_Load_Glyph(mFontFace, FT_Get_Char_Index(mFontFace, str[i]), FT_LOAD_RENDER)) {
+			//	std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+			//	exit(-1);
+			//}
+			//GLuint tex;
+			//glGenTextures(1, &tex);
+			//glActiveTexture(GL_TEXTURE);
+			//glBindTexture(GL_TEXTURE_2D, tex);
+			//glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+
+			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			//glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows,
+			//	0, GL_RED, GL_UNSIGNED_BYTE, mFontFace->glyph->bitmap.buffer);
+			//mFontWidth = mFontFace->glyph->bitmap.width;
+			//mFontHeight = mFontFace->glyph->bitmap.rows;
+
+			//TexChar	 tc = {
+			//	tex,
+			//	glm::ivec2(mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows),
+			//	glm::ivec2(mFontFace->glyph->bitmap_left, mFontFace->glyph->bitmap_top),
+			//	mFontFace->glyph->advance.x
+			//};
+
+			//glGenerateMipmap(GL_TEXTURE_2D);
+			//glBindTexture(tex, 0);		// unbind
+
+			TexChar tc = LoadUTFChar(str[i]);
+
+			mJapanTexVec.push_back(tc);
+			mJapanTexChars.insert(std::make_pair(str[i], tc));
+			//mTextStr.push_back(tex);
+		}
+	}
+	//char16_t si[] = u"ã‚ã„ã†ãˆãŠ";
+
 
 
 	return true;
@@ -798,6 +941,41 @@ YGame::TexChar YGame::LoadChar(char c)
 	return tc;
 }
 
+YGame::TexChar YGame::LoadUTFChar(char16_t c)
+{
+	if (FT_Load_Glyph(mFontFace, FT_Get_Char_Index(mFontFace, c), FT_LOAD_RENDER)) {
+		std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+		exit(-1);
+	}
+	GLuint tex;
+	glGenTextures(1, &tex);
+	glActiveTexture(GL_TEXTURE);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows,
+		0, GL_RED, GL_UNSIGNED_BYTE, mFontFace->glyph->bitmap.buffer);
+	mFontWidth = mFontFace->glyph->bitmap.width;
+	mFontHeight = mFontFace->glyph->bitmap.rows;
+
+	TexChar	 tc = {
+		tex,
+		glm::ivec2(mFontFace->glyph->bitmap.width, mFontFace->glyph->bitmap.rows),
+		glm::ivec2(mFontFace->glyph->bitmap_left, mFontFace->glyph->bitmap_top),
+		mFontFace->glyph->advance.x
+	};
+
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(tex, 0);		// unbind
+
+	return tc;
+}
+
 void YGame::ProcessInput()
 {
 	SDL_Point mouse_position = { mWindowWidth / 2, mWindowHeight / 2 };
@@ -814,7 +992,7 @@ void YGame::ProcessInput()
 		case SDL_QUIT:
 			mIsRunning = false;
 			break;
-		case SDL_MOUSEBUTTONDOWN:	// ƒ}ƒEƒX‚Ìƒ{ƒ^ƒ“‚ª‰Ÿ‚³‚ê‚½‚ç
+		case SDL_MOUSEBUTTONDOWN:	// ãƒã‚¦ã‚¹ã®ãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚ŒãŸã‚‰
 		{
 			if (mPhase == PHASE_IDLE) {
 				//mLastMousePos = mMousePos;
@@ -829,7 +1007,7 @@ void YGame::ProcessInput()
 			}
 		}
 		break;
-		case SDL_MOUSEBUTTONUP:		// ƒ}ƒEƒX‚ğ—£‚µ‚½‚ç
+		case SDL_MOUSEBUTTONUP:		// ãƒã‚¦ã‚¹ã‚’é›¢ã—ãŸã‚‰
 			if (mPhase == PHASE_MOVE) {
 				mPhase = PHASE_IDLE;
 
@@ -846,7 +1024,7 @@ void YGame::ProcessInput()
 	}
 
 	const Uint8* keyState = SDL_GetKeyboardState(NULL);
-	if (keyState[SDL_SCANCODE_ESCAPE] || keyState[SDL_SCANCODE_Q])	// escapeƒL[‚ğ‰Ÿ‰º‚·‚é‚ÆI—¹
+	if (keyState[SDL_SCANCODE_ESCAPE] || keyState[SDL_SCANCODE_Q])	// escapeã‚­ãƒ¼ã‚’æŠ¼ä¸‹ã™ã‚‹ã¨çµ‚äº†
 	{
 		mIsRunning = false;
 	}
@@ -891,7 +1069,7 @@ void YGame::UpdateGame()
 	mCubeRotation = deltaTime * mCubeRotateVel * 10;
 
 	last = clock();
-	ComputeWorldTransform();	// Cube‚Ìtransform‚ğŒvZ
+	ComputeWorldTransform();	// Cubeã®transformã‚’è¨ˆç®—
 
 	if (mPhase == PHASE_MOVE) {
 		//printf("%d %d\n", mMousePos.x, mMousePos.y);
@@ -934,21 +1112,21 @@ void YGame::SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale, float r
 	glm::mat4 SpriteTrans = glm::mat4(1.0f);
 	SpriteTrans = glm::translate(glm::mat4(1.0f), spritePos);
 
-	// sprite‚Ìscaling matrix
+	// spriteã®scaling matrix
 	glm::vec3 sprite_scale_vec = glm::vec3((float)tex->getWidth(), (float)tex->getHeight(), 1.0f);
 	sprite_scale_vec *= scale;
 	glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
 
-	// sprite‚Ìrotation matrix
+	// spriteã®rotation matrix
 	glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0, 0, 1.0f));
 	//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
 
-	// Texture‚Ìalpha’l‚ğİ’è
+	// Textureã®alphaå€¤ã‚’è¨­å®š
 	mSpriteShaderProgram->SetFloatUniform("uSpriteAlpha", alpha);
 
-	mSpriteShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);	// cube‚ÌÀ•W‚ğ”½‰f
-	mSpriteShaderProgram->SetMatrixUniform("uScaling", SpriteScaling);	// cube‚ÌÀ•W‚ğ”½‰f
-	mSpriteShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);	// cube‚ÌÀ•W‚ğ”½‰f
+	mSpriteShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+	mSpriteShaderProgram->SetMatrixUniform("uScaling", SpriteScaling);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+	mSpriteShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);	// cubeã®åº§æ¨™ã‚’åæ˜ 
 }
 
 void YGame::RenderText(std::string text, glm::vec3 pos, float scale)
@@ -1057,7 +1235,7 @@ void YGame::DrawText(std::string text, glm::vec3 pos, glm::vec3 color, float sca
 	mTextShaderProgram->UseProgram();
 	glBindVertexArray(mTextVertexArray);
 
-	// •¶š‚Ìtexchar‚Ì‘å‚«‚³‚ğæ“¾
+	// æ–‡å­—ã®texcharã®å¤§ãã•ã‚’å–å¾—
 	int TexWidth = 0;
 	int TexHeight = 0;
 	for (auto c = text.begin(); c != text.end(); c++) {
@@ -1075,19 +1253,15 @@ void YGame::DrawText(std::string text, glm::vec3 pos, glm::vec3 color, float sca
 	glm::vec3 TexOffset = glm::vec3((float)TexWidth / 2.0f, (float)TexHeight / 2.0f, 0);
 	SpriteTrans = glm::translate(glm::mat4(1.0f), pos - TexOffset);
 
-	// sprite‚Ìscaling matrix
-	//glm::vec3 sprite_scale_vec = glm::vec3((float)AtrasWidth, (float)AtrasHeight, 1.0f);
-	//sprite_scale_vec *= 1.0;
-	//glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
 
-	// sprite‚Ìrotation matrix
+	// spriteã®rotation matrix
 	glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), rot, glm::vec3(0, 0.0f, 1.0f));
 	//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
 
-	//SetMatrixUniform("uWorldTransform", SpriteTrans, mTextShaderProgram);	// cube‚ÌÀ•W‚ğ”½‰f
+	//SetMatrixUniform("uWorldTransform", SpriteTrans, mTextShaderProgram);	// cubeã®åº§æ¨™ã‚’åæ˜ 
 	mTextShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);
-	//SetMatrixUniform("uScaling", SpriteScaling, mTextShaderProgram);	// cube‚ÌÀ•W‚ğ”½‰f
-	//SetMatrixUniform("uRotate", SpriteRotate, mTextShaderProgram);	// cube‚ÌÀ•W‚ğ”½‰f
+	//SetMatrixUniform("uScaling", SpriteScaling, mTextShaderProgram);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+	//SetMatrixUniform("uRotate", SpriteRotate, mTextShaderProgram);	// cubeã®åº§æ¨™ã‚’åæ˜ 
 	mTextShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);
 
 	//glUniform3f(glGetUniformLocation(mTextShaderProgram, "textColor"), color.x, color.y, color.z);
@@ -1103,6 +1277,121 @@ void YGame::DrawText(std::string text, glm::vec3 pos, glm::vec3 color, float sca
 		float ypos = y2 - (ch.Size.y - ch.Bearing.y) * scale;
 		float w = ch.Size.x * scale;
 		float h = ch.Size.y * scale;
+
+		float textVertices[6][4] = {
+			{ xpos,     ypos + h,   0.0f, 0.0f },
+			{ xpos,     ypos,       0.0f, 1.0f },
+			{ xpos + w, ypos,       1.0f, 1.0f },
+
+			{ xpos,     ypos + h,   0.0f, 0.0f },
+			{ xpos + w, ypos,       1.0f, 1.0f },
+			{ xpos + w, ypos + h,   1.0f, 0.0f }
+		};
+
+		glBindTexture(GL_TEXTURE_2D, ch.texID);
+		// update content of VBO memory
+		glBindBuffer(GL_ARRAY_BUFFER, mTextVertexBuffer);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(textVertices), textVertices);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		// now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+		x2 += (ch.Advance >> 6) * scale;
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void YGame::DrawText2(std::string text, glm::vec3 pos, glm::vec3 color, float scale, float rot)
+{
+	mTextShaderProgram->UseProgram();
+	glBindVertexArray(mAtrasVertexArray);
+
+	glm::mat4 SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f));
+	glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0.0f, 1.0f));
+
+	mTextShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);
+	mTextShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);
+	mTextShaderProgram->SetVectorUniform("textColor", color);
+
+	pos = glm::vec3(0.0f);
+	for (int i = 0; i < text.length(); i++) {
+		char c = text[i];
+		float x2 = pos.x + Characters[c].bl * scale;
+		float y2 = -pos.y - Characters[c].bt * scale;
+		float w = Characters[c].bw * scale;
+		float h = Characters[c].bh * scale;
+
+		pos.x += Characters[c].ax * scale;
+		pos.y += Characters[c].ay * scale;
+
+		if (!w || !h)
+			continue;
+
+		float textVertices[6][4] = {
+			{ x2,     -y2    , Characters[c].tx, 0 },
+			{ x2 + w, -y2    , Characters[c].tx + Characters[c].bw / AtrasWidth,   0 },
+			{ x2,     -y2 - h, Characters[c].tx,                                          Characters[c].bh / AtrasHeight }, //remember: each glyph occupies a different amount of vertical space
+			{ x2 + w, -y2    , Characters[c].tx + Characters[c].bw / AtrasWidth,   0 },
+			{ x2,     -y2 - h, Characters[c].tx,                                          Characters[c].bh / AtrasHeight },
+			{ x2 + w, -y2 - h, Characters[c].tx + Characters[c].bw / AtrasWidth,                 Characters[c].bh / AtrasHeight }
+		};
+
+		glBindTexture(GL_TEXTURE_2D, AtrasTex);
+		// update content of VBO memory
+		glBindBuffer(GL_ARRAY_BUFFER, mAtrasVertexBuffer);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(textVertices), textVertices);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void YGame::DrawUTF(std::u16string text, glm::vec3 pos, glm::vec3 color, float scale, float rot)
+{
+	mTextShaderProgram->UseProgram();
+	glBindVertexArray(mTextVertexArray);
+
+	glm::vec3 FontCenter = glm::vec3(0.0f);
+	// æ–‡å­—ã®texcharã®å¤§ãã•ã‚’å–å¾—
+	{
+		int TexWidth = 0;
+		int width = (mJapanTexChars.begin()->second.Advance >> 6) * scale;
+		FontCenter.x = (width * text.length()) / 2.0f;
+		FontCenter.y = width / 2.0f;
+	}
+
+	glm::mat4 SpriteTrans = glm::translate(glm::mat4(1.0f), pos - FontCenter);
+	glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0.0f, 1.0f));
+	mTextShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);
+	mTextShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);
+	mTextShaderProgram->SetVectorUniform("textColor", color);
+
+
+	glActiveTexture(GL_TEXTURE0);
+
+	int x2 = 0;
+	int y2 = 0;
+	//float scale = 1.0f;
+	const char16_t* str = text.c_str();
+	for (int i = 0; str[i] != '\0'; i++) {
+		auto itr = mJapanTexChars.find(str[i]);
+		TexChar ch;
+		if (itr == mJapanTexChars.end()) {		// ã¾ã èª­ã¿è¾¼ã¾ã‚Œã¦ã„ãªã„æ–‡å­—ãªã‚‰
+			ch = LoadUTFChar(str[i]);
+			mJapanTexChars.insert(std::make_pair(str[i], ch));
+		}
+		else {
+			ch = itr->second;
+		}
+
+		float xpos = x2 + ch.Bearing.x * scale;
+		float ypos = y2 - (ch.Size.y - ch.Bearing.y) * scale;
+		float w = ch.Size.x * scale;
+		float h = ch.Size.y * scale;
+
 
 		float textVertices[6][4] = {
 			{ xpos,     ypos + h,   0.0f, 0.0f },
@@ -1144,15 +1433,8 @@ void YGame::Draw()
 
 	// draw meshes
 	mMeshShaderProgram->UseProgram();
-	// bindcube vertex array
-	glBindVertexArray(mCubeVertexArray);
 
-	mMeshShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
-	//SetMatrixUniform("model", mCubeWorldTrans, mMeshShaderProgram);	// cube‚ÌÀ•W‚ğ”½‰f
-
-	// ƒJƒƒ‰‚ÌˆÊ’u‚ğ”½‰f
-	//glm::vec3 camera_pos = glm::vec3(mView[3].x, mView[3].y, mView[3].z);
-	//glm::vec3 camera_pos = glm::vec3(0);
+	// ã‚«ãƒ¡ãƒ©ã®ä½ç½®æƒ…å ±ã‚’è¨­å®š
 	mMeshShaderProgram->SetVectorUniform("uCameraPos", mCameraPos);
 	//glm::mat4 CameraView = glm::mat4(glm::mat3(glm::lookAt(
 	//	mCameraPos,
@@ -1164,14 +1446,39 @@ void YGame::Draw()
 		mCameraUP
 	);
 	mMeshShaderProgram->SetMatrixUniform("view", CameraView);
-	// set lighting
-	mMeshShaderProgram->SetVectorUniform("uAmbientLight", mAmbientLightColor);
-	mMeshShaderProgram->SetVectorUniform("uDirLight.mDirection", mDirectionalLight.direction);
-	mMeshShaderProgram->SetVectorUniform("uDirLight.mDiffuseColor", mDirectionalLight.diffuseColor);
-	mMeshShaderProgram->SetVectorUniform("uDirLight.mSpecColorr", mDirectionalLight.specColor);
 
-	// cube‚Ìspecular power
+	// bindcube vertex array
+
+	// cubeã‚’æç”»
+	glBindVertexArray(mCubeVertexArray);
+	mMeshShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
 	mMeshShaderProgram->SetFloatUniform("uSpecPower", 100.0f);
+	mCubeTexture->BindTexture();
+	//glDrawElements(GL_TRIANGLES, mNumCubeIndicies, GL_UNSIGNED_INT, 0);
+	mCubeTexture->UnBindTexture();
+	glBindVertexArray(0);
+
+	// sphareã‚’æç”»
+	{
+		mMeshShaderProgram->UseProgram();
+		glBindVertexArray(mSphareVertexArray);
+		glm::mat4 sphareTrans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 35.0f, 0.0f));
+		mMeshShaderProgram->SetMatrixUniform("model", sphareTrans);
+		mMeshShaderProgram->SetFloatUniform("uSpecPower", 100.0f);
+		mCubeTexture->BindTexture();
+		glDrawElements(GL_TRIANGLES, mNumSphareIndicies, GL_UNSIGNED_INT, 0);
+		mCubeTexture->UnBindTexture();
+		glBindVertexArray(0);
+	}
+
+
+
+	// ã‚«ãƒ¡ãƒ©ã®ä½ç½®ã‚’åæ˜ 
+	//glm::vec3 camera_pos = glm::vec3(mView[3].x, mView[3].y, mView[3].z);
+	//glm::vec3 camera_pos = glm::vec3(0);
+
+	// set lighting
+	// cubeã®specular power
 
 	// Gets the location of the uniform
 	//GLuint texUni = glGetUniformLocation(mMeshShaderProgram, "tex0");
@@ -1179,12 +1486,8 @@ void YGame::Draw()
 	//glUniform1i(texUni, 0);
 
 	// bind cube texture
-	mCubeTexture->BindTexture();
 
 	// draw
-	glDrawElements(GL_TRIANGLES, mNumCubeIndicies, GL_UNSIGNED_INT, 0);
-	mCubeTexture->UnBindTexture();
-	glBindVertexArray(0);
 
 
 	// --- draw sprites ---
@@ -1197,7 +1500,7 @@ void YGame::Draw()
 	mSpriteShaderProgram->UseProgram();
 	glBindVertexArray(mSpriteVertexArray);
 	
-	// sprite‚Ì•`‰æˆÊ’u‚ğİ’è
+	// spriteã®æç”»ä½ç½®ã‚’è¨­å®š
 	 //Draw Test Texture
 	SetSpritePos(glm::vec3((float)mWindowWidth / 4.0f, 0, 0), mTestTexture, 0.25f, 0.5, 0.2f);
 	mTestTexture->BindTexture();
@@ -1222,10 +1525,10 @@ void YGame::Draw()
 		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0.0f, 1.0f));
 		////glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
 
-		////SetMatrixUniform("uWorldTransform", SpriteTrans, mTextShaderProgram);	// cube‚ÌÀ•W‚ğ”½‰f
+		////SetMatrixUniform("uWorldTransform", SpriteTrans, mTextShaderProgram);	// cubeã®åº§æ¨™ã‚’åæ˜ 
 		//mTextShaderProgram->SetMatrixUniform("uWorldTransform", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f)));
-		////SetMatrixUniform("uScaling", SpriteScaling, mTextShaderProgram);	// cube‚ÌÀ•W‚ğ”½‰f
-		////SetMatrixUniform("uRotate", SpriteRotate, mTextShaderProgram);	// cube‚ÌÀ•W‚ğ”½‰f
+		////SetMatrixUniform("uScaling", SpriteScaling, mTextShaderProgram);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+		////SetMatrixUniform("uRotate", SpriteRotate, mTextShaderProgram);	// cubeã®åº§æ¨™ã‚’åæ˜ 
 		//mTextShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);
 
 		////glUniform3f(glGetUniformLocation(mTextShaderProgram, "textColor"), color.x, color.y, color.z);
@@ -1234,59 +1537,170 @@ void YGame::Draw()
 
 		// Sprite Translation Matrix
 		mSpriteShaderProgram->UseProgram();
+		glBindVertexArray(mSpriteVertexArray);
 		glm::mat4 SpriteTrans = glm::mat4(1.0f);
 		SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3(-(float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0));
 
-		// sprite‚Ìscaling matrix
+		// spriteã®scaling matrix
 		glm::vec3 sprite_scale_vec = glm::vec3((float)mFontWidth, (float)mFontHeight, 1.0f);
 		sprite_scale_vec *= 1.0;
 		glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
 
-		// sprite‚Ìrotation matrix
+		// spriteã®rotation matrix
 		glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1.0f));
 		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
 
-		mSpriteShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);	// cube‚ÌÀ•W‚ğ”½‰f
-		mSpriteShaderProgram->SetMatrixUniform("uScaling", SpriteScaling);	// cube‚ÌÀ•W‚ğ”½‰f
-		mSpriteShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);	// cube‚ÌÀ•W‚ğ”½‰f
+		mSpriteShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+		mSpriteShaderProgram->SetMatrixUniform("uScaling", SpriteScaling);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+		mSpriteShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+		mSpriteShaderProgram->SetFloatUniform("uSpriteAlpha", 1.0f);
+
 
 		glBindTexture(GL_TEXTURE_2D, FontTex);
-		//glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
 		glBindTexture(FontTex, 0);
 	}
 
-	//// Draw AtrasTexture
-	//{
-	//	// Sprite Translation Matrix
-	//	glm::mat4 SpriteTrans = glm::mat4(1.0f);
-	//	SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3((float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0));
+	{
+		// æ—¥æœ¬èªæ–‡å­—åˆ—è¡¨ç¤º
+		//for (auto tex = mTextStr.begin(); tex != mTextStr.end(); tex++) {
+		//	mSpriteShaderProgram->UseProgram();
+		//	glm::mat4 SpriteTrans = glm::mat4(1.0f);
+		//	SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3((float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0));
 
-	//	// sprite‚Ìscaling matrix
-	//	glm::vec3 sprite_scale_vec = glm::vec3((float)AtrasWidth, (float)AtrasHeight, 1.0f);
-	//	sprite_scale_vec *= 1.0;
-	//	glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
+		//	// spriteã®scaling matrix
+		//	glm::vec3 sprite_scale_vec = glm::vec3((float)mFontWidth, (float)mFontHeight, 1.0f);
+		//	sprite_scale_vec *= 1.0;
+		//	glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
 
-	//	// sprite‚Ìrotation matrix
-	//	glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1.0f));
-	//	//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+		//	// spriteã®rotation matrix
+		//	glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1.0f));
+		//	//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
 
-	//	SetMatrixUniform("uWorldTransform", SpriteTrans, mSpriteShaderProgram);	// cube‚ÌÀ•W‚ğ”½‰f
-	//	SetMatrixUniform("uScaling", SpriteScaling, mSpriteShaderProgram);	// cube‚ÌÀ•W‚ğ”½‰f
-	//	SetMatrixUniform("uRotate", SpriteRotate, mSpriteShaderProgram);	// cube‚ÌÀ•W‚ğ”½‰f
-	//	glUniform1f(glGetUniformLocation(mSpriteShaderProgram, "uSpriteAlpha"), 1.0f);
+		//	mSpriteShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+		//	mSpriteShaderProgram->SetMatrixUniform("uScaling", SpriteScaling);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+		//	mSpriteShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+		//	mSpriteShaderProgram->SetFloatUniform("uSpriteAlpha", 1.0f);
+
+		//	glBindTexture(GL_TEXTURE_2D, *tex);
+		//	glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+		//	glBindTexture(*tex, 0);
+		//}
+
+	}
+
+	{
+		// æ—¥æœ¬èªæ–‡å­—åˆ—è¡¨ç¤º
+		mTextShaderProgram->UseProgram();
+		glBindVertexArray(mTextVertexArray);
+
+		// æ–‡å­—ã®texcharã®å¤§ãã•ã‚’å–å¾—
+		//int TexWidth = 0;
+		//int TexHeight = 0;
+		//for (auto c = text.begin(); c != text.end(); c++) {
+		//	auto itr = mTexChars.find(*c);
+		//	if (itr == mTexChars.end()) {
+		//		std::cout << "error: Tex Char hasnt been loaded yet\n";
+		//		exit(-1);
+		//	}
+		//	TexChar ch = mTexChars[*c];
+		//	TexWidth += ch.Size.x;
+		//	TexHeight = (TexHeight < ch.Size.y) ? ch.Size.y : TexHeight;
+		//}
+
+		glm::mat4 SpriteTrans = glm::mat4(1.0f);
+		//glm::vec3 TexOffset = glm::vec3((float)TexWidth / 2.0f, (float)TexHeight / 2.0f, 0);
+		SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3((float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0.0f));
 
 
-	//	glBindTexture(GL_TEXTURE_2D, AtrasTex);
-	//	glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
-	//	glBindTexture(AtrasTex, 0);
-	//}
+		// spriteã®rotation matrix
+		glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0.0f, 1.0f));
+		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+
+		//SetMatrixUniform("uWorldTransform", SpriteTrans, mTextShaderProgram);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+		mTextShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);
+		//SetMatrixUniform("uScaling", SpriteScaling, mTextShaderProgram);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+		//SetMatrixUniform("uRotate", SpriteRotate, mTextShaderProgram);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+		mTextShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);
+
+		//glUniform3f(glGetUniformLocation(mTextShaderProgram, "textColor"), color.x, color.y, color.z);
+		glm::vec3 color = glm::vec3(0.2f, 1.0f, 0.2f);
+		mTextShaderProgram->SetVectorUniform("textColor", color);
+		glActiveTexture(GL_TEXTURE0);
+
+		int x2 = 0;
+		int y2 = 0;
+		float scale = 1.0f;
+		for (auto c = mJapanTexVec.begin(); c != mJapanTexVec.end(); c++) {
+			TexChar ch = *c;
+
+			float xpos = x2 + ch.Bearing.x * scale;
+			float ypos = y2 - (ch.Size.y - ch.Bearing.y) * scale;
+			float w = ch.Size.x * scale;
+			float h = ch.Size.y * scale;
+
+			float textVertices[6][4] = {
+				{ xpos,     ypos + h,   0.0f, 0.0f },
+				{ xpos,     ypos,       0.0f, 1.0f },
+				{ xpos + w, ypos,       1.0f, 1.0f },
+
+				{ xpos,     ypos + h,   0.0f, 0.0f },
+				{ xpos + w, ypos,       1.0f, 1.0f },
+				{ xpos + w, ypos + h,   1.0f, 0.0f }
+			};
+
+			glBindTexture(GL_TEXTURE_2D, ch.texID);
+			// update content of VBO memory
+			glBindBuffer(GL_ARRAY_BUFFER, mTextVertexBuffer);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(textVertices), textVertices);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			// now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+			x2 += (ch.Advance >> 6) * scale;
+		}
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+	}
+
+	// Draw AtrasTexture
+	{
+		// Sprite Translation Matrix
+		mSpriteShaderProgram->UseProgram();
+		glBindVertexArray(mSpriteVertexArray);
+		glm::mat4 SpriteTrans = glm::mat4(1.0f);
+		SpriteTrans = glm::translate(glm::mat4(1.0f), glm::vec3((float)mWindowWidth / 4.0f, (float)mWindowHeight / 4.0f, 0));
+
+		// spriteã®scaling matrix
+		glm::vec3 sprite_scale_vec = glm::vec3((float)AtrasWidth, (float)AtrasHeight, 1.0f);
+		sprite_scale_vec *= 1.0;
+		glm::mat4 SpriteScaling = glm::scale(glm::mat4(1.0f), sprite_scale_vec);
+
+		// spriteã®rotation matrix
+		glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0, 1.0f));
+		//glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(0, 0, 1.0f));
+
+		mSpriteShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+		mSpriteShaderProgram->SetMatrixUniform("uScaling", SpriteScaling);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+		mSpriteShaderProgram->SetMatrixUniform("uRotate", SpriteRotate);	// cubeã®åº§æ¨™ã‚’åæ˜ 
+		mSpriteShaderProgram->SetFloatUniform("uSpriteAlpha", 1.0f);
 
 
-	// text •\¦
+		glBindTexture(GL_TEXTURE_2D, AtrasTex);
+		glDrawElements(GL_TRIANGLES, sizeof(SpriteIndices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+		glBindTexture(AtrasTex, 0);
+	}
+
+
+	// text è¡¨ç¤º
 	DrawText("hello, world!", glm::vec3(0.0f), glm::vec3(1.0f, 0.3f, 0.2f));
+	DrawText2("hello", glm::vec3(0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
+	DrawUTF(u"ã‚„ã€‚ã¯ã‚ãƒ¼", glm::vec3((float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
+	DrawUTF(u"ã‚„ã€‚ã¯ã‚ãƒ¼", glm::vec3(0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
 
 
-	// Œ»İ‚ÌƒtƒF[ƒY•\¦
+	// ç¾åœ¨ã®ãƒ•ã‚§ãƒ¼ã‚ºè¡¨ç¤º
 	if (mPhase == PHASE_IDLE) {
 		DrawText("PHASE_IDLE", glm::vec3(-(float)mWindowWidth * 3.0f / 8.0f, (float)mWindowHeight * 3.0f / 8.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
 	}

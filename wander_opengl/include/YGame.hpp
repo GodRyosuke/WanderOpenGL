@@ -46,11 +46,15 @@ private:
 	void ComputeWorldTransform();
 	bool LoadShaders();
 	bool LoadData();
+
 	TexChar LoadChar(char c);
+	TexChar LoadUTFChar(char16_t c);
 	void SetSpritePos(glm::vec3 spritePos, Texture* tex, float scale = 1.0f, float rotation = 0.0f, float alpha = 1.0f);
 	void RenderText(std::string text, glm::vec3 pos, float scale = 1.0f);
 	void RenderText2(std::string text, glm::vec3 pos, glm::vec3 color, float scale = 1.0f);
 	void DrawText(std::string text, glm::vec3 pos, glm::vec3 color, float scale = 1.0f, float rot = 0.0f);
+	void DrawText2(std::string text, glm::vec3 pos, glm::vec3 color, float scale = 1.0f, float rot = 0.0f);
+	void DrawUTF(std::u16string text, glm::vec3 pos, glm::vec3 color, float scale = 1.0f, float rot = 0.0f);
 
 	enum PHASE{
 		PHASE_IDLE,
@@ -103,6 +107,13 @@ private:
 	unsigned int mCubeVertexBuffer;
 	unsigned int mCubeIndexBuffer;
 	int mNumCubeIndicies;
+
+	unsigned int mSphareVertexArray;
+	unsigned int mSphareVertexBuffer;
+	unsigned int mSphareIndexBuffer;
+	int mNumSphareIndicies;
+
+
 	Texture* mCubeTexture;
 	Texture* mTestTexture;
 	int test_w;
@@ -125,6 +136,10 @@ private:
 	// Text Vertices
 	unsigned int mTextVertexArray;
 	unsigned int mTextVertexBuffer;
+
+	// Atras Vertices
+	unsigned int mAtrasVertexArray;
+	unsigned int mAtrasVertexBuffer;
 
 	TTF_Font* mFont;
 	FT_Face mFontFace;
@@ -153,6 +168,10 @@ private:
 	std::map<char, TexChar> mTexChars;
 
 	std::map<std::string, Texture*> mFontMap;
+	std::vector<GLuint> mTextStr;
+	std::map<char16_t, TexChar> mJapanTexChars;
+	std::vector<TexChar> mJapanTexVec;
+
 
 	PHASE mPhase;
 	clock_t last;
