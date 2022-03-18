@@ -2,6 +2,7 @@
 
 #include "YGame.hpp"
 #include <time.h>
+#include "GLUtil.hpp"
 
 // Vertices coordinates
 GLfloat vertices[] =
@@ -190,6 +191,7 @@ bool YGame::Initialize()
 		return false;
 	}
 
+
 	//CreateSpriteVerts();
 
 	if (!LoadData())
@@ -197,6 +199,7 @@ bool YGame::Initialize()
 		SDL_Log("Failed to load data.");
 		return false;
 	}
+
 
 
 	mTicksCount = SDL_GetTicks();
@@ -290,11 +293,11 @@ bool YGame::LoadData()
 	mDirectionalLight.diffuseColor = glm::vec3(0.78, 0.88, 1);
 	mDirectionalLight.specColor = glm::vec3(0.8, 0.2, 0.8);
 
+
 	mMeshShaderProgram->SetVectorUniform("uAmbientLight", mAmbientLightColor);
 	mMeshShaderProgram->SetVectorUniform("uDirLight.mDirection", mDirectionalLight.direction);
 	mMeshShaderProgram->SetVectorUniform("uDirLight.mDiffuseColor", mDirectionalLight.diffuseColor);
 	mMeshShaderProgram->SetVectorUniform("uDirLight.mSpecColor", mDirectionalLight.specColor);
-
 
 	// Meshを読み込む
 	{

@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "Mesh.hpp"
+#include "GLUtil.hpp"
 #include <iostream>
 
 Mesh::Mesh(std::string FilePath, std::string ObjFileName, Shader* shader, glm::vec3 LightDir)
@@ -9,6 +10,7 @@ Mesh::Mesh(std::string FilePath, std::string ObjFileName, Shader* shader, glm::v
 	mIndices(0),
 	mLightDir(LightDir)
 {
+
 	if (!LoadObjFile(FilePath, ObjFileName)) {
 		std::cout << "Failed to Load Mesh Obj File\n";
 		return;
@@ -374,8 +376,11 @@ void Mesh::Draw()
 		for (int i = subset->FaceStart; i < subset->FaceCount + subset->FaceStart; i++) {
 			indices[i - subset->FaceStart] = mIndices[i];
 		}
-		unsigned int* indices_data = indices.data();
-		glDrawElements(GL_TRIANGLES, subset->FaceCount, GL_UNSIGNED_INT, &indices_data[0]);
+		unsigned int* indices_data = mIndices.data();
+
+
+		//glDrawElements(GL_TRIANGLES, subset->FaceCount, GL_UNSIGNED_INT, mIndices.data());
+		glDrawElements(GL_TRIANGLES, subset->FaceCount, GL_UNSIGNED_INT, &indices_data[subset->FaceStart]);
 		//glDrawElements(GL_TRIANGLES, subset->FaceCount, GL_UNSIGNED_INT, 0);
 
 		if (material.tex != nullptr) {

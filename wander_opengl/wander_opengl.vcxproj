@@ -185,6 +185,7 @@ COPY "$(SolutionDir)wander_opengl\Shaders" "$(OutDir)"</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Game.hpp" />
+    <ClInclude Include="include\GLUtil.hpp" />
     <ClInclude Include="include\Mesh.hpp" />
     <ClInclude Include="include\Shader.hpp" />
     <ClInclude Include="include\Texture.hpp" />

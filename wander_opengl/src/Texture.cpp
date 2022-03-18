@@ -1,5 +1,6 @@
 #include "Texture.hpp"
 #include "SDL_image.h"
+#include "GLUtil.hpp"
 
 Texture::Texture()
 {
@@ -41,7 +42,7 @@ void Texture::CreateTextTexture(std::string text_data, int* color, TTF_Font* fon
 void Texture::createFromSurf(SDL_Surface* surf)
 {
 	glGenTextures(1, &texture_data);
-	glActiveTexture(GL_TEXTURE);
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture_data);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -70,6 +71,7 @@ void Texture::createFromSurf(SDL_Surface* surf)
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	width = surf->w;
 	height = surf->h;
+
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surf->pixels);
 	// Generates MipMaps
