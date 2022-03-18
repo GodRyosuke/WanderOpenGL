@@ -18,6 +18,7 @@
 #include "json.hpp"
 #include "ft2build.h"
 #include "Shader.hpp"
+#include "Mesh.hpp"
 #include FT_FREETYPE_H
 
 
@@ -103,19 +104,19 @@ private:
 	double mCubeRotateVel;
 
 	// Mesh Vertices
-	unsigned int mCubeVertexArray;
-	unsigned int mCubeVertexBuffer;
-	unsigned int mCubeIndexBuffer;
-	int mNumCubeIndicies;
-
-	unsigned int mSphareVertexArray;
-	unsigned int mSphareVertexBuffer;
-	unsigned int mSphareIndexBuffer;
-	int mNumSphareIndicies;
+	std::vector<Mesh*> mMeshes;
+	Mesh* mSphareMesh;
+	Mesh* mCubeMesh;
+	Mesh* mDonutMesh;
+	Mesh* mHouseWall;
+	Mesh* mDonut2Mesh;
 
 
 	Texture* mCubeTexture;
+	Texture* mDonutTexture;
 	Texture* mTestTexture;
+	Texture* mHouseWallTexture;
+
 	int test_w;
 	int test_h;
 

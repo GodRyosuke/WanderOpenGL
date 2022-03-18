@@ -205,84 +205,6 @@ bool YGame::Initialize()
 }
 
 
-static bool CompileShader(std::string filepath, GLenum shaderType, GLuint& shader)
-{
-	std::ifstream shaderFile(filepath);
-	if (shaderFile.is_open())
-	{
-		// Read all the text into a string
-		std::stringstream sstream;
-		sstream << shaderFile.rdbuf();
-		std::string contents = sstream.str();
-		const char* contentsChar = contents.c_str();
-
-		// Create a shader of the specified type
-		shader = glCreateShader(shaderType);
-		// Set the source characters and try to compile
-		glShaderSource(shader, 1, &(contentsChar), nullptr);
-		glCompileShader(shader);
-
-		GLint status;
-		// Query the compile status
-		glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-
-		if (status != GL_TRUE)
-		{
-			char buffer[512];
-			memset(buffer, 0, 512);
-			glGetShaderInfoLog(shader, 511, nullptr, buffer);
-			SDL_Log("GLSL Compile Failed:\n%s", buffer);
-			return false;
-		}
-	}
-	else
-	{
-		SDL_Log("Shader file not found: %s", filepath.c_str());
-		return false;
-	}
-	return true;
-}
-
-static bool CreateShaderProgram(std::string vertFilePath, std::string fragFilePath,
-	GLuint& shaderProgram)
-{
-	GLuint VertexShader;
-	GLuint FragmentShader;
-	// Compile vertex and pixel shaders
-	if (!CompileShader(vertFilePath,
-		GL_VERTEX_SHADER,
-		VertexShader) ||
-		!CompileShader(fragFilePath,
-			GL_FRAGMENT_SHADER,
-			FragmentShader))
-	{
-		return false;
-	}
-
-	// 
-	// Now create a shader program that
-	// links together the vertex/frag shaders
-	shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, VertexShader);
-	glAttachShader(shaderProgram, FragmentShader);
-	glLinkProgram(shaderProgram);
-
-	// Verify that the program linked successfully
-	GLint status;
-	// Query the link status
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &status);
-	if (status != GL_TRUE)
-	{
-		char buffer[512];
-		memset(buffer, 0, 512);
-		glGetProgramInfoLog(shaderProgram, 511, nullptr, buffer);
-		SDL_Log("GLSL Link Status:\n%s", buffer);
-		return false;
-	}
-
-	glUseProgram(shaderProgram);
-}
-
 bool YGame::LoadShaders()
 {
 	// Sprite
@@ -355,225 +277,8 @@ bool YGame::LoadShaders()
 	return true;
 }
 
-static bool LoadObjFile(std::string FilePath, std::vector<float>& vertices,
-	std::vector<int>& indices)
-{
-	// obj fileを読みだす
-	FILE* file = fopen(FilePath.c_str(), "r");
-	if (file == NULL) {
-		printf("error: failed to open mesh file\n");
-		return false;
-	}
-
-	std::vector<float>CubeVertices;
-	std::vector<float>CubeUV;
-	std::vector<float>CubeNormals;
-	std::vector<int>CubeVertexI;
-	std::vector<int>CubeUVI;
-	std::vector<int>CubeNormalI;
-	std::vector<glm::ivec3>FaceVec;
-	std::vector<glm::ivec3>RFaceVec(0);		// 重複したindexが除去された配列
-
-	while (1) {
-
-		char lineHeader[128];
-		// 行の最初の文字列を読み込みます。
-		int res = fscanf(file, "%s", lineHeader);
-		if (res == EOF)
-			break;
-
-		if (strcmp(lineHeader, "v") == 0) {
-			char x_str[20];
-			char y_str[20];
-			char z_str[20];
-			fscanf(file, "%s %s %s", x_str, y_str, z_str);
-			CubeVertices.push_back(atof(x_str));
-			CubeVertices.push_back(atof(y_str));
-			CubeVertices.push_back(atof(z_str));
-		}
-		else if (strcmp(lineHeader, "vt") == 0) {
-			char x_str[20];
-			char y_str[20];
-			fscanf(file, "%s %s", x_str, y_str);
-			CubeUV.push_back(atof(x_str));
-			CubeUV.push_back(atof(y_str));
-		}
-		else if (strcmp(lineHeader, "vn") == 0) {
-			char x_str[20];
-			char y_str[20];
-			char z_str[20];
-			fscanf(file, "%s %s %sn", x_str, y_str, z_str);
-			CubeNormals.push_back(atof(x_str));
-			CubeNormals.push_back(atof(y_str));
-			CubeNormals.push_back(atof(z_str));
-		}
-		else if (strcmp(lineHeader, "f") == 0) {
-			Eigen::Vector3i vertexIndex;
-			Eigen::Vector3i uvIndex;
-			Eigen::Vector3i normalIndex;
-			fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d",
-				&vertexIndex.x(), &uvIndex.x(), &normalIndex.x(),
-				&vertexIndex.y(), &uvIndex.y(), &normalIndex.y(),
-				&vertexIndex.z(), &uvIndex.z(), &normalIndex.z()
-			);
-			CubeVertexI.push_back(vertexIndex.x() - 1);
-			CubeVertexI.push_back(vertexIndex.y() - 1);
-			CubeVertexI.push_back(vertexIndex.z() - 1);
-			CubeUVI.push_back(uvIndex.x() - 1);
-			CubeUVI.push_back(uvIndex.y() - 1);
-			CubeUVI.push_back(uvIndex.z() - 1);
-			CubeNormalI.push_back(normalIndex.x() - 1);
-			CubeNormalI.push_back(normalIndex.y() - 1);
-			CubeNormalI.push_back(normalIndex.z() - 1);
-			glm::ivec3 a1, a2, a3;
-			a1[0] = vertexIndex.x();	a1[1] = uvIndex.x();	a1[2] = normalIndex.x();
-			a2[0] = vertexIndex.y();	a2[1] = uvIndex.y();	a2[2] = normalIndex.y();
-			a3[0] = vertexIndex.z();	a3[1] = uvIndex.z();	a3[2] = normalIndex.z();
-			FaceVec.push_back(a1);
-			FaceVec.push_back(a2);
-			FaceVec.push_back(a3);
-		}
-	}
-
-	// データ構造を変更する処理
-	// FaceVecの重複indexを排除
-	for (int i = 0; i < FaceVec.size(); i++) {
-		bool IsHaving = false;
-		for (int j = 0; j < RFaceVec.size(); j++) {
-			if (FaceVec[i] == RFaceVec[j]) {
-				IsHaving = true;
-			}
-		}
-		if (!IsHaving) {
-			RFaceVec.push_back(FaceVec[i]);
-		}
-	}
-
-	// 各indexに対応する新しいindex作成
-	std::map<glm::ivec3, int> vec_i_map;
-	std::vector<int> newIndex;
-	for (int i = 0; i < FaceVec.size(); i++) {
-		int Idx = -1;
-		for (int j = 0; j < RFaceVec.size(); j++) {
-			if (FaceVec[i] == RFaceVec[j]) {
-				Idx = j;
-				break;
-			}
-		}
-		newIndex.push_back(Idx);
-	}
-
-	// RFaceVecに対応する vertices作成
-	std::vector<float>newVertices;
-	for (int i = 0; i < RFaceVec.size(); i++) {
-		glm::ivec3 this_vec = RFaceVec[i];
-		int vertI = 3 * (this_vec.x - 1);
-		int uvI = 2 * (this_vec.y - 1);
-		int normalI = 3 * (this_vec.z - 1);
-		newVertices.push_back(CubeVertices[vertI]);
-		newVertices.push_back(CubeVertices[vertI + 1]);
-		newVertices.push_back(CubeVertices[vertI + 2]);
-		newVertices.push_back(CubeNormals[normalI]);
-		newVertices.push_back(CubeNormals[normalI + 1]);
-		newVertices.push_back(CubeNormals[normalI + 2]);
-		newVertices.push_back(CubeUV[uvI]);
-		newVertices.push_back(CubeUV[uvI + 1]);
-	}
-
-	vertices = newVertices;
-	indices = newIndex;
-
-	return true;
-}
-
 bool YGame::LoadData()
 {
-	{
-		std::string filepath = "./resources/cube2.obj";
-		std::vector<float> cubeVert;
-		std::vector<int> cubeIndex;
-		LoadObjFile(filepath, cubeVert, cubeIndex);
-
-		mNumCubeIndicies = cubeIndex.size();
-
-
-		// Cubeのvertex arrayを設定
-		mMeshShaderProgram->UseProgram();
-		glGenVertexArrays(1, &mCubeVertexArray);
-		glBindVertexArray(mCubeVertexArray);
-
-		glGenBuffers(1, &mCubeVertexBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, mCubeVertexBuffer);
-		glBufferData(GL_ARRAY_BUFFER, cubeVert.size() * sizeof(float), cubeVert.data(), GL_STATIC_DRAW);
-		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-		glGenBuffers(1, &mCubeIndexBuffer);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mCubeIndexBuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, cubeIndex.size() * sizeof(int), cubeIndex.data(), GL_STATIC_DRAW);
-
-		// link attribution
-		glBindBuffer(GL_ARRAY_BUFFER, mCubeVertexBuffer);
-		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		//glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-		glEnableVertexAttribArray(2);
-
-		// unbind cube vertex arrays
-		glBindVertexArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-
-	}
-
-	{
-		std::string filepath = "./resources/sphare.obj";
-		std::vector<float> cubeVert;
-		std::vector<int> cubeIndex;
-		LoadObjFile(filepath, cubeVert, cubeIndex);
-
-		mNumSphareIndicies = cubeIndex.size();
-
-
-		// Sphareのvertex arrayを設定
-		mMeshShaderProgram->UseProgram();
-		glGenVertexArrays(1, &mSphareVertexArray);
-		glBindVertexArray(mSphareVertexArray);
-
-		glGenBuffers(1, &mSphareVertexBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, mSphareVertexBuffer);
-		glBufferData(GL_ARRAY_BUFFER, cubeVert.size() * sizeof(float), cubeVert.data(), GL_STATIC_DRAW);
-		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-		glGenBuffers(1, &mSphareIndexBuffer);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mSphareIndexBuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, cubeIndex.size() * sizeof(int), cubeIndex.data(), GL_STATIC_DRAW);
-
-		// link attribution
-		glBindBuffer(GL_ARRAY_BUFFER, mSphareVertexBuffer);
-		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		//glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-		glEnableVertexAttribArray(2);
-
-		// unbind cube vertex arrays
-		glBindVertexArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-
-	}
-
-
-
 	// CubeのTextureを設定
 	// textureを読みだす。
 	mCubeTexture = new Texture(".\\resources\\brick.png");
@@ -588,14 +293,72 @@ bool YGame::LoadData()
 	mMeshShaderProgram->SetVectorUniform("uAmbientLight", mAmbientLightColor);
 	mMeshShaderProgram->SetVectorUniform("uDirLight.mDirection", mDirectionalLight.direction);
 	mMeshShaderProgram->SetVectorUniform("uDirLight.mDiffuseColor", mDirectionalLight.diffuseColor);
-	mMeshShaderProgram->SetVectorUniform("uDirLight.mSpecColorr", mDirectionalLight.specColor);
+	mMeshShaderProgram->SetVectorUniform("uDirLight.mSpecColor", mDirectionalLight.specColor);
+
+
+	// Meshを読み込む
+	{
+		Mesh* mesh = new Mesh("./resources/", "cube2.obj", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707));
+		mesh->SetMeshPos(glm::vec3(10.0f, 35.0f, 0.0f));
+		mesh->SetMeshRotate(glm::mat4(1.0f));
+		mesh->SetMeshScale(1.0f);
+		mMeshes.push_back(mesh);
+	}
+
+	{ 
+		//Mesh* mesh = new Mesh("./resources/SimpleObj/", "cubes.obj", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707));
+		//mesh->SetMeshPos(glm::vec3(10.0f, 35.0f, 0.0f));
+		//mesh->SetMeshRotate(glm::mat4(1.0f));
+		//mesh->SetMeshScale(1.0f);
+		//mMeshes.push_back(mesh);
+	}
 
 
 
+	//mCubeMesh = new Mesh("./resources/", "cube2.obj", mMeshShaderProgram);
+	//mCubeMesh->SetMeshPos(glm::vec3(10.0f, 35.0f, 0.0f));
+	//mCubeMesh->SetMeshRotate(glm::mat4(1.0f));
+	//mCubeMesh->SetMeshScale(1.0f);
+	//mCubeMesh->SetMeshLightDirection(glm::vec3(0, -0.707, -0.707));
+
+	//mDonutMesh = new Mesh("./resources/Donut/testDonut.obj", "./resources/Donut/testDonut.mtl", mMeshShaderProgram);
+	//mDonutMesh->SetMeshPos(glm::vec3(-10.0f, 35.0f, 0.0f));
+	//mDonutMesh->SetMeshRotate(glm::mat4(1.0f));
+	//mDonutMesh->SetMeshScale(1.0f);
+	//mDonutMesh->SetMeshLightDirection(glm::vec3(0, -0.707, -0.707));
+
+	//mSphareMesh = new Mesh("./resources/sphare.obj", "./resources/sphare.mtl", mMeshShaderProgram);
+	//mSphareMesh->SetMeshPos(glm::vec3(0.0f, 35.0f, 0.0f));
+	//mSphareMesh->SetMeshRotate(glm::mat4(1.0f));
+	//mSphareMesh->SetMeshScale(2.0f);
+	//mSphareMesh->SetMeshLightDirection(glm::vec3(0, -0.707, -0.707));
+
+	//mHouseWall = new Mesh("./resources/house2/", "HouseWall.obj", mMeshShaderProgram);
+	//mHouseWall->SetMeshPos(glm::vec3(20.0f, 35.0f, 0.0f));
+	//mHouseWall->SetMeshRotate(glm::mat4(1.0f));
+	//mHouseWall->SetMeshScale(0.01f);
+	//mHouseWall->SetMeshLightDirection(glm::vec3(0, -0.707, -0.707));
+	//mHouseWallTexture = new Texture("./resources/house2/wall.png");
+
+	//mDonut2Mesh = new Mesh("./resources/Donut2/", "Donut23.obj", mMeshShaderProgram);
+	//mDonut2Mesh->SetMeshPos(glm::vec3(-20.0f, 35.0f, 0.0f));
+	//mDonut2Mesh->SetMeshRotate(glm::mat4(1.0f));
+	//mDonut2Mesh->SetMeshScale(10.0f);
+	//mDonut2Mesh->SetMeshLightDirection(glm::vec3(0, -0.707, -0.707));
+
+
+
+
+
+
+	// ドーナツのtextureを読み込む
+	mDonutTexture = new Texture("./resources/Donut/testDonut.png");
+
+	
 	// Camera Settings
 	mCameraPos = glm::vec3(0.0f);
 	mCameraUP = glm::vec3(0.0f, 0.0f, 1.0f);
-	mCameraOrientation = glm::vec3(0, 1.0f, 0);
+	mCameraOrientation = glm::vec3(0, 0.5f, 0);
 
 
 	// spriteのvertex arrayの設定
@@ -1450,25 +1213,88 @@ void YGame::Draw()
 	// bindcube vertex array
 
 	// cubeを描画
-	glBindVertexArray(mCubeVertexArray);
-	mMeshShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
-	mMeshShaderProgram->SetFloatUniform("uSpecPower", 100.0f);
-	mCubeTexture->BindTexture();
-	//glDrawElements(GL_TRIANGLES, mNumCubeIndicies, GL_UNSIGNED_INT, 0);
-	mCubeTexture->UnBindTexture();
-	glBindVertexArray(0);
-
-	// sphareを描画
-	{
+	for (int i = 0; i < mMeshes.size(); i++) {
 		mMeshShaderProgram->UseProgram();
-		glBindVertexArray(mSphareVertexArray);
-		glm::mat4 sphareTrans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 35.0f, 0.0f));
-		mMeshShaderProgram->SetMatrixUniform("model", sphareTrans);
-		mMeshShaderProgram->SetFloatUniform("uSpecPower", 100.0f);
-		mCubeTexture->BindTexture();
-		glDrawElements(GL_TRIANGLES, mNumSphareIndicies, GL_UNSIGNED_INT, 0);
-		mCubeTexture->UnBindTexture();
-		glBindVertexArray(0);
+		mMeshes[i]->Draw();
+	}
+
+	//glBindVertexArray(mCubeVertexArray);
+	//mMeshShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
+	//mMeshShaderProgram->SetFloatUniform("uSpecPower", 100.0f);
+	//mCubeTexture->BindTexture();
+	////glDrawElements(GL_TRIANGLES, mNumCubeIndicies, GL_UNSIGNED_INT, 0);
+	//mCubeTexture->UnBindTexture();
+	//glBindVertexArray(0);
+	//{
+	//	mMeshShaderProgram->UseProgram();
+	//	mCubeMesh->BindVertexArray();
+	//	mCubeMesh->SetMeshTransforms();
+	//	mCubeMesh->SetMeshLightings();
+	//	mCubeTexture->BindTexture();
+	//	glDrawElements(GL_TRIANGLES, mCubeMesh->GetNumIndices(), GL_UNSIGNED_INT, 0);
+	//	mCubeTexture->UnBindTexture();
+	//	glBindVertexArray(0);
+	//}
+
+
+	//// Donutを描画
+	//{
+	//	mMeshShaderProgram->UseProgram();
+	//	mDonutMesh->BindVertexArray();
+	//	mDonutMesh->SetMeshTransforms();
+	//	mDonutMesh->SetMeshLightings();
+	//	mDonutTexture->BindTexture();
+	//	glDrawElements(GL_TRIANGLES, mDonutMesh->GetNumIndices(), GL_UNSIGNED_INT, 0);
+	//	mDonutTexture->UnBindTexture();
+	//	glBindVertexArray(0);
+	//}
+
+	//// sphareを描画
+	//{
+	//	mMeshShaderProgram->UseProgram();
+	//	mSphareMesh->BindVertexArray();
+	//	mSphareMesh->SetMeshTransforms();
+	//	mSphareMesh->SetMeshLightings();
+	//	mCubeTexture->BindTexture();
+	//	glDrawElements(GL_TRIANGLES, mSphareMesh->GetNumIndices(), GL_UNSIGNED_INT, 0);
+	//	mCubeTexture->UnBindTexture();
+	//	glBindVertexArray(0);
+	//}
+
+	//// house wallを描画
+	//{
+	//	mMeshShaderProgram->UseProgram();
+	//	mHouseWall->BindVertexArray();
+	//	mHouseWall->SetMeshTransforms();
+	//	mHouseWall->SetMeshLightings();
+	//	mHouseWallTexture->BindTexture();
+	//	glDrawElements(GL_TRIANGLES, mHouseWall->GetNumIndices(), GL_UNSIGNED_INT, 0);
+	//	mHouseWallTexture->UnBindTexture();
+	//	glBindVertexArray(0);
+	//}
+
+	//{
+	//	mMeshShaderProgram->UseProgram();
+	//	mDonut2Mesh->BindVertexArray();
+	//	mDonut2Mesh->SetMeshTransforms();
+	//	mDonut2Mesh->SetMeshLightings();
+	//	mDonutTexture->BindTexture();
+	//	glDrawElements(GL_TRIANGLES, mDonut2Mesh->GetNumIndices(), GL_UNSIGNED_INT, 0);
+	//	mDonutTexture->UnBindTexture();
+	//	glBindVertexArray(0);
+	//}
+
+
+	{
+		//mMeshShaderProgram->UseProgram();
+		//glBindVertexArray(mSphareVertexArray);
+		//glm::mat4 sphareTrans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 35.0f, 0.0f));
+		//mMeshShaderProgram->SetMatrixUniform("model", sphareTrans);
+		//mMeshShaderProgram->SetFloatUniform("uSpecPower", 100.0f);
+		//mCubeTexture->BindTexture();
+		//glDrawElements(GL_TRIANGLES, mNumSphareIndicies, GL_UNSIGNED_INT, 0);
+		//mCubeTexture->UnBindTexture();
+		//glBindVertexArray(0);
 	}
 
 
@@ -1694,19 +1520,18 @@ void YGame::Draw()
 
 
 	// text 表示
-	DrawText("hello, world!", glm::vec3(0.0f), glm::vec3(1.0f, 0.3f, 0.2f));
-	DrawText2("hello", glm::vec3(0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
-	DrawUTF(u"や。はろー", glm::vec3((float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
-	DrawUTF(u"や。はろー", glm::vec3(0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
+	//DrawText("hello, world!", glm::vec3(0.0f), glm::vec3(1.0f, 0.3f, 0.2f));
+	//DrawText2("hello", glm::vec3(0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
+	//DrawUTF(u"初めて", glm::vec3((float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
 
 
-	// 現在のフェーズ表示
-	if (mPhase == PHASE_IDLE) {
-		DrawText("PHASE_IDLE", glm::vec3(-(float)mWindowWidth * 3.0f / 8.0f, (float)mWindowHeight * 3.0f / 8.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
-	}
-	else if (mPhase == PHASE_MOVE) {
-		DrawText("PHASE_MOVE", glm::vec3(-(float)mWindowWidth * 3.0f / 8.0f, (float)mWindowHeight * 3.0f / 8.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
-	}
+	//// 現在のフェーズ表示
+	//if (mPhase == PHASE_IDLE) {
+	//	DrawText("PHASE_IDLE", glm::vec3(-(float)mWindowWidth * 3.0f / 8.0f, (float)mWindowHeight * 3.0f / 8.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
+	//}
+	//else if (mPhase == PHASE_MOVE) {
+	//	DrawText("PHASE_MOVE", glm::vec3(-(float)mWindowWidth * 3.0f / 8.0f, (float)mWindowHeight * 3.0f / 8.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
+	//}
 
 
 
