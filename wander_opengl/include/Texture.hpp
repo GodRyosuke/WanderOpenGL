@@ -1,9 +1,11 @@
 #pragma once
 
+
 #include <string>
 #include "glew.h"
 #include "SDL_ttf.h"
 #include "SDL.h"
+#include "stb_image.h"
 
 class Texture {
 public:

@@ -1,4 +1,5 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
+#define STB_IMAGE_IMPLEMENTATION
 
 #include "YGame.hpp"
 #include <time.h>
@@ -55,12 +56,19 @@ GLuint indices[] =
 //	-0.5f, -0.5f, 0.0f,     1.0f, 1.0f, 1.0f,	1.0f, 0.0f  // Lower right corner
 //};
 
+//static float SpriteVertices[] =
+//{ //     COORDINATES     /        COLORS      /   TexCoord  //
+//	-0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 0.f, // top left
+//	0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 1.f, 0.f, // top right
+//	0.5f,-0.5f, 0.f, 0.f, 0.f, 0.0f, 1.f, 1.f, // bottom right
+//	-0.5f,-0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 1.f  // bottom left
+//};
 static float SpriteVertices[] =
 { //     COORDINATES     /        COLORS      /   TexCoord  //
-	-0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 0.f, // top left
-	0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 1.f, 0.f, // top right
-	0.5f,-0.5f, 0.f, 0.f, 0.f, 0.0f, 1.f, 1.f, // bottom right
-	-0.5f,-0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 1.f  // bottom left
+	-0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 1.f, // top left
+	0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 1.f, 1.f,	// top right
+	0.5f,-0.5f, 0.f, 0.f, 0.f, 0.0f, 1.f, 0.f,	// bottom right
+	-0.5f,-0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 0.f	// bottom left
 };
 
 
@@ -308,12 +316,20 @@ bool YGame::LoadData()
 		mMeshes.push_back(mesh);
 	}
 
-	{ 
-		//Mesh* mesh = new Mesh("./resources/SimpleObj/", "cubes.obj", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707));
-		//mesh->SetMeshPos(glm::vec3(10.0f, 35.0f, 0.0f));
-		//mesh->SetMeshRotate(glm::mat4(1.0f));
-		//mesh->SetMeshScale(1.0f);
-		//mMeshes.push_back(mesh);
+	{
+		Mesh* mesh = new Mesh("./resources/SimpleObj2/", "cubes.obj", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707));
+		mesh->SetMeshPos(glm::vec3(-10.0f, 35.0f, 0.0f));
+		mesh->SetMeshRotate(glm::mat4(1.0f));
+		mesh->SetMeshScale(1.0f);
+		mMeshes.push_back(mesh);
+	}
+
+	{
+		Mesh* mesh = new Mesh("./resources/SimpleObj3/", "cubes.obj", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707));
+		mesh->SetMeshPos(glm::vec3(-20.0f, 35.0f, 0.0f));
+		mesh->SetMeshRotate(glm::mat4(1.0f));
+		mesh->SetMeshScale(1.0f);
+		mMeshes.push_back(mesh);
 	}
 
 
@@ -428,7 +444,7 @@ bool YGame::LoadData()
 
 	
 	//mTestTexture = new Texture(".\\resources\\forest23.jpg");
-	mTestTexture = new Texture(".\\resources\\test_picture.png");
+	mTestTexture = new Texture(".\\resources\\forest23.jpg");
 	//LoadTexture(".\\resources\\test_picture.png", mTestTexture, test_w, test_h);
 
 
@@ -840,8 +856,8 @@ void YGame::UpdateGame()
 	if (mPhase == PHASE_MOVE) {
 		//printf("%d %d\n", mMousePos.x, mMousePos.y);
 
-		float rotX = mMoveSensitivity * (float)(mMousePos.y - (mWindowHeight / 2.0f)) / mWindowHeight;
-		float rotY = mMoveSensitivity * (float)(mMousePos.x - (mWindowWidth / 2.0f)) / mWindowWidth;
+		float rotX = mMoveSensitivity * (float)((float)mMousePos.y - ((float)mWindowHeight / 2.0f)) / (float)mWindowHeight;
+		float rotY = mMoveSensitivity * (float)((float)mMousePos.x - ((float)mWindowWidth / 2.0f)) / (float)mWindowWidth;
 		printf("rotX: %f rotY: %f\t", rotX, rotY);
 		// Calculates upcoming vertical change in the Orientation
 		glm::vec3 newOrientation = glm::rotate(mCameraOrientation, glm::radians(-rotX), glm::normalize(glm::cross(mCameraOrientation, mCameraUP)));
