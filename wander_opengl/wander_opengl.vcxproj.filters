@@ -69,5 +69,7 @@
     <None Include="Shaders\Sprite.frag" />
     <None Include="Shaders\Text.vert" />
     <None Include="Shaders\Text.frag" />
+    <None Include="Shaders\3DText.vert" />
+    <None Include="Shaders\3DText.frag" />
   </ItemGroup>
 </Project>

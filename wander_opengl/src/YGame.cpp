@@ -219,8 +219,6 @@ bool YGame::Initialize()
 bool YGame::LoadShaders()
 {
 	// Sprite
-	std::string spriteVertFile = "./Shaders/Sprite.vert";
-	std::string spriteFragFile = "./Shaders/Sprite.frag";
 	{
 		std::string vertFile = "./Shaders/Sprite.vert";
 		std::string fragFile = "./Shaders/Sprite.frag";
@@ -266,7 +264,7 @@ bool YGame::LoadShaders()
 
 	// View Projection行列を設定する
 	// View行列の計算
-	mProjection = glm::mat4(1.0f);
+	glm::mat4 mProjection = glm::mat4(1.0f);
 	//mView = glm::translate(mView, glm::vec3(0.0f, 0, 0));
 	mProjection = glm::perspective(glm::radians(45.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
 	mCubeWorldTrans = glm::mat4(1.0);
@@ -283,6 +281,22 @@ bool YGame::LoadShaders()
 	mMeshShaderProgram->SetMatrixUniform("view", view2);
 	mMeshShaderProgram->SetMatrixUniform("proj", mProjection);
 	mMeshShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
+
+
+	// 3DText Shader読み込み
+	{
+		std::string vert_file = "./Shaders/3DText.vert";
+		std::string frag_file = "./Shaders/3DText.frag";
+		m3DTextShaderProgram = new Shader();
+		if (!m3DTextShaderProgram->CreateShaderProgram(vert_file, frag_file)) {
+			return false;
+		}
+	}
+	m3DTextShaderProgram->UseProgram();
+	m3DTextShaderProgram->SetMatrixUniform("view", view2);
+	m3DTextShaderProgram->SetMatrixUniform("proj", mProjection);
+	m3DTextShaderProgram->SetMatrixUniform("uWorldTransform", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 35.0f, 0.0f)));
+	m3DTextShaderProgram->SetMatrixUniform("uRotate", glm::mat4(1.0f));
 
 	
 	return true;
@@ -432,6 +446,23 @@ bool YGame::LoadData()
 
 	glGenBuffers(1, &mAtrasVertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, mAtrasVertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	// Load 3D Text VAO
+	m3DTextShaderProgram->UseProgram();
+	glGenVertexArrays(1, &m3DTextVertexArray);
+	glBindVertexArray(m3DTextVertexArray);
+
+	glGenBuffers(1, &m3DTextVertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, m3DTextVertexBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
@@ -1200,6 +1231,74 @@ void YGame::DrawUTF(std::u16string text, glm::vec3 pos, glm::vec3 color, float s
 }
 
 
+void YGame::Draw3DUTF(std::u16string text, glm::vec3 pos, glm::vec3 color, float scale, glm::mat4 rot)
+{
+	m3DTextShaderProgram->UseProgram();
+	glBindVertexArray(m3DTextVertexArray);
+
+	glm::vec3 FontCenter = glm::vec3(0.0f);
+	// 文字のtexcharの大きさを取得
+	{
+		int TexWidth = 0;
+		int width = (mJapanTexChars.begin()->second.Advance >> 6) * scale;
+		FontCenter.x = (width * text.length()) / 2.0f;
+		FontCenter.y = width / 2.0f;
+	}
+
+	glm::mat4 SpriteTrans = glm::translate(glm::mat4(1.0f), pos);
+	glm::mat4 SpriteRotate = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0, 0.0f, 1.0f));
+	m3DTextShaderProgram->SetMatrixUniform("uWorldTransform", SpriteTrans);
+	m3DTextShaderProgram->SetMatrixUniform("uRotate", rot);
+	m3DTextShaderProgram->SetVectorUniform("textColor", color);
+
+
+	glActiveTexture(GL_TEXTURE0);
+
+	int x2 = 0;
+	int y2 = 0;
+	//float scale = 1.0f;
+	const char16_t* str = text.c_str();
+	for (int i = 0; str[i] != '\0'; i++) {
+		auto itr = mJapanTexChars.find(str[i]);
+		TexChar ch;
+		if (itr == mJapanTexChars.end()) {		// まだ読み込まれていない文字なら
+			ch = LoadUTFChar(str[i]);
+			mJapanTexChars.insert(std::make_pair(str[i], ch));
+		}
+		else {
+			ch = itr->second;
+		}
+
+		float xpos = x2 + ch.Bearing.x * scale;
+		float ypos = y2 - (ch.Size.y - ch.Bearing.y) * scale;
+		float w = ch.Size.x * scale;
+		float h = ch.Size.y * scale;
+
+
+		float textVertices[6][4] = {
+			{ xpos,     ypos + h,   0.0f, 0.0f },
+			{ xpos,     ypos,       0.0f, 1.0f },
+			{ xpos + w, ypos,       1.0f, 1.0f },
+
+			{ xpos,     ypos + h,   0.0f, 0.0f },
+			{ xpos + w, ypos,       1.0f, 1.0f },
+			{ xpos + w, ypos + h,   1.0f, 0.0f }
+		};
+
+		glBindTexture(GL_TEXTURE_2D, ch.texID);
+		// update content of VBO memory
+		glBindBuffer(GL_ARRAY_BUFFER, m3DTextVertexBuffer);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(textVertices), textVertices);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		// now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+		x2 += (ch.Advance >> 6) * scale;
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void YGame::Draw()
 {
 	// Set the clear color to light grey
@@ -1539,20 +1638,26 @@ void YGame::Draw()
 
 
 	// text 表示
-	//DrawText("hello, world!", glm::vec3(0.0f), glm::vec3(1.0f, 0.3f, 0.2f));
-	//DrawText2("hello", glm::vec3(0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
-	//DrawUTF(u"初めて", glm::vec3((float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
+	DrawText("hello, world!", glm::vec3(0.0f), glm::vec3(1.0f, 0.3f, 0.2f));
+	DrawText2("hello", glm::vec3(0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
+	DrawUTF(u"初めてのOpenGL", glm::vec3((float)mWindowWidth / 4.0f, -(float)mWindowHeight / 4.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
 
 
-	//// 現在のフェーズ表示
-	//if (mPhase == PHASE_IDLE) {
-	//	DrawText("PHASE_IDLE", glm::vec3(-(float)mWindowWidth * 3.0f / 8.0f, (float)mWindowHeight * 3.0f / 8.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
-	//}
-	//else if (mPhase == PHASE_MOVE) {
-	//	DrawText("PHASE_MOVE", glm::vec3(-(float)mWindowWidth * 3.0f / 8.0f, (float)mWindowHeight * 3.0f / 8.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
-	//}
+	// 現在のフェーズ表示
+	if (mPhase == PHASE_IDLE) {
+		DrawText("PHASE_IDLE", glm::vec3(-(float)mWindowWidth * 3.0f / 8.0f, (float)mWindowHeight * 3.0f / 8.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
+	}
+	else if (mPhase == PHASE_MOVE) {
+		DrawText("PHASE_MOVE", glm::vec3(-(float)mWindowWidth * 3.0f / 8.0f, (float)mWindowHeight * 3.0f / 8.0f, 0.0f), glm::vec3(0.2f, 1.0f, 0.2f));
+	}
 
 
+	{
+		m3DTextShaderProgram->UseProgram();
+		m3DTextShaderProgram->SetMatrixUniform("view", CameraView);
+		glm::mat4 textRotate = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0, 0.0f, 0.0f));
+		Draw3DUTF(u"3Dの文字列", glm::vec3(0.0f, 20.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.2f), 0.25f, textRotate);
+	}
 
 
 	glBindVertexArray(0);

@@ -5,7 +5,7 @@
 uniform mat4 uWorldTransform;
 uniform mat4 uScaling;
 uniform mat4 uRotate;
-uniform mat4 uViewProj;
+uniform mat4 uViewProj;	// SpriteViewProj
 
 // Attribute 0 is position, 1 is normal, 2 is tex coords.
 layout(location = 0) in vec2 inPosition;

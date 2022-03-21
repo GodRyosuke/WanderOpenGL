@@ -56,6 +56,7 @@ private:
 	void DrawText(std::string text, glm::vec3 pos, glm::vec3 color, float scale = 1.0f, float rot = 0.0f);
 	void DrawText2(std::string text, glm::vec3 pos, glm::vec3 color, float scale = 1.0f, float rot = 0.0f);
 	void DrawUTF(std::u16string text, glm::vec3 pos, glm::vec3 color, float scale = 1.0f, float rot = 0.0f);
+	void Draw3DUTF(std::u16string text, glm::vec3 pos, glm::vec3 color, float scale = 1.0f, glm::mat4 rot = glm::mat4(1.0f));
 
 	enum PHASE{
 		PHASE_IDLE,
@@ -81,8 +82,8 @@ private:
 	Shader* mMeshShaderProgram;
 	Shader* mSpriteShaderProgram;
 	Shader* mTextShaderProgram;
+	Shader* m3DTextShaderProgram;
 
-	glm::mat4 mProjection;
 
 	// lighting
 	glm::vec3 mAmbientLightColor;
@@ -137,6 +138,10 @@ private:
 	// Text Vertices
 	unsigned int mTextVertexArray;
 	unsigned int mTextVertexBuffer;
+
+	// 3D Text Vertex Array
+	unsigned int m3DTextVertexArray;
+	unsigned int m3DTextVertexBuffer;
 
 	// Atras Vertices
 	unsigned int mAtrasVertexArray;
