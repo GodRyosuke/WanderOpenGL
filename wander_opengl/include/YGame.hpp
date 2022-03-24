@@ -83,6 +83,7 @@ private:
 	Shader* mSpriteShaderProgram;
 	Shader* mTextShaderProgram;
 	Shader* m3DTextShaderProgram;
+	Shader* mSkyBoxShaderProgram;
 
 
 	// lighting
@@ -117,6 +118,7 @@ private:
 	Texture* mDonutTexture;
 	Texture* mTestTexture;
 	Texture* mHouseWallTexture;
+	Texture* mSkyBoxTexture;
 
 	int test_w;
 	int test_h;
@@ -146,6 +148,11 @@ private:
 	// Atras Vertices
 	unsigned int mAtrasVertexArray;
 	unsigned int mAtrasVertexBuffer;
+
+	// Sky Box Vertices
+	unsigned int mSkyBoxVertexArray;
+	unsigned int mSkyBoxVertexBuffer;
+	unsigned int mSkyBoxIndexBuffer;
 
 	TTF_Font* mFont;
 	FT_Face mFontFace;

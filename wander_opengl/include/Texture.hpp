@@ -6,15 +6,18 @@
 #include "SDL_ttf.h"
 #include "SDL.h"
 #include "stb_image.h"
+#include <vector>
 
 class Texture {
 public:
 	Texture();
 	Texture(std::string filePath);
+	Texture(std::vector<std::string> filePaths);
 
 	void CreateTextTexture(std::string text_data, int* color, TTF_Font* font);
 
 	void BindTexture();
+	void BindCubeMapTexture();
 	void UnBindTexture();
 
 	int getWidth() { return width; }

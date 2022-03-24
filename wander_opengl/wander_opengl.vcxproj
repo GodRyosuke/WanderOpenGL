@@ -197,6 +197,8 @@ COPY "$(SolutionDir)wander_opengl\Shaders" "$(OutDir)"</Command>
     <None Include="Shaders\3DText.vert" />
     <None Include="Shaders\Phong.frag" />
     <None Include="Shaders\Phong.vert" />
+    <None Include="Shaders\SkyBox.frag" />
+    <None Include="Shaders\SkyBox.vert" />
     <None Include="Shaders\Sprite.frag" />
     <None Include="Shaders\Sprite.vert" />
     <None Include="Shaders\Text.frag" />

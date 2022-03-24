@@ -71,5 +71,7 @@
     <None Include="Shaders\Text.frag" />
     <None Include="Shaders\3DText.vert" />
     <None Include="Shaders\3DText.frag" />
+    <None Include="Shaders\SkyBox.vert" />
+    <None Include="Shaders\SkyBox.frag" />
   </ItemGroup>
 </Project>

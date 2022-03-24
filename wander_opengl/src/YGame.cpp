@@ -26,6 +26,41 @@ GLuint indices[] =
 	3, 0, 4
 };
 
+float skyboxVertices[] =
+{
+	//   Coordinates
+	-1.0f, -1.0f,  1.0f,//        7--------6
+	 1.0f, -1.0f,  1.0f,//       /|       /|
+	 1.0f, -1.0f, -1.0f,//      4--------5 |
+	-1.0f, -1.0f, -1.0f,//      | |      | |
+	-1.0f,  1.0f,  1.0f,//      | 3------|-2
+	 1.0f,  1.0f,  1.0f,//      |/       |/
+	 1.0f,  1.0f, -1.0f,//      0--------1
+	-1.0f,  1.0f, -1.0f
+};
+
+unsigned int skyboxIndices[] =
+{
+	// Right
+	1, 2, 6,
+	6, 5, 1,
+	// Left
+	0, 4, 7,
+	7, 3, 0,
+	// Top
+	4, 5, 6,
+	6, 7, 4,
+	// Bottom
+	0, 3, 2,
+	2, 1, 0,
+	// Back
+	0, 1, 5,
+	5, 4, 0,
+	// Front
+	3, 7, 6,
+	6, 2, 3
+};
+
 //float SpriteVertices[] = {
 //	-0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 0.f, // top left
 //	0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 1.f, 0.f, // top right
@@ -297,6 +332,21 @@ bool YGame::LoadShaders()
 	m3DTextShaderProgram->SetMatrixUniform("proj", mProjection);
 	m3DTextShaderProgram->SetMatrixUniform("uWorldTransform", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 35.0f, 0.0f)));
 	m3DTextShaderProgram->SetMatrixUniform("uRotate", glm::mat4(1.0f));
+
+
+	// Sky Box Shader読み込み
+	{
+		std::string vert_file = "./Shaders/SkyBox.vert";
+		std::string frag_file = "./Shaders/SkyBox.frag";
+		mSkyBoxShaderProgram = new Shader();
+		if (!mSkyBoxShaderProgram->CreateShaderProgram(vert_file, frag_file)) {
+			return false;
+		}
+	}
+	mSkyBoxShaderProgram->UseProgram();
+	mSkyBoxShaderProgram->SetMatrixUniform("uVew", view2);
+	mSkyBoxShaderProgram->SetMatrixUniform("uProj", mProjection);
+
 
 	
 	return true;
@@ -716,6 +766,44 @@ bool YGame::LoadData()
 		}
 	}
 	//char16_t si[] = u"あいうえお";
+
+
+	// SkyBox
+	// Sky BoxのVertex Arrayを読み込む
+	glGenVertexArrays(1, &mSkyBoxVertexArray);
+	glBindVertexArray(mSkyBoxVertexArray);
+
+	glGenBuffers(1, &mSkyBoxVertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, mSkyBoxVertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &mSkyBoxIndexBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mSkyBoxIndexBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skyboxIndices), skyboxIndices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, mSkyBoxVertexBuffer);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	// unbind cube vertex arrays
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	
+	// Sky BoxのTextureを読み込む
+	{
+		std::vector<std::string> facesCubemap =
+		{
+			"./resources/skybox/right.jpg",
+			"./resources/skybox/left.jpg",
+			"./resources/skybox/top.jpg",
+			"./resources/skybox/bottom.jpg",
+			"./resources/skybox/front.jpg",
+			"./resources/skybox/back.jpg"
+		};
+		mSkyBoxTexture = new Texture(facesCubemap);
+	}
 
 
 
@@ -1431,7 +1519,20 @@ void YGame::Draw()
 
 	// bind cube texture
 
-	// draw
+
+	// draw sky boxes
+	glDepthFunc(GL_LEQUAL);
+	{
+		mSkyBoxShaderProgram->UseProgram();
+		mSkyBoxShaderProgram->SetMatrixUniform("uView", CameraView);
+		glBindVertexArray(mSkyBoxVertexArray);
+		mSkyBoxTexture->BindCubeMapTexture();
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+		mSkyBoxTexture->UnBindTexture();
+		glBindVertexArray(0);
+	}
+	glDepthFunc(GL_LESS);
+
 
 
 	// --- draw sprites ---

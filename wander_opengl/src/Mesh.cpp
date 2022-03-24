@@ -599,6 +599,7 @@ void Mesh::Draw()
 		if (material.tex != nullptr) {
 			material.tex->UnBindTexture();
 		}
+		glBindVertexArray(0);
 	}
 }
 
