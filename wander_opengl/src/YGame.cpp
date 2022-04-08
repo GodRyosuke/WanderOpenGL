@@ -26,18 +26,33 @@ GLuint indices[] =
 	3, 0, 4
 };
 
+//float skyboxVertices[] =
+//{
+//	//   Coordinates
+//	-1.0f, -1.0f,  1.0f,//        7--------6
+//	 1.0f, -1.0f,  1.0f,//       /|       /|
+//	 1.0f, -1.0f, -1.0f,//      4--------5 |
+//	-1.0f, -1.0f, -1.0f,//      | |      | |
+//	-1.0f,  1.0f,  1.0f,//      | 3------|-2
+//	 1.0f,  1.0f,  1.0f,//      |/       |/
+//	 1.0f,  1.0f, -1.0f,//      0--------1
+//	-1.0f,  1.0f, -1.0f
+//};
+
 float skyboxVertices[] =
 {
 	//   Coordinates
+	-1.0f, -1.0f, -1.0f,//      | |      | |
+	 1.0f, -1.0f, -1.0f,//      4--------5 |
+	 1.0f,  1.0f, -1.0f,//      0--------1
+	-1.0f,  1.0f, -1.0f, 
 	-1.0f, -1.0f,  1.0f,//        7--------6
 	 1.0f, -1.0f,  1.0f,//       /|       /|
-	 1.0f, -1.0f, -1.0f,//      4--------5 |
-	-1.0f, -1.0f, -1.0f,//      | |      | |
-	-1.0f,  1.0f,  1.0f,//      | 3------|-2
 	 1.0f,  1.0f,  1.0f,//      |/       |/
-	 1.0f,  1.0f, -1.0f,//      0--------1
-	-1.0f,  1.0f, -1.0f
+	-1.0f,  1.0f,  1.0f//      | 3------|-2
 };
+
+
 
 unsigned int skyboxIndices[] =
 {
@@ -60,6 +75,54 @@ unsigned int skyboxIndices[] =
 	3, 7, 6,
 	6, 2, 3
 };
+
+//unsigned int skyboxIndices[] =
+//{
+//	// Right
+//	6, 2, 1,
+//	1, 5, 6,
+//	// Left
+//	0, 4, 7,
+//	7, 3, 0,
+//	// Front
+//	4, 5, 6,
+//	6, 7, 4,
+//	// Back
+//	0, 3, 2,
+//	2, 1, 0,
+//	// Top
+//	0, 1, 5,
+//	5, 4, 0,
+//	// Bottom
+//	3, 7, 6,
+//	6, 2, 3
+//};
+
+
+
+//unsigned int skyboxIndices[] =
+//{
+//	// Right
+//	1, 2, 6,
+//	6, 5, 1,
+//	// Left
+//	0, 4, 7,
+//	7, 3, 0,
+//	// Top
+//	0, 1, 5,
+//	5, 4, 0,
+//	// Bottom
+//	3, 7, 6,
+//	6, 2, 3,
+//	// Back
+//	0, 3, 2,
+//	2, 1, 0,
+//	// Front
+//	4, 5, 6,
+//	6, 7, 4
+//};
+
+
 
 //float SpriteVertices[] = {
 //	-0.5f, 0.5f, 0.f, 0.f, 0.f, 0.0f, 0.f, 0.f, // top left
@@ -346,6 +409,12 @@ bool YGame::LoadShaders()
 	mSkyBoxShaderProgram->UseProgram();
 	mSkyBoxShaderProgram->SetMatrixUniform("uVew", view2);
 	mSkyBoxShaderProgram->SetMatrixUniform("uProj", mProjection);
+	{
+		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+		mSkyBoxShaderProgram->SetMatrixUniform("uRot", rot);
+		glm::mat4 trans = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f));
+		mSkyBoxShaderProgram->SetMatrixUniform("uTrans", trans);
+	}
 
 
 	
@@ -793,17 +862,80 @@ bool YGame::LoadData()
 	
 	// Sky BoxのTextureを読み込む
 	{
+		//std::vector<std::string> facesCubemap =
+		//{
+		//	"./resources/skybox/right.jpg",
+		//	"./resources/skybox/left.jpg",
+		//	"./resources/skybox/top.jpg",
+		//	"./resources/skybox/bottom.jpg",
+		//	"./resources/skybox/front.jpg",
+		//	"./resources/skybox/back.jpg"
+		//};
+		//std::vector<std::string> facesCubemap =
+		//{
+		//	"./resources/starbox/right.png",
+		//	"./resources/starbox/left.png",
+		//	"./resources/starbox/top.png",
+		//	"./resources/starbox/bottom.png",
+		//	"./resources/starbox/front.png",
+		//	"./resources/starbox/back.png"
+		//};
+
+		//std::vector<std::string> facesCubemap =
+		//{
+		//	"./resources/mountainBox/right.png",
+		//	"./resources/mountainBox/left.png",
+		//	"./resources/mountainBox/top.png",
+		//	"./resources/mountainBox/bottom.png",
+		//	"./resources/mountainBox/front.png",
+		//	"./resources/mountainBox/back.png"
+		//};
 		std::vector<std::string> facesCubemap =
 		{
-			"./resources/skybox/right.jpg",
-			"./resources/skybox/left.jpg",
-			"./resources/skybox/top.jpg",
-			"./resources/skybox/bottom.jpg",
-			"./resources/skybox/front.jpg",
-			"./resources/skybox/back.jpg"
+			"./resources/StarWarsSkyBox/right.png",
+			"./resources/StarWarsSkyBox/left.png",
+			"./resources/StarWarsSkyBox/top.png",
+			"./resources/StarWarsSkyBox/bottom.png",
+			"./resources/StarWarsSkyBox/front.png",
+			"./resources/StarWarsSkyBox/back.png"
 		};
+
+
+		//std::vector<std::string> facesCubemap =
+		//{
+		//	"./resources/skybox/right.jpg",
+		//	"./resources/skybox/left.jpg",
+		//	"./resources/skybox/front.jpg",
+		//	"./resources/skybox/back.jpg",
+		//	"./resources/skybox/top.jpg",
+		//	"./resources/skybox/bottom.jpg"
+		//};
+
+
 		mSkyBoxTexture = new Texture(facesCubemap);
 	}
+
+	//unsigned int skyboxIndices[] =
+	//{
+	//	// Right
+	//	1, 2, 6,
+	//	6, 5, 1,
+	//	// Left
+	//	0, 4, 7,
+	//	7, 3, 0,
+	//	// Front
+	//	4, 5, 6,
+	//	6, 7, 4,
+	//	// Back
+	//	0, 3, 2,
+	//	2, 1, 0,
+	//	// Top
+	//	0, 1, 5,
+	//	5, 4, 0,
+	//	// Bottom
+	//	3, 7, 6,
+	//	6, 2, 3
+	//};
 
 
 
@@ -1524,7 +1656,10 @@ void YGame::Draw()
 	glDepthFunc(GL_LEQUAL);
 	{
 		mSkyBoxShaderProgram->UseProgram();
-		mSkyBoxShaderProgram->SetMatrixUniform("uView", CameraView);
+		glm::mat4 skyView = glm::mat4(glm::mat3(glm::lookAt(mCameraPos, mCameraPos + mCameraOrientation, mCameraUP)));
+		mSkyBoxShaderProgram->SetMatrixUniform("uView", skyView);
+		glm::mat4 CameraTrans = glm::translate(glm::mat4(1.0f), mCameraPos);
+		//mSkyBoxShaderProgram->SetMatrixUniform("uTrans", CameraTrans);
 		glBindVertexArray(mSkyBoxVertexArray);
 		mSkyBoxTexture->BindCubeMapTexture();
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
