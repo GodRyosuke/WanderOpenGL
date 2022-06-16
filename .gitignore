@@ -5,3 +5,4 @@
 /wander_opengl/x64/
 # /x64/Debug/*.exe
 # /x64/Debug/*.pdb
+/dependencies/fbxsdk/lib/

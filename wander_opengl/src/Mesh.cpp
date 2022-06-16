@@ -15,6 +15,7 @@ Mesh::Mesh(std::string FilePath, std::string ObjFileName, Shader* shader, glm::v
 		std::cout << "Failed to Load Mesh Obj File\n";
 		return;
 	}
+
 	//if (!LoadMaterials(MtlFilePath)) {
 	//	std::cout << "Failed to Load Material Obj File\n";
 	//	return;
@@ -550,6 +551,14 @@ bool Mesh::LoadMaterials(std::string FilePath, std::string MtlFileName)
 	fclose(file);
 	return true;
 }
+
+bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
+{
+	FbxManager* manager = FbxManager::Create();
+
+	return true;
+}
+
 
 void Mesh::SetMeshLightings()
 {

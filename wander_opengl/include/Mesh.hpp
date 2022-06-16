@@ -6,6 +6,7 @@
 #include "Shader.hpp"
 #include <map>
 #include "Texture.hpp"
+#include "fbxsdk.h"
 
 class Mesh {
 public:
@@ -60,6 +61,9 @@ private:
 
 	bool LoadObjFile(std::string FilePath, std::string ObjFileName);
 	bool deLoadObjFile(std::string FilePath, std::string ObjFileName);
+
+	bool LoadFBXFile(std::string FilePath, std::string FBXFileName);
+
 	bool LoadMaterials(std::string FilePath, std::string MtlFileName);
 	bool LoadVAO(FILE* file, VAO& vao, int& VertexOffset, int& NormalOffset, int& IndexOffset);
 	void CreateVAO(std::vector<float>VertexData, std::vector<float>NormalData,
