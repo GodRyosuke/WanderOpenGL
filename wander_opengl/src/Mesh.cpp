@@ -554,7 +554,60 @@ bool Mesh::LoadMaterials(std::string FilePath, std::string MtlFileName)
 
 bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
 {
+	std::string fbxFilePath = FilePath + FBXFileName;
+
 	FbxManager* manager = FbxManager::Create();
+	if (!manager) {
+		std::cerr << "failed to create FbxManager." << std::endl;
+		manager->Destroy();
+		return false;
+	}
+
+	FbxScene* scene = FbxScene::Create(manager, "");
+	if (!scene) {
+		std::cerr << "failed to create FbxScene." << std::endl;
+		manager->Destroy();
+		return false;
+	}
+
+	FbxImporter* importer = FbxImporter::Create(manager, "");
+	if (!importer) {
+		std::cerr << "failed to create FbxImporter." << std::endl;
+		manager->Destroy();
+		scene->Destroy();
+		return false;
+	}
+
+	if (!importer->Initialize(fbxFilePath.c_str(), -1, manager->GetIOSettings())) {
+		std::cerr << "failed to initialize FbxImporter." << std::endl;
+		importer->Destroy();
+		manager->Destroy();
+		scene->Destroy();
+		return false;
+	}
+
+	if (!importer->Import(scene))
+	{
+		std::cerr << "failed to import: " << fbxFilePath << std::endl;
+		importer->Destroy();
+		manager->Destroy();
+		scene->Destroy();
+		return false;
+	}
+
+	importer->Destroy();
+
+	// ƒ|ƒŠƒSƒ“‚ðŽOŠpŒ`‚É•ÏŠ·
+	FbxGeometryConverter geometry_converter(manager);
+	geometry_converter.Triangulate(scene, true);
+
+	//FbxMesh* mesh = scene->GetSrcObject<FbxMesh>();
+	//if (!mesh) {
+	//	std::cerr << "failed to load mesh." << " (" << fbxFilePath << ")" << std::endl;
+	//	scene->Destroy();
+	//	manager->Destroy();
+	//	return false;
+	//}
 
 	return true;
 }
