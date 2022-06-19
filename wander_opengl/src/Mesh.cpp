@@ -4,17 +4,26 @@
 #include "GLUtil.hpp"
 #include <iostream>
 
-Mesh::Mesh(std::string FilePath, std::string ObjFileName, Shader* shader, glm::vec3 LightDir)
+Mesh::Mesh(std::string FilePath, std::string ObjFileName, Shader* shader, glm::vec3 LightDir, bool is_fbx)
 	:mShader(shader),
 	mVertices(0),
 	mIndices(0),
 	mLightDir(LightDir)
 {
 
-	if (!LoadObjFile(FilePath, ObjFileName)) {
-		std::cout << "Failed to Load Mesh Obj File\n";
-		return;
+	if (is_fbx) {
+		if (!LoadFBXFile(FilePath, ObjFileName)) {
+			std::cout << "Failed to Load FBX File\n";
+			return;
+		}
 	}
+	else {
+		if (!LoadObjFile(FilePath, ObjFileName)) {
+			std::cout << "Failed to Load Mesh Obj File\n";
+			return;
+		}
+	}
+
 
 	//if (!LoadMaterials(MtlFilePath)) {
 	//	std::cout << "Failed to Load Material Obj File\n";
@@ -563,39 +572,175 @@ bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
 		return false;
 	}
 
-	FbxScene* scene = FbxScene::Create(manager, "");
+	FbxIOSettings* ios = FbxIOSettings::Create(manager, IOSROOT);
+	manager->SetIOSettings(ios);
+
+	FbxImporter* importer = FbxImporter::Create(manager, "");
+	if (!importer->Initialize(fbxFilePath.c_str(), -1, manager->GetIOSettings())) {
+		printf("Call to FbxImporter::Initialize() failed.\n");
+		printf("Error returned: %s\n\n", importer->GetStatus().GetErrorString());
+		exit(-1);
+	}
+
+
+	FbxScene* scene = FbxScene::Create(manager, "wander_scene");
 	if (!scene) {
 		std::cerr << "failed to create FbxScene." << std::endl;
 		manager->Destroy();
 		return false;
 	}
 
-	FbxImporter* importer = FbxImporter::Create(manager, "");
-	if (!importer) {
-		std::cerr << "failed to create FbxImporter." << std::endl;
-		manager->Destroy();
-		scene->Destroy();
-		return false;
-	}
-
-	if (!importer->Initialize(fbxFilePath.c_str(), -1, manager->GetIOSettings())) {
-		std::cerr << "failed to initialize FbxImporter." << std::endl;
-		importer->Destroy();
-		manager->Destroy();
-		scene->Destroy();
-		return false;
-	}
-
-	if (!importer->Import(scene))
-	{
-		std::cerr << "failed to import: " << fbxFilePath << std::endl;
-		importer->Destroy();
-		manager->Destroy();
-		scene->Destroy();
-		return false;
-	}
-
+	importer->Import(scene);
 	importer->Destroy();
+
+	FbxNode* rootNode = scene->GetRootNode();
+	if (rootNode) {
+		for (int i = 0; i < rootNode->GetChildCount(); i++) {
+			FbxNode* node = rootNode->GetChild(i);
+			FbxNodeAttribute* attr = node->GetNodeAttribute();
+
+			if (attr) {
+				if (attr->GetAttributeType() == FbxNodeAttribute::eMesh) {
+					// mesh作成処理
+					FbxMesh* lMesh = node->GetMesh();
+					const int lVertexCount = lMesh->GetControlPointsCount();
+					std::vector<int>indices;
+					struct customVert {
+						glm::vec3 vert;
+						glm::vec3 normal;
+						glm::vec2 uv;
+					};
+					std::vector<customVert>vertices;
+
+					// Index取得
+					for (int i = 0; i < lMesh->GetPolygonCount(); i++) {
+						indices.push_back(i * 3);
+						indices.push_back(i * 3 + 1);
+						indices.push_back(i * 3 + 2);
+					}
+
+					// Vertex取得
+					FbxVector4* lVertexArray = NULL;
+					lVertexArray = new FbxVector4[lVertexCount];
+					memcpy(lVertexArray, lMesh->GetControlPoints(), lVertexCount * sizeof(FbxVector4));
+
+					int* polygonIndices = lMesh->GetPolygonVertices();
+					for (int i = 0; i < lMesh->GetPolygonVertexCount(); i++) {
+						int index = polygonIndices[i];
+						customVert point;
+						point.vert.x = lVertexArray[index][0];
+						point.vert.y = lVertexArray[index][1];
+						point.vert.z = lVertexArray[index][2];
+						vertices.push_back(point);
+					}
+
+					// 法線取得
+					FbxArray<FbxVector4> lNormals;
+					lMesh->GetPolygonVertexNormals(lNormals);
+					for (int i = 0; i < lNormals.Size(); i++) {
+						vertices[i].normal.x = lNormals[i][0];
+						vertices[i].normal.y = lNormals[i][1];
+						vertices[i].normal.z = lNormals[i][2];
+					}
+
+					// UV取得
+					FbxStringList lUVNames;
+					lMesh->GetUVSetNames(lUVNames);
+					FbxArray<FbxVector2> lUVs;
+					lMesh->GetPolygonVertexUVs(lUVNames.GetStringAt(0), lUVs);
+					for (int i = 0; i < lUVs.Size(); i++) {
+						vertices[i].uv.x = lUVs[i][0];
+						vertices[i].uv.y = lUVs[i][1];
+					}
+
+					// マテリアル取得
+
+
+
+					int x = 0;
+				}
+			}
+
+			//if (mesh) {
+			//	FbxVector4* lVertexArray = NULL;
+			//	const int lVertexCount = mesh->GetControlPointsCount();
+			//	auto meshcach = mesh->GetUserDataPtr();
+			//	lVertexArray = new FbxVector4[lVertexCount];
+			//	memcpy(lVertexArray, mesh->GetControlPoints(), lVertexCount * sizeof(FbxVector4));
+
+			//	if (meshcach) {
+
+			//	}
+			//}
+
+			int x = 0;
+		}
+	}
+	int childCount = rootNode->GetChildCount();
+
+	FbxPose* pose = scene->GetPose(0);
+	const FbxVector4 lT = rootNode->GetGeometricTranslation(FbxNode::eSourcePivot);
+	const FbxVector4 lR = rootNode->GetGeometricRotation(FbxNode::eSourcePivot);
+	const FbxVector4 lS = rootNode->GetGeometricScaling(FbxNode::eSourcePivot);
+
+	FbxAMatrix rootMat = FbxAMatrix(lT, lR, lS);
+
+	FbxNodeAttribute* lNodeAttribute = rootNode->GetNodeAttribute();
+
+	//if (lNodeAttribute)
+	//{
+	//	// All lights has been processed before the whole scene because they influence every geometry.
+	//	if (lNodeAttribute->GetAttributeType() == FbxNodeAttribute::eMarker)
+	//	{
+	//		DrawMarker(pGlobalPosition);
+	//	}
+	//	else if (lNodeAttribute->GetAttributeType() == FbxNodeAttribute::eSkeleton)
+	//	{
+	//		DrawSkeleton(pNode, pParentGlobalPosition, pGlobalPosition);
+	//	}
+	//	// NURBS and patch have been converted into triangluation meshes.
+	//	else if (lNodeAttribute->GetAttributeType() == FbxNodeAttribute::eMesh)
+	//	{
+	//		DrawMesh(pNode, pTime, pAnimLayer, pGlobalPosition, pPose, pShadingMode);
+	//	}
+	//	else if (lNodeAttribute->GetAttributeType() == FbxNodeAttribute::eCamera)
+	//	{
+	//		DrawCamera(pNode, pTime, pAnimLayer, pGlobalPosition);
+	//	}
+	//	else if (lNodeAttribute->GetAttributeType() == FbxNodeAttribute::eNull)
+	//	{
+	//		DrawNull(pGlobalPosition);
+	//	}
+	//}
+	//else
+	//{
+	//	// Draw a Null for nodes without attribute.
+	//	DrawNull(pGlobalPosition);
+	//}
+
+
+	manager->Destroy();
+	return true;
+
+
+	//if (!importer->Initialize(fbxFilePath.c_str(), -1, manager->GetIOSettings())) {
+	//	std::cerr << "failed to initialize FbxImporter." << std::endl;
+	//	importer->Destroy();
+	//	manager->Destroy();
+	//	scene->Destroy();
+	//	return false;
+	//}
+
+	//if (!importer->Import(scene))
+	//{
+	//	std::cerr << "failed to import: " << fbxFilePath << std::endl;
+	//	importer->Destroy();
+	//	manager->Destroy();
+	//	scene->Destroy();
+	//	return false;
+	//}
+
+	//importer->Destroy();
 
 	// ポリゴンを三角形に変換
 	FbxGeometryConverter geometry_converter(manager);

@@ -10,7 +10,7 @@
 
 class Mesh {
 public:
-	Mesh(std::string ObjFilePath, std::string MtlFilePath, Shader* shader, glm::vec3 LightDir);
+	Mesh(std::string ObjFilePath, std::string MtlFilePath, Shader* shader, glm::vec3 LightDir, bool is_fbx = false);
 	// Mesh ‚ÌMaterial uniform’l‚ğİ’è
 	void SetMeshLightings();
 	// Mesh‚ÌAffine•ÏŠ·‚ğuniform’l‚É”½‰f
