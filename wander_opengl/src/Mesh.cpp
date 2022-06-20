@@ -561,50 +561,25 @@ bool Mesh::LoadMaterials(std::string FilePath, std::string MtlFileName)
 	return true;
 }
 
-bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
+void Mesh::searchNode(FbxScene* scene, FbxGeometryConverter converter, FbxNode* node)
 {
-	std::string fbxFilePath = FilePath + FBXFileName;
-
-	FbxManager* manager = FbxManager::Create();
-	if (!manager) {
-		std::cerr << "failed to create FbxManager." << std::endl;
-		manager->Destroy();
-		return false;
+	if (node->GetChildCount() == 0) {
+		return;
 	}
 
-	FbxIOSettings* ios = FbxIOSettings::Create(manager, IOSROOT);
-	manager->SetIOSettings(ios);
+	for (int no = 0; no < node->GetChildCount(); no++) {
+		FbxNode* lNode = node->GetChild(no);
 
-	FbxImporter* importer = FbxImporter::Create(manager, "");
-	if (!importer->Initialize(fbxFilePath.c_str(), -1, manager->GetIOSettings())) {
-		printf("Call to FbxImporter::Initialize() failed.\n");
-		printf("Error returned: %s\n\n", importer->GetStatus().GetErrorString());
-		exit(-1);
-	}
-
-
-	FbxScene* scene = FbxScene::Create(manager, "wander_scene");
-	if (!scene) {
-		std::cerr << "failed to create FbxScene." << std::endl;
-		manager->Destroy();
-		return false;
-	}
-
-	importer->Import(scene);
-	importer->Destroy();
-
-	FbxNode* rootNode = scene->GetRootNode();
-	if (rootNode) {
-		for (int i = 0; i < rootNode->GetChildCount(); i++) {
-			FbxNode* node = rootNode->GetChild(i);
-			FbxNodeAttribute* attr = node->GetNodeAttribute();
-
+		for (int attrIdx = 0; attrIdx < lNode->GetNodeAttributeCount(); attrIdx++) {
+			FbxNodeAttribute* attr = lNode->GetNodeAttributeByIndex(attrIdx);
 			if (attr) {
 				if (attr->GetAttributeType() == FbxNodeAttribute::eMesh) {
 					// mesh作成処理
-					FbxMesh* lMesh = node->GetMesh();
+					FbxMesh* lMesh = lNode->GetMesh();
+					converter.SplitMeshPerMaterial(lMesh, true);
+
 					const int lVertexCount = lMesh->GetControlPointsCount();
-					std::vector<int>indices;
+					std::vector<unsigned int>indices;
 					struct customVert {
 						glm::vec3 vert;
 						glm::vec3 normal;
@@ -656,36 +631,235 @@ bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
 					// マテリアル取得
 
 
+					// VAO作成
+					// データを作り変える
+					std::vector<float> vertices_data;
+					for (int i = 0; i < vertices.size(); i++) {
+						vertices_data.push_back(vertices[i].vert.x);
+						vertices_data.push_back(vertices[i].vert.y);
+						vertices_data.push_back(vertices[i].vert.z);
+						vertices_data.push_back(vertices[i].normal.x);
+						vertices_data.push_back(vertices[i].normal.y);
+						vertices_data.push_back(vertices[i].normal.z);
+						vertices_data.push_back(vertices[i].uv.x);
+						vertices_data.push_back(vertices[i].uv.y);
+					}
+
+					unsigned int VertexArray;
+					unsigned int VertexBuffer;
+					unsigned int IndexBuffer;
+
+					mShader->UseProgram();
+					glGenVertexArrays(1, &VertexArray);
+					glBindVertexArray(VertexArray);
+
+					glGenBuffers(1, &VertexBuffer);
+					glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+					glBufferData(GL_ARRAY_BUFFER, vertices_data.size() * sizeof(float), vertices_data.data(), GL_STATIC_DRAW);
+					//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+					glGenBuffers(1, &IndexBuffer);
+					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
+					glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+
+					// link attribution
+					glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+					//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+					//glEnableVertexAttribArray(0);
+					glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+					glEnableVertexAttribArray(0);
+					glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+					glEnableVertexAttribArray(1);
+					glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+					glEnableVertexAttribArray(2);
+
+					// unbind cube vertex arrays
+					glBindVertexArray(0);
+					glBindBuffer(GL_ARRAY_BUFFER, 0);
+					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+					VAO vao;
+					vao.VertexArray = VertexArray;
+					vao.VertexBuffer = VertexBuffer;
+					vao.IndexBuffer = IndexBuffer;
+					vao.IndicesSize = indices.size();
+					vao.MaterialName = "FBX";
+					mVAOs.push_back(vao);
 
 					int x = 0;
 				}
 			}
 
-			//if (mesh) {
-			//	FbxVector4* lVertexArray = NULL;
-			//	const int lVertexCount = mesh->GetControlPointsCount();
-			//	auto meshcach = mesh->GetUserDataPtr();
-			//	lVertexArray = new FbxVector4[lVertexCount];
-			//	memcpy(lVertexArray, mesh->GetControlPoints(), lVertexCount * sizeof(FbxVector4));
-
-			//	if (meshcach) {
-
-			//	}
-			//}
-
-			int x = 0;
 		}
+
+		searchNode(scene, converter, lNode);
 	}
-	int childCount = rootNode->GetChildCount();
+}
 
-	FbxPose* pose = scene->GetPose(0);
-	const FbxVector4 lT = rootNode->GetGeometricTranslation(FbxNode::eSourcePivot);
-	const FbxVector4 lR = rootNode->GetGeometricRotation(FbxNode::eSourcePivot);
-	const FbxVector4 lS = rootNode->GetGeometricScaling(FbxNode::eSourcePivot);
+bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
+{
+	std::string fbxFilePath = FilePath + FBXFileName;
 
-	FbxAMatrix rootMat = FbxAMatrix(lT, lR, lS);
+	FbxManager* manager = FbxManager::Create();
+	if (!manager) {
+		std::cerr << "failed to create FbxManager." << std::endl;
+		manager->Destroy();
+		return false;
+	}
 
-	FbxNodeAttribute* lNodeAttribute = rootNode->GetNodeAttribute();
+	FbxIOSettings* ios = FbxIOSettings::Create(manager, IOSROOT);
+	manager->SetIOSettings(ios);
+
+	FbxImporter* importer = FbxImporter::Create(manager, "");
+	if (!importer->Initialize(fbxFilePath.c_str(), -1, manager->GetIOSettings())) {
+		printf("Call to FbxImporter::Initialize() failed.\n");
+		printf("Error returned: %s\n\n", importer->GetStatus().GetErrorString());
+		exit(-1);
+	}
+
+
+	FbxScene* scene = FbxScene::Create(manager, "wander_scene");
+	if (!scene) {
+		std::cerr << "failed to create FbxScene." << std::endl;
+		manager->Destroy();
+		return false;
+	}
+
+	importer->Import(scene);
+	importer->Destroy();
+
+	// 3角形ポリゴンにする
+	FbxGeometryConverter converter(manager);
+	converter.Triangulate(scene, true);
+
+	// ポリゴンごとに、Meshを分割
+	converter.SplitMeshesPerMaterial(scene, true);
+
+	FbxNode* rootNode = scene->GetRootNode();
+	if (rootNode) {
+		searchNode(scene, converter, rootNode);
+		//for (int i = 0; i < rootNode->GetChildCount(); i++) {
+		//	FbxNode* node = rootNode->GetChild(i);
+		//	FbxNodeAttribute* attr = node->GetNodeAttribute();
+
+		//	if (attr) {
+		//		if (attr->GetAttributeType() == FbxNodeAttribute::eMesh) {
+		//			// mesh作成処理
+		//			FbxMesh* lMesh = node->GetMesh();
+		//			const int lVertexCount = lMesh->GetControlPointsCount();
+		//			std::vector<unsigned int>indices;
+		//			struct customVert {
+		//				glm::vec3 vert;
+		//				glm::vec3 normal;
+		//				glm::vec2 uv;
+		//			};
+		//			std::vector<customVert>vertices;
+
+		//			// Index取得
+		//			for (int i = 0; i < lMesh->GetPolygonCount(); i++) {
+		//				indices.push_back(i * 3);
+		//				indices.push_back(i * 3 + 1);
+		//				indices.push_back(i * 3 + 2);
+		//			}
+
+		//			// Vertex取得
+		//			FbxVector4* lVertexArray = NULL;
+		//			lVertexArray = new FbxVector4[lVertexCount];
+		//			memcpy(lVertexArray, lMesh->GetControlPoints(), lVertexCount * sizeof(FbxVector4));
+
+		//			int* polygonIndices = lMesh->GetPolygonVertices();
+		//			for (int i = 0; i < lMesh->GetPolygonVertexCount(); i++) {
+		//				int index = polygonIndices[i];
+		//				customVert point;
+		//				point.vert.x = lVertexArray[index][0];
+		//				point.vert.y = lVertexArray[index][1];
+		//				point.vert.z = lVertexArray[index][2];
+		//				vertices.push_back(point);
+		//			}
+
+		//			// 法線取得
+		//			FbxArray<FbxVector4> lNormals;
+		//			lMesh->GetPolygonVertexNormals(lNormals);
+		//			for (int i = 0; i < lNormals.Size(); i++) {
+		//				vertices[i].normal.x = lNormals[i][0];
+		//				vertices[i].normal.y = lNormals[i][1];
+		//				vertices[i].normal.z = lNormals[i][2];
+		//			}
+
+		//			// UV取得
+		//			FbxStringList lUVNames;
+		//			lMesh->GetUVSetNames(lUVNames);
+		//			FbxArray<FbxVector2> lUVs;
+		//			lMesh->GetPolygonVertexUVs(lUVNames.GetStringAt(0), lUVs);
+		//			for (int i = 0; i < lUVs.Size(); i++) {
+		//				vertices[i].uv.x = lUVs[i][0];
+		//				vertices[i].uv.y = lUVs[i][1];
+		//			}
+
+		//			// マテリアル取得
+
+
+		//			// VAO作成
+		//			// データを作り変える
+		//			std::vector<float> vertices_data;
+		//			for (int i = 0; i < vertices.size(); i++) {
+		//				vertices_data.push_back(vertices[i].vert.x);
+		//				vertices_data.push_back(vertices[i].vert.y);
+		//				vertices_data.push_back(vertices[i].vert.z);
+		//				vertices_data.push_back(vertices[i].normal.x);
+		//				vertices_data.push_back(vertices[i].normal.y);
+		//				vertices_data.push_back(vertices[i].normal.z);
+		//				vertices_data.push_back(vertices[i].uv.x);
+		//				vertices_data.push_back(vertices[i].uv.y);
+		//			}
+
+		//			unsigned int VertexArray;
+		//			unsigned int VertexBuffer;
+		//			unsigned int IndexBuffer;
+
+		//			mShader->UseProgram();
+		//			glGenVertexArrays(1, &VertexArray);
+		//			glBindVertexArray(VertexArray);
+
+		//			glGenBuffers(1, &VertexBuffer);
+		//			glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+		//			glBufferData(GL_ARRAY_BUFFER, vertices_data.size() * sizeof(float), vertices_data.data(), GL_STATIC_DRAW);
+		//			//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		//			glGenBuffers(1, &IndexBuffer);
+		//			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
+		//			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+
+		//			// link attribution
+		//			glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+		//			//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		//			//glEnableVertexAttribArray(0);
+		//			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		//			glEnableVertexAttribArray(0);
+		//			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		//			glEnableVertexAttribArray(1);
+		//			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		//			glEnableVertexAttribArray(2);
+
+		//			// unbind cube vertex arrays
+		//			glBindVertexArray(0);
+		//			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		//			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		//			VAO vao;
+		//			vao.VertexArray = VertexArray;
+		//			vao.VertexBuffer = VertexBuffer;
+		//			vao.IndexBuffer = IndexBuffer;
+		//			vao.IndicesSize = indices.size();
+		//			vao.MaterialName = "FBX";
+		//			mVAOs.push_back(vao);
+
+		//			int x = 0;
+		//		}
+		//	}
+		//}
+	}
+
 
 	//if (lNodeAttribute)
 	//{
@@ -787,6 +961,13 @@ void Mesh::Draw()
 	SetMeshTransforms();
 	for (auto vao = mVAOs.begin(); vao != mVAOs.end(); vao++) {
 		glBindVertexArray(vao->VertexArray);
+
+		if (vao->MaterialName == "FBX") {
+			glDrawElements(GL_TRIANGLES, vao->IndicesSize, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
+			break;
+			continue;
+		}
 
 		Material material = mMaterials[vao->MaterialName];
 		// Set Lightings

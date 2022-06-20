@@ -62,6 +62,7 @@ private:
 	bool LoadObjFile(std::string FilePath, std::string ObjFileName);
 	bool deLoadObjFile(std::string FilePath, std::string ObjFileName);
 
+	void searchNode(FbxScene* scene, FbxGeometryConverter converter, FbxNode* node);
 	bool LoadFBXFile(std::string FilePath, std::string FBXFileName);
 
 	bool LoadMaterials(std::string FilePath, std::string MtlFileName);
