@@ -122,7 +122,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)dependencies\SDL2\lib\x64;$(SolutionDir)dependencies\fmod\lib;$(SolutionDir)dependencies\glew\lib;$(SolutionDir)dependencies\freetype\lib;$(SolutionDir)dependencies\fbxsdk\lib\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>fmod_vc.lib;fmodstudio_vc.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;glew32s.lib;opengl32.lib;freetype.lib;libfbxsdk.lib;libxml2-md.lib;zlib-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fmod_vc.lib;fmodstudio_vc.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;glew32s.lib;opengl32.lib;freetype.lib;libfbxsdk-md.lib;libxml2-md.lib;zlib-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>COPY "$(SolutionDir)dependencies\SDL2\lib\x64\SDL2.dll" "$(OutDir)"  
@@ -157,7 +157,7 @@ XCOPY "$(SolutionDir)dependencies\fbxsdk\lib\debug\*.dll" "$(OutDir)" /e /y</Com
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)dependencies\SDL2\lib\x64;$(SolutionDir)dependencies\fmod\lib;$(SolutionDir)dependencies\glew\lib;$(SolutionDir)dependencies\freetype\lib;$(SolutionDir)dependencies\fbxsdk\lib\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>fmod_vc.lib;fmodstudio_vc.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;glew32s.lib;opengl32.lib;freetype.lib;libfbxsdk.lib;libxml2-md.lib;zlib-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fmod_vc.lib;fmodstudio_vc.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;glew32s.lib;opengl32.lib;freetype.lib;libfbxsdk-md.lib;libxml2-md.lib;zlib-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>COPY "$(SolutionDir)dependencies\SDL2\lib\x64\SDL2.dll" "$(OutDir)"  

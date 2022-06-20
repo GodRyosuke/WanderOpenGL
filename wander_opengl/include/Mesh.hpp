@@ -46,6 +46,14 @@ private:
 		Texture* tex;
 	};
 
+	struct FBXMaterial {
+		glm::vec3 AmbientColor;
+		float AmbientFactor;
+		glm::vec3 DiffuseColor;
+		float DiffuseFactor;
+		float specPower;
+	};
+
 	struct VAO {
 		unsigned int VertexArray;
 		unsigned int VertexBuffer;
@@ -64,6 +72,8 @@ private:
 
 	void searchNode(FbxScene* scene, FbxGeometryConverter converter, FbxNode* node);
 	bool LoadFBXFile(std::string FilePath, std::string FBXFileName);
+	void LoadFBXMaterial(FbxMesh* mesh, Material& material, FbxSurfaceMaterial* fbxMaterial, std::string& materialName);
+	void LoadFBXMaterial(FbxSurfaceMaterial* fbxMaterial);
 
 	bool LoadMaterials(std::string FilePath, std::string MtlFileName);
 	bool LoadVAO(FILE* file, VAO& vao, int& VertexOffset, int& NormalOffset, int& IndexOffset);
