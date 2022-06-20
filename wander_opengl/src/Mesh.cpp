@@ -641,7 +641,6 @@ void Mesh::searchNode(FbxScene* scene, FbxGeometryConverter converter, FbxNode* 
 			if (attr) {
 				if (attr->GetAttributeType() == FbxNodeAttribute::eMesh) {
 					// meshì¬ˆ—
-					VAO vao;
 
 					FbxMesh* lMesh = lNode->GetMesh();
 					//converter.SplitMeshPerMaterial(lMesh, true);
@@ -759,6 +758,7 @@ void Mesh::searchNode(FbxScene* scene, FbxGeometryConverter converter, FbxNode* 
 					glBindBuffer(GL_ARRAY_BUFFER, 0);
 					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+					VAO vao;
 					vao.VertexArray = VertexArray;
 					vao.VertexBuffer = VertexBuffer;
 					vao.IndexBuffer = IndexBuffer;
@@ -815,10 +815,16 @@ bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
 	// ƒ|ƒŠƒSƒ“‚ðŽOŠpŒ`‚É‚·‚é
 	converter.Triangulate(fbx_scene, true);
 
+	// Material“Ç‚Ýž‚Ý
 	int material_num = fbx_scene->GetSrcObjectCount<FbxSurfaceMaterial>();
 	for (int i = 0; i < material_num; i++)
 	{
 		LoadFBXMaterial(fbx_scene->GetSrcObject<FbxSurfaceMaterial>(i));
+	}
+
+	for (int i = 0; i < fbx_scene->GetSrcObjectCount<FbxMesh>(); i++) {
+		FbxMesh* mesh = fbx_scene->GetSrcObject<FbxMesh>(i);
+
 	}
 
 	//FbxIOSettings* ios = FbxIOSettings::Create(manager, IOSROOT);
