@@ -595,6 +595,16 @@ void Mesh::LoadFBXMaterial(FbxMesh* mesh, Material& material, FbxSurfaceMaterial
 
 }
 
+Texture* Mesh::LoadFBXTexture(FbxFileTexture* texture)
+{
+	std::string file_path = texture->GetRelativeFileName();
+
+
+	Texture* textureData = new Texture("ab");
+
+	return textureData;
+}
+
 void Mesh::LoadFBXMaterial(FbxSurfaceMaterial* material)
 {
 	FBXMaterial materialData;
@@ -668,6 +678,32 @@ void Mesh::LoadFBXMaterial(FbxSurfaceMaterial* material)
 			materialData.NormalMap.x = prop.Get<FbxDouble3>()[0];
 			materialData.NormalMap.y = prop.Get<FbxDouble3>()[1];
 			materialData.NormalMap.z = prop.Get<FbxDouble3>()[2];
+		}
+
+		// Texture
+		prop = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
+		FbxFileTexture* texture = nullptr;
+		int texture_num = prop.GetSrcObjectCount<FbxFileTexture>();
+		if (texture_num > 0)
+		{
+			// prop‚©‚çFbxFileTexture‚ğæ“¾	
+			texture = prop.GetSrcObject<FbxFileTexture>(0);
+		}
+		else
+		{
+			// FbxLayeredTexture‚©‚çFbxFileTexture‚ğæ“¾	
+			int layer_num = prop.GetSrcObjectCount<FbxLayeredTexture>();
+			if (layer_num > 0)
+			{
+				texture = prop.GetSrcObject<FbxFileTexture>(0);
+			}
+		}
+
+		if (texture == nullptr) {
+			materialData.Tex = nullptr;
+		}
+		else {
+			materialData.Tex = LoadFBXTexture(texture);
 		}
 
 		std::string materialName = material->GetName();
@@ -1010,7 +1046,7 @@ bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
 		LoadFBXMeshData(mesh);
 	}
 
-	// Texture“Ç‚İ‚İ
+
 
 
 	//FbxIOSettings* ios = FbxIOSettings::Create(manager, IOSROOT);

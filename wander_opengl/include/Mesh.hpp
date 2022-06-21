@@ -56,6 +56,7 @@ private:
 		glm::vec3 Emissive;
 		glm::vec3 Bump;
 		glm::vec3 NormalMap;
+		Texture* Tex;
 	};
 
 	struct VAO {
@@ -79,6 +80,7 @@ private:
 	bool LoadFBXFile(std::string FilePath, std::string FBXFileName);
 	void LoadFBXMaterial(FbxMesh* mesh, Material& material, FbxSurfaceMaterial* fbxMaterial, std::string& materialName);
 	void LoadFBXMaterial(FbxSurfaceMaterial* fbxMaterial);
+	Texture* LoadFBXTexture(FbxFileTexture* tex);
 	void LoadFBXMeshData(FbxMesh* lMesh);
 
 	bool LoadMaterials(std::string FilePath, std::string MtlFileName);
