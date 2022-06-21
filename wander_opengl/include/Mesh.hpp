@@ -106,4 +106,5 @@ private:
 	DirectionalLight mDirectionalLight;
 	float mSpecPower;
 
+	bool isFbx;
 };

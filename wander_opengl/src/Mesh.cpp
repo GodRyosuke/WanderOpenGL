@@ -11,12 +11,14 @@ Mesh::Mesh(std::string FilePath, std::string ObjFileName, Shader* shader, glm::v
 	mLightDir(LightDir)
 {
 	if (is_fbx) {
+		isFbx = true;
 		if (!LoadFBXFile(FilePath, ObjFileName)) {
 			std::cout << "Failed to Load FBX File\n";
 			return;
 		}
 	}
 	else {
+		isFbx = false;
 		if (!LoadObjFile(FilePath, ObjFileName)) {
 			std::cout << "Failed to Load Mesh Obj File\n";
 			return;
@@ -1005,7 +1007,7 @@ bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
 	// Mesh“Ç‚Ýž‚Ý
 	for (int i = 0; i < fbx_scene->GetSrcObjectCount<FbxMesh>(); i++) {
 		FbxMesh* mesh = fbx_scene->GetSrcObject<FbxMesh>(i);
-
+		LoadFBXMeshData(mesh);
 	}
 
 	//FbxIOSettings* ios = FbxIOSettings::Create(manager, IOSROOT);
@@ -1093,36 +1095,47 @@ void Mesh::Draw()
 	mShader->UseProgram();
 	SetMeshTransforms();
 
-	for (int i = 0; i < mVAOs.size(); i++) {
-		VAO vao = mVAOs[i];
-		glBindVertexArray(vao.VertexArray);
+	if (!isFbx) {
+		for (auto vao : mVAOs) {
+			glBindVertexArray(vao.VertexArray);
 
-		if (vao.MaterialName == "FBX") {
+			Material material = mMaterials[vao.MaterialName];
+			// Set Lightings
+			mShader->SetVectorUniform("uAmbientLight", material.AmbientColor);
+			mShader->SetVectorUniform("uDirLight.mDirection", mLightDir);
+			mShader->SetVectorUniform("uDirLight.mDiffuseColor", material.DirLight.diffuseColor);
+			mShader->SetVectorUniform("uDirLight.mSpecColor", material.DirLight.specColor);
+			mShader->SetFloatUniform("uSpecPower", material.SpecPower);
+
+			// Set Texture
+			if (material.tex != nullptr) {
+				material.tex->BindTexture();
+			}
+
 			glDrawElements(GL_TRIANGLES, vao.IndicesSize, GL_UNSIGNED_INT, 0);
-			glBindVertexArray(0);
-			continue;
+
+			if (material.tex != nullptr) {
+				material.tex->UnBindTexture();
+			}
 		}
-
-		Material material = mMaterials[vao.MaterialName];
-		// Set Lightings
-		mShader->SetVectorUniform("uAmbientLight", material.AmbientColor);
-		mShader->SetVectorUniform("uDirLight.mDirection", mLightDir);
-		mShader->SetVectorUniform("uDirLight.mDiffuseColor", material.DirLight.diffuseColor);
-		mShader->SetVectorUniform("uDirLight.mSpecColor", material.DirLight.specColor);
-		mShader->SetFloatUniform("uSpecPower", material.SpecPower);
-
-		// Set Texture
-		if (material.tex != nullptr) {
-			material.tex->BindTexture();
-		}
-
-		glDrawElements(GL_TRIANGLES, vao.IndicesSize, GL_UNSIGNED_INT, 0);
-
-		if (material.tex != nullptr) {
-			material.tex->UnBindTexture();
-		}
-		glBindVertexArray(0);
 	}
+	else {
+		for (auto vao : mVAOs) {
+			glBindVertexArray(vao.VertexArray);
+
+			FBXMaterial material = mFBXMaterials[vao.MaterialName];
+			// Set Lightings
+			mShader->SetVectorUniform("uAmbientLight", material.AmbientColor);
+			mShader->SetVectorUniform("uDirLight.mDirection", mLightDir);
+			mShader->SetVectorUniform("uDirLight.mDiffuseColor", material.DiffuseColor);
+			mShader->SetVectorUniform("uDirLight.mSpecColor", material.SpecColor);
+			mShader->SetFloatUniform("uSpecPower", material.SpecPower);
+
+			glDrawElements(GL_TRIANGLES, vao.IndicesSize, GL_UNSIGNED_INT, 0);
+		}
+	}
+
+	glBindVertexArray(0);
 }
 
 void Mesh::deDraw()
