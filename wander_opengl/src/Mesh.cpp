@@ -1010,6 +1010,9 @@ bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
 		LoadFBXMeshData(mesh);
 	}
 
+	// Texture“Ç‚İ‚İ
+
+
 	//FbxIOSettings* ios = FbxIOSettings::Create(manager, IOSROOT);
 	//manager->SetIOSettings(ios);
 
@@ -1044,8 +1047,9 @@ bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
 	//}
 
 
-
-	//manager->Destroy();
+	fbx_importer->Destroy();
+	fbx_scene->Destroy();
+	manager->Destroy();
 	return true;
 
 
