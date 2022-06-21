@@ -4,17 +4,28 @@
 #include "GLUtil.hpp"
 #include <iostream>
 
-Mesh::Mesh(std::string FilePath, std::string ObjFileName, Shader* shader, glm::vec3 LightDir)
+Mesh::Mesh(std::string FilePath, std::string ObjFileName, Shader* shader, glm::vec3 LightDir, bool is_fbx)
 	:mShader(shader),
 	mVertices(0),
 	mIndices(0),
 	mLightDir(LightDir)
 {
-
-	if (!LoadObjFile(FilePath, ObjFileName)) {
-		std::cout << "Failed to Load Mesh Obj File\n";
-		return;
+	if (is_fbx) {
+		isFbx = true;
+		if (!LoadFBXFile(FilePath, ObjFileName)) {
+			std::cout << "Failed to Load FBX File\n";
+			return;
+		}
 	}
+	else {
+		isFbx = false;
+		if (!LoadObjFile(FilePath, ObjFileName)) {
+			std::cout << "Failed to Load Mesh Obj File\n";
+			return;
+		}
+	}
+
+
 	//if (!LoadMaterials(MtlFilePath)) {
 	//	std::cout << "Failed to Load Material Obj File\n";
 	//	return;
@@ -551,6 +562,515 @@ bool Mesh::LoadMaterials(std::string FilePath, std::string MtlFileName)
 	return true;
 }
 
+void Mesh::LoadFBXMaterial(FbxMesh* mesh, Material& material, FbxSurfaceMaterial* fbxMaterial, std::string& materialName)
+{
+	FbxProperty prop;
+	//prop = fbxMaterial->FindProperty(FbxSurfaceMaterial::sAmbient);
+	if (prop.IsValid()) {
+
+	}
+
+	if (mesh->GetElementMaterialCount() == 0) {
+		materialName = "";
+	}
+
+	//FbxLayerElementMaterial* lMaterial = mesh->GetElementMaterial(0);
+	//FbxSurfaceMaterial* surface_material;
+	//{
+	//	int index = lMaterial->GetIndexArray().GetAt(0);
+	//	surface_material = mesh->GetNode()->GetSrcObject<FbxSurfaceMaterial>(index);
+	//}
+	//if (surface_material != nullptr) {
+	//	materialName = surface_material->GetName();
+	//}
+	//else {
+	//	materialName = "";
+	//}
+
+
+	fbxMaterial->sAmbient[0];
+	//material.AmbientColor.x = surface_material->sAmbient[0];
+	//material.AmbientColor.y = surface_material->sAmbient[1];
+	//material.AmbientColor.z = surface_material->sAmbient[2];
+
+}
+
+void Mesh::LoadFBXMaterial(FbxSurfaceMaterial* material)
+{
+	FBXMaterial materialData;
+	FbxProperty prop = material->FindProperty(FbxSurfaceMaterial::sAmbient);
+
+	if (material->GetClassId().Is(FbxSurfacePhong::ClassId)) {
+		// Ambient
+		prop = material->FindProperty(FbxSurfaceMaterial::sAmbient);
+		if (prop.IsValid()) {
+			materialData.AmbientColor.x = prop.Get<FbxDouble3>()[0];
+			materialData.AmbientColor.y = prop.Get<FbxDouble3>()[1];
+			materialData.AmbientColor.z = prop.Get<FbxDouble3>()[2];
+		}
+		prop = material->FindProperty(FbxSurfaceMaterial::sAmbientFactor);
+		if (prop.IsValid()) {
+			float AmbientFactor = prop.Get<FbxDouble>();
+			materialData.AmbientColor *= AmbientFactor;
+		}
+
+		// Diffuse
+		prop = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
+		if (prop.IsValid()) {
+			materialData.DiffuseColor.x = prop.Get<FbxDouble3>()[0];
+			materialData.DiffuseColor.y = prop.Get<FbxDouble3>()[1];
+			materialData.DiffuseColor.z = prop.Get<FbxDouble3>()[2];
+		}
+		prop = material->FindProperty(FbxSurfaceMaterial::sDiffuseFactor);
+		if (prop.IsValid()) {
+			float DiffuseFactor = prop.Get<FbxDouble>();
+			materialData.DiffuseColor *= DiffuseFactor;
+		}
+		
+		// Specular
+		prop = material->FindProperty(FbxSurfaceMaterial::sSpecular);
+		if (prop.IsValid()) {
+			materialData.SpecColor.x = prop.Get<FbxDouble3>()[0];
+			materialData.SpecColor.y = prop.Get<FbxDouble3>()[1];
+			materialData.SpecColor.z = prop.Get<FbxDouble3>()[2];
+		}
+		prop = material->FindProperty(FbxSurfaceMaterial::sSpecularFactor);
+		if (prop.IsValid()) {
+			float specFactor = prop.Get<FbxDouble>();
+			materialData.SpecColor *= specFactor;
+		}
+		prop = material->FindProperty(FbxSurfaceMaterial::sShininess);
+		if (prop.IsValid()) {
+			materialData.SpecPower = prop.Get<FbxDouble>();
+		}
+
+		// Transparency
+		prop = material->FindProperty(FbxSurfaceMaterial::sTransparencyFactor);
+		if (prop.IsValid()) {
+			materialData.Alpha = prop.Get<FbxDouble>();
+		}
+
+		// Bump
+		prop = material->FindProperty(FbxSurfaceMaterial::sBump);
+		if (prop.IsValid()) {
+			materialData.Bump.x = prop.Get<FbxDouble3>()[0];
+			materialData.Bump.y = prop.Get<FbxDouble3>()[1];
+			materialData.Bump.z = prop.Get<FbxDouble3>()[2];
+		}
+		prop = material->FindProperty(FbxSurfaceMaterial::sBumpFactor);
+		if (prop.IsValid()) {
+			materialData.Bump *= prop.Get<FbxDouble>();
+		}
+
+		// NormalMap
+		prop = material->FindProperty(FbxSurfaceMaterial::sNormalMap);
+		if (prop.IsValid()) {
+			materialData.NormalMap.x = prop.Get<FbxDouble3>()[0];
+			materialData.NormalMap.y = prop.Get<FbxDouble3>()[1];
+			materialData.NormalMap.z = prop.Get<FbxDouble3>()[2];
+		}
+
+		std::string materialName = material->GetName();
+		mFBXMaterials.insert(std::make_pair(materialName, materialData));
+	}
+	else {
+		std::cout << "error: This surface is not allowed Phong Reflection model" << std::endl;
+	}
+}
+
+void Mesh::LoadFBXMeshData(FbxMesh* lMesh)
+{
+	const int lVertexCount = lMesh->GetControlPointsCount();
+	std::vector<unsigned int>indices;
+	struct customVert {
+		glm::vec3 vert;
+		glm::vec3 normal;
+		glm::vec2 uv;
+	};
+	std::vector<customVert>vertices;
+
+	// Index取得
+	for (int i = 0; i < lMesh->GetPolygonCount(); i++) {
+		indices.push_back(i * 3);
+		indices.push_back(i * 3 + 1);
+		indices.push_back(i * 3 + 2);
+	}
+
+	// Vertex取得
+	FbxVector4* lVertexArray = NULL;
+	lVertexArray = new FbxVector4[lVertexCount];
+	memcpy(lVertexArray, lMesh->GetControlPoints(), lVertexCount * sizeof(FbxVector4));
+
+	int* polygonIndices = lMesh->GetPolygonVertices();
+	for (int i = 0; i < lMesh->GetPolygonVertexCount(); i++) {
+		int index = polygonIndices[i];
+		customVert point;
+		point.vert.x = lVertexArray[index][0];
+		point.vert.y = lVertexArray[index][1];
+		point.vert.z = lVertexArray[index][2];
+		vertices.push_back(point);
+	}
+
+	// 法線取得
+	FbxArray<FbxVector4> lNormals;
+	lMesh->GetPolygonVertexNormals(lNormals);
+	for (int i = 0; i < lNormals.Size(); i++) {
+		vertices[i].normal.x = lNormals[i][0];
+		vertices[i].normal.y = lNormals[i][1];
+		vertices[i].normal.z = lNormals[i][2];
+	}
+
+	// UV取得
+	FbxStringList lUVNames;
+	lMesh->GetUVSetNames(lUVNames);
+	FbxArray<FbxVector2> lUVs;
+	lMesh->GetPolygonVertexUVs(lUVNames.GetStringAt(0), lUVs);
+	for (int i = 0; i < lUVs.Size(); i++) {
+		vertices[i].uv.x = lUVs[i][0];
+		vertices[i].uv.y = lUVs[i][1];
+	}
+
+	// マテリアル名取得
+	std::string MaterialName;
+	if (lMesh->GetElementMaterialCount() == 0)
+	{
+		MaterialName = "";
+		return;
+	}
+
+	// Mesh側のマテリアル情報を取得
+	FbxLayerElementMaterial* material = lMesh->GetElementMaterial(0);
+	int index = material->GetIndexArray().GetAt(0);
+	FbxSurfaceMaterial* surface_material = lMesh->GetNode()->GetSrcObject<FbxSurfaceMaterial>(index);
+
+	if (surface_material != nullptr)
+	{
+		MaterialName = surface_material->GetName();
+	}
+	else
+	{
+		MaterialName = "";
+	}
+
+
+	// VAO作成
+	// データを作り変える
+	std::vector<float> vertices_data;
+	for (int i = 0; i < vertices.size(); i++) {
+		vertices_data.push_back(vertices[i].vert.x);
+		vertices_data.push_back(vertices[i].vert.y);
+		vertices_data.push_back(vertices[i].vert.z);
+		vertices_data.push_back(vertices[i].normal.x);
+		vertices_data.push_back(vertices[i].normal.y);
+		vertices_data.push_back(vertices[i].normal.z);
+		vertices_data.push_back(vertices[i].uv.x);
+		vertices_data.push_back(vertices[i].uv.y);
+	}
+
+	unsigned int VertexArray;
+	unsigned int VertexBuffer;
+	unsigned int IndexBuffer;
+
+	mShader->UseProgram();
+	glGenVertexArrays(1, &VertexArray);
+	glBindVertexArray(VertexArray);
+
+	glGenBuffers(1, &VertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+	glBufferData(GL_ARRAY_BUFFER, vertices_data.size() * sizeof(float), vertices_data.data(), GL_STATIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &IndexBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+
+	// link attribution
+	glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	//glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	// unbind cube vertex arrays
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	VAO vao;
+	vao.VertexArray = VertexArray;
+	vao.VertexBuffer = VertexBuffer;
+	vao.IndexBuffer = IndexBuffer;
+	vao.IndicesSize = indices.size();
+	vao.MaterialName = MaterialName;
+	mVAOs.push_back(vao);
+}
+
+void Mesh::searchNode(FbxScene* scene, FbxGeometryConverter converter, FbxNode* node)
+{
+	if (node->GetChildCount() == 0) {
+		return;
+	}
+
+	for (int no = 0; no < node->GetChildCount(); no++) {
+		FbxNode* lNode = node->GetChild(no);
+
+		for (int attrIdx = 0; attrIdx < lNode->GetNodeAttributeCount(); attrIdx++) {
+			FbxNodeAttribute* attr = lNode->GetNodeAttributeByIndex(attrIdx);
+			if (attr) {
+				if (attr->GetAttributeType() == FbxNodeAttribute::eMesh) {
+					// mesh作成処理
+
+					FbxMesh* lMesh = lNode->GetMesh();
+					//converter.SplitMeshPerMaterial(lMesh, true);
+
+					const int lVertexCount = lMesh->GetControlPointsCount();
+					std::vector<unsigned int>indices;
+					struct customVert {
+						glm::vec3 vert;
+						glm::vec3 normal;
+						glm::vec2 uv;
+					};
+					std::vector<customVert>vertices;
+
+					// Index取得
+					for (int i = 0; i < lMesh->GetPolygonCount(); i++) {
+						indices.push_back(i * 3);
+						indices.push_back(i * 3 + 1);
+						indices.push_back(i * 3 + 2);
+					}
+
+					// Vertex取得
+					FbxVector4* lVertexArray = NULL;
+					lVertexArray = new FbxVector4[lVertexCount];
+					memcpy(lVertexArray, lMesh->GetControlPoints(), lVertexCount * sizeof(FbxVector4));
+
+					int* polygonIndices = lMesh->GetPolygonVertices();
+					for (int i = 0; i < lMesh->GetPolygonVertexCount(); i++) {
+						int index = polygonIndices[i];
+						customVert point;
+						point.vert.x = lVertexArray[index][0];
+						point.vert.y = lVertexArray[index][1];
+						point.vert.z = lVertexArray[index][2];
+						vertices.push_back(point);
+					}
+
+					// 法線取得
+					FbxArray<FbxVector4> lNormals;
+					lMesh->GetPolygonVertexNormals(lNormals);
+					for (int i = 0; i < lNormals.Size(); i++) {
+						vertices[i].normal.x = lNormals[i][0];
+						vertices[i].normal.y = lNormals[i][1];
+						vertices[i].normal.z = lNormals[i][2];
+					}
+
+					// UV取得
+					FbxStringList lUVNames;
+					lMesh->GetUVSetNames(lUVNames);
+					FbxArray<FbxVector2> lUVs;
+					lMesh->GetPolygonVertexUVs(lUVNames.GetStringAt(0), lUVs);
+					for (int i = 0; i < lUVs.Size(); i++) {
+						vertices[i].uv.x = lUVs[i][0];
+						vertices[i].uv.y = lUVs[i][1];
+					}
+
+					// マテリアル取得
+					Material material;
+					std::string materialName;
+					for (int i = 0; i < scene->GetMaterialCount(); i++) {
+						FbxSurfaceMaterial* surfaceMaterial = scene->GetMaterial(i);
+						//material.AmbientColor.x = surfaceMaterial->sAmbient[0];
+						//material.AmbientColor.y = surfaceMaterial->sAmbient[1];
+						//material.AmbientColor.z = surfaceMaterial->sAmbient[2];
+						//LoadFBXMaterial(lMesh, material, scene->GetMaterial(i), materialName);
+					}
+					//for (int i = 0; i < scene->GetSrcObjectCount<FbxSurfaceMaterial>(); i++) {
+					//	LoadFBXMaterial(lMesh, material, scene->GetSrcObject<FbxSurfaceMaterial>(i), materialName);
+					//}
+
+
+
+					// VAO作成
+					// データを作り変える
+					std::vector<float> vertices_data;
+					for (int i = 0; i < vertices.size(); i++) {
+						vertices_data.push_back(vertices[i].vert.x);
+						vertices_data.push_back(vertices[i].vert.y);
+						vertices_data.push_back(vertices[i].vert.z);
+						vertices_data.push_back(vertices[i].normal.x);
+						vertices_data.push_back(vertices[i].normal.y);
+						vertices_data.push_back(vertices[i].normal.z);
+						vertices_data.push_back(vertices[i].uv.x);
+						vertices_data.push_back(vertices[i].uv.y);
+					}
+
+					unsigned int VertexArray;
+					unsigned int VertexBuffer;
+					unsigned int IndexBuffer;
+
+					mShader->UseProgram();
+					glGenVertexArrays(1, &VertexArray);
+					glBindVertexArray(VertexArray);
+
+					glGenBuffers(1, &VertexBuffer);
+					glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+					glBufferData(GL_ARRAY_BUFFER, vertices_data.size() * sizeof(float), vertices_data.data(), GL_STATIC_DRAW);
+					//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+					glGenBuffers(1, &IndexBuffer);
+					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
+					glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+
+					// link attribution
+					glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+					//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+					//glEnableVertexAttribArray(0);
+					glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+					glEnableVertexAttribArray(0);
+					glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+					glEnableVertexAttribArray(1);
+					glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+					glEnableVertexAttribArray(2);
+
+					// unbind cube vertex arrays
+					glBindVertexArray(0);
+					glBindBuffer(GL_ARRAY_BUFFER, 0);
+					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+					VAO vao;
+					vao.VertexArray = VertexArray;
+					vao.VertexBuffer = VertexBuffer;
+					vao.IndexBuffer = IndexBuffer;
+					vao.IndicesSize = indices.size();
+					vao.MaterialName = "FBX";
+					mVAOs.push_back(vao);
+
+					int x = 0;
+				}
+			}
+
+		}
+
+		searchNode(scene, converter, lNode);
+	}
+}
+
+bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
+{
+	std::string fbxFilePath = FilePath + FBXFileName;
+
+	FbxManager* manager = FbxManager::Create();
+	if (!manager) {
+		std::cerr << "failed to create FbxManager." << std::endl;
+		manager->Destroy();
+		return false;
+	}
+
+	// FbxImporter作成
+	FbxImporter* fbx_importer = FbxImporter::Create(manager, "");
+	if (fbx_importer == nullptr)
+	{
+		manager->Destroy();
+		return false;
+	}
+
+	// FbxScene作成
+	FbxScene* fbx_scene = FbxScene::Create(manager, "");
+	if (fbx_scene == nullptr)
+	{
+		fbx_importer->Destroy();
+		manager->Destroy();
+		return false;
+	}
+
+	// Fileを初期化
+	fbx_importer->Initialize(fbxFilePath.c_str());
+	// sceneにインポート
+	fbx_importer->Import(fbx_scene);
+
+	FbxGeometryConverter converter(manager);
+	// メッシュに使われているマテリアル単位でメッシュを分割する
+	converter.SplitMeshesPerMaterial(fbx_scene, true);
+	// ポリゴンを三角形にする
+	converter.Triangulate(fbx_scene, true);
+
+	// Material読み込み
+	int material_num = fbx_scene->GetSrcObjectCount<FbxSurfaceMaterial>();
+	for (int i = 0; i < material_num; i++)
+	{
+		LoadFBXMaterial(fbx_scene->GetSrcObject<FbxSurfaceMaterial>(i));
+	}
+
+	// Mesh読み込み
+	for (int i = 0; i < fbx_scene->GetSrcObjectCount<FbxMesh>(); i++) {
+		FbxMesh* mesh = fbx_scene->GetSrcObject<FbxMesh>(i);
+		LoadFBXMeshData(mesh);
+	}
+
+	// Texture読み込み
+
+
+	//FbxIOSettings* ios = FbxIOSettings::Create(manager, IOSROOT);
+	//manager->SetIOSettings(ios);
+
+	//FbxImporter* importer = FbxImporter::Create(manager, "");
+	//if (!importer->Initialize(fbxFilePath.c_str(), -1, manager->GetIOSettings())) {
+	//	printf("Call to FbxImporter::Initialize() failed.\n");
+	//	printf("Error returned: %s\n\n", importer->GetStatus().GetErrorString());
+	//	exit(-1);
+	//}
+
+
+	//FbxScene* scene = FbxScene::Create(manager, "wander_scene");
+	//if (!scene) {
+	//	std::cerr << "failed to create FbxScene." << std::endl;
+	//	manager->Destroy();
+	//	return false;
+	//}
+
+	//importer->Import(scene);
+	//importer->Destroy();
+
+	//// 3角形ポリゴンにする
+	//FbxGeometryConverter converter(manager);
+	//converter.Triangulate(scene, true);
+
+	//// ポリゴンごとに、Meshを分割
+	//converter.SplitMeshesPerMaterial(scene, true);
+
+	//FbxNode* rootNode = scene->GetRootNode();
+	//if (rootNode) {
+	//	searchNode(scene, converter, rootNode);
+	//}
+
+
+	fbx_importer->Destroy();
+	fbx_scene->Destroy();
+	manager->Destroy();
+	return true;
+
+
+
+
+	// ポリゴンを三角形に変換
+	//FbxGeometryConverter geometry_converter(manager);
+	//geometry_converter.Triangulate(scene, true);
+
+	//FbxMesh* mesh = scene->GetSrcObject<FbxMesh>();
+	//if (!mesh) {
+	//	std::cerr << "failed to load mesh." << " (" << fbxFilePath << ")" << std::endl;
+	//	scene->Destroy();
+	//	manager->Destroy();
+	//	return false;
+	//}
+
+	return true;
+}
+
+
 void Mesh::SetMeshLightings()
 {
 	mShader->SetVectorUniform("uAmbientLight", mAmbientLightColor);
@@ -578,29 +1098,48 @@ void Mesh::Draw()
 {
 	mShader->UseProgram();
 	SetMeshTransforms();
-	for (auto vao = mVAOs.begin(); vao != mVAOs.end(); vao++) {
-		glBindVertexArray(vao->VertexArray);
 
-		Material material = mMaterials[vao->MaterialName];
-		// Set Lightings
-		mShader->SetVectorUniform("uAmbientLight", material.AmbientColor);
-		mShader->SetVectorUniform("uDirLight.mDirection", mLightDir);
-		mShader->SetVectorUniform("uDirLight.mDiffuseColor", material.DirLight.diffuseColor);
-		mShader->SetVectorUniform("uDirLight.mSpecColor", material.DirLight.specColor);
-		mShader->SetFloatUniform("uSpecPower", material.SpecPower);
+	if (!isFbx) {
+		for (auto vao : mVAOs) {
+			glBindVertexArray(vao.VertexArray);
 
-		// Set Texture
-		if (material.tex != nullptr) {
-			material.tex->BindTexture();
+			Material material = mMaterials[vao.MaterialName];
+			// Set Lightings
+			mShader->SetVectorUniform("uAmbientLight", material.AmbientColor);
+			mShader->SetVectorUniform("uDirLight.mDirection", mLightDir);
+			mShader->SetVectorUniform("uDirLight.mDiffuseColor", material.DirLight.diffuseColor);
+			mShader->SetVectorUniform("uDirLight.mSpecColor", material.DirLight.specColor);
+			mShader->SetFloatUniform("uSpecPower", material.SpecPower);
+
+			// Set Texture
+			if (material.tex != nullptr) {
+				material.tex->BindTexture();
+			}
+
+			glDrawElements(GL_TRIANGLES, vao.IndicesSize, GL_UNSIGNED_INT, 0);
+
+			if (material.tex != nullptr) {
+				material.tex->UnBindTexture();
+			}
 		}
-
-		glDrawElements(GL_TRIANGLES, vao->IndicesSize, GL_UNSIGNED_INT, 0);
-
-		if (material.tex != nullptr) {
-			material.tex->UnBindTexture();
-		}
-		glBindVertexArray(0);
 	}
+	else {
+		for (auto vao : mVAOs) {
+			glBindVertexArray(vao.VertexArray);
+
+			FBXMaterial material = mFBXMaterials[vao.MaterialName];
+			// Set Lightings
+			mShader->SetVectorUniform("uAmbientLight", material.AmbientColor);
+			mShader->SetVectorUniform("uDirLight.mDirection", mLightDir);
+			mShader->SetVectorUniform("uDirLight.mDiffuseColor", material.DiffuseColor);
+			mShader->SetVectorUniform("uDirLight.mSpecColor", material.SpecColor);
+			mShader->SetFloatUniform("uSpecPower", material.SpecPower);
+
+			glDrawElements(GL_TRIANGLES, vao.IndicesSize, GL_UNSIGNED_INT, 0);
+		}
+	}
+
+	glBindVertexArray(0);
 }
 
 void Mesh::deDraw()

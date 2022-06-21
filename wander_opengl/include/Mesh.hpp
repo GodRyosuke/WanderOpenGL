@@ -6,10 +6,11 @@
 #include "Shader.hpp"
 #include <map>
 #include "Texture.hpp"
+#include "fbxsdk.h"
 
 class Mesh {
 public:
-	Mesh(std::string ObjFilePath, std::string MtlFilePath, Shader* shader, glm::vec3 LightDir);
+	Mesh(std::string ObjFilePath, std::string MtlFilePath, Shader* shader, glm::vec3 LightDir, bool is_fbx = false);
 	// Mesh ÇÃMaterial uniformílÇê›íË
 	void SetMeshLightings();
 	// MeshÇÃAffineïœä∑ÇuniformílÇ…îΩâf
@@ -45,6 +46,18 @@ private:
 		Texture* tex;
 	};
 
+	struct FBXMaterial {
+		glm::vec3 AmbientColor;
+		glm::vec3 DiffuseColor;
+		glm::vec3 SpecColor;
+		float SpecPower;
+		float Alpha;
+		glm::vec3 Reflection;
+		glm::vec3 Emissive;
+		glm::vec3 Bump;
+		glm::vec3 NormalMap;
+	};
+
 	struct VAO {
 		unsigned int VertexArray;
 		unsigned int VertexBuffer;
@@ -55,11 +68,19 @@ private:
 
 
 	std::map<std::string, Material> mMaterials;
+	std::map<std::string, FBXMaterial> mFBXMaterials;
 	std::vector<ObjSubSet> mObjSubSets;
 	std::vector<VAO> mVAOs;
 
 	bool LoadObjFile(std::string FilePath, std::string ObjFileName);
 	bool deLoadObjFile(std::string FilePath, std::string ObjFileName);
+
+	void searchNode(FbxScene* scene, FbxGeometryConverter converter, FbxNode* node);
+	bool LoadFBXFile(std::string FilePath, std::string FBXFileName);
+	void LoadFBXMaterial(FbxMesh* mesh, Material& material, FbxSurfaceMaterial* fbxMaterial, std::string& materialName);
+	void LoadFBXMaterial(FbxSurfaceMaterial* fbxMaterial);
+	void LoadFBXMeshData(FbxMesh* lMesh);
+
 	bool LoadMaterials(std::string FilePath, std::string MtlFileName);
 	bool LoadVAO(FILE* file, VAO& vao, int& VertexOffset, int& NormalOffset, int& IndexOffset);
 	void CreateVAO(std::vector<float>VertexData, std::vector<float>NormalData,
@@ -85,4 +106,5 @@ private:
 	DirectionalLight mDirectionalLight;
 	float mSpecPower;
 
+	bool isFbx;
 };
