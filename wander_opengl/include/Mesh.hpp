@@ -48,10 +48,14 @@ private:
 
 	struct FBXMaterial {
 		glm::vec3 AmbientColor;
-		float AmbientFactor;
 		glm::vec3 DiffuseColor;
-		float DiffuseFactor;
-		float specPower;
+		glm::vec3 SpecColor;
+		float SpecPower;
+		float Alpha;
+		glm::vec3 Reflection;
+		glm::vec3 Emissive;
+		glm::vec3 Bump;
+		glm::vec3 NormalMap;
 	};
 
 	struct VAO {
@@ -64,6 +68,7 @@ private:
 
 
 	std::map<std::string, Material> mMaterials;
+	std::map<std::string, FBXMaterial> mFBXMaterials;
 	std::vector<ObjSubSet> mObjSubSets;
 	std::vector<VAO> mVAOs;
 
@@ -74,6 +79,7 @@ private:
 	bool LoadFBXFile(std::string FilePath, std::string FBXFileName);
 	void LoadFBXMaterial(FbxMesh* mesh, Material& material, FbxSurfaceMaterial* fbxMaterial, std::string& materialName);
 	void LoadFBXMaterial(FbxSurfaceMaterial* fbxMaterial);
+	void LoadFBXMeshData(FbxMesh* lMesh);
 
 	bool LoadMaterials(std::string FilePath, std::string MtlFileName);
 	bool LoadVAO(FILE* file, VAO& vao, int& VertexOffset, int& NormalOffset, int& IndexOffset);
