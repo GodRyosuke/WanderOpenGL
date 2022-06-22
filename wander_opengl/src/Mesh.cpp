@@ -8,7 +8,9 @@ Mesh::Mesh(std::string FilePath, std::string ObjFileName, Shader* shader, glm::v
 	:mShader(shader),
 	mVertices(0),
 	mIndices(0),
-	mLightDir(LightDir)
+	mLightDir(LightDir),
+	ObjFilePath(FilePath),
+	ObjFileName(ObjFileName)
 {
 	if (is_fbx) {
 		isFbx = true;
@@ -599,8 +601,18 @@ Texture* Mesh::LoadFBXTexture(FbxFileTexture* texture)
 {
 	std::string file_path = texture->GetRelativeFileName();
 
+	GLUtil glutil;
+	char buffer[512];
+	memset(buffer, 0, 512 * sizeof(char));
+	memcpy(buffer, file_path.c_str(), sizeof(char) * 512);
+	glutil.Replace('\\', '/', buffer);
+	std::vector<std::string> split_list;
+	std::string replace_file_name = buffer;
+	// u/v‚Å•ª‰ð
+	glutil.Split('/', buffer, split_list);
 
-	Texture* textureData = new Texture("ab");
+	std::string file_name = ObjFilePath + "Textures/" + split_list[split_list.size() - 1];
+	Texture* textureData = new Texture(file_name);
 
 	return textureData;
 }
@@ -1165,13 +1177,22 @@ void Mesh::Draw()
 
 			FBXMaterial material = mFBXMaterials[vao.MaterialName];
 			// Set Lightings
-			mShader->SetVectorUniform("uAmbientLight", material.AmbientColor);
+			mShader->SetVectorUniform("uAmbientLight", glm::vec3(0.5f, 0.5f, 0.5f));
 			mShader->SetVectorUniform("uDirLight.mDirection", mLightDir);
 			mShader->SetVectorUniform("uDirLight.mDiffuseColor", material.DiffuseColor);
 			mShader->SetVectorUniform("uDirLight.mSpecColor", material.SpecColor);
 			mShader->SetFloatUniform("uSpecPower", material.SpecPower);
 
+			// Set Texture
+			if (material.Tex != nullptr) {
+				material.Tex->BindTexture();
+			}
+
 			glDrawElements(GL_TRIANGLES, vao.IndicesSize, GL_UNSIGNED_INT, 0);
+
+			if (material.Tex != nullptr) {
+				material.Tex->UnBindTexture();
+			}
 		}
 	}
 
