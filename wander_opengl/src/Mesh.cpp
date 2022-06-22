@@ -1055,7 +1055,54 @@ bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
 	// Meshì«Ç›çûÇ›
 	for (int i = 0; i < fbx_scene->GetSrcObjectCount<FbxMesh>(); i++) {
 		FbxMesh* mesh = fbx_scene->GetSrcObject<FbxMesh>(i);
+
+		int deformer_count = mesh->GetDeformerCount(FbxDeformer::eSkin);
+
+		int index = 0;
+		FbxSkin* pFbxSkin = (FbxSkin*)mesh->GetDeformer(
+			index,              // int pIndex
+			FbxDeformer::eSkin  // FbxDeformer::EDeformerType pType
+		);
+
+		int clusterCount = pFbxSkin->GetClusterCount();
+		FbxCluster* pFbxCluster = pFbxSkin->GetCluster(index);// int pIndex
+		const char* clusterLinkName = pFbxCluster->GetLink()->GetName();
+		int controlPointIndicesCount = pFbxCluster->GetControlPointIndicesCount();
+		int* controlPointIndices = pFbxCluster->GetControlPointIndices();
+		double* controlPointWeights = pFbxCluster->GetControlPointWeights();
+		const FbxMatrix& globalTransform = pFbxCluster->GetLink()->EvaluateGlobalTransform();
+
+		//for (int k = 0; k < 4; k++) {
+		//	for (int l = 0; l < 4; l++) {
+		//		printf("%3f ", globalTransform[k][l]);
+		//	}
+		//	std::cout << std::endl;
+		//}
+
+		int animStackCount = fbx_importer->GetAnimStackCount();
+		FbxTakeInfo* pFbxTakeInfo = fbx_importer->GetTakeInfo(index);
+
+		FbxLongLong start = pFbxTakeInfo->mLocalTimeSpan.GetStart().Get();
+		FbxLongLong stop = pFbxTakeInfo->mLocalTimeSpan.GetStop().Get();
+		FbxLongLong oneFrameValue = FbxTime::GetOneFrameValue(FbxTime::eFrames60);// EMode pTimeMode=eDefaultMode
+
+		double sum_frame = (stop - start) / oneFrameValue;
+
+		//FbxMatrix m = pFbxNode->EvaluateGlobalTransform(
+		//	time    // FbxTime pTime=FBXSDK_TIME_INFINITE
+		//			// FbxNode::EPivotSet pPivotSet=FbxNode::eSourcePivot
+		//			// bool pApplyTarget=false
+		//);          // bool pForceEval=false
+
+		printf("%d %d %s\n", deformer_count, index, clusterLinkName);
+		printf("start: %lld stop: %lld sum: %f\n", start, stop, sum_frame);
 		LoadFBXMeshData(mesh);
+	}
+	int x = 0;
+
+	FbxNode* rootNode = fbx_scene->GetRootNode();
+	if (rootNode) {
+
 	}
 
 
