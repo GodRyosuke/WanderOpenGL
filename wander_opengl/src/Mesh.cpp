@@ -1056,7 +1056,40 @@ bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
 	for (int i = 0; i < fbx_scene->GetSrcObjectCount<FbxMesh>(); i++) {
 		FbxMesh* mesh = fbx_scene->GetSrcObject<FbxMesh>(i);
 
-		int deformer_count = mesh->GetDeformerCount(FbxDeformer::eSkin);
+		int skinCount = mesh->GetDeformerCount(FbxDeformer::eSkin);
+		if (skinCount > 0) {
+			// skinを取得
+			for (int skinIdx = 0; skinIdx < skinCount; skinIdx++) {
+				FbxSkin* skin = static_cast<FbxSkin*>(mesh->GetDeformer(skinIdx, FbxDeformer::eSkin));
+
+				int clusterNum = skin->GetClusterCount();
+				// Cluster取得(ボーン)
+				for (int clusterIdx = 0; clusterIdx < clusterNum; ++clusterIdx) {
+					FbxCluster* cluster = skin->GetCluster(clusterIdx);
+
+					// 対象ボーンが影響を与える頂点、weightを取得
+					int pointNum = cluster->GetControlPointIndicesCount();
+					int* pointAry = cluster->GetControlPointIndices();		// 頂点index配列
+					double* weightAry = cluster->GetControlPointWeights();	// weight配列
+
+					for (int pointIdx = 0; pointIdx < pointNum; ++pointIdx) {
+						// 頂点インデックスとウェイトを取得
+						int   index = pointAry[i];
+						float weight = (float)weightAry[i];
+						printf("%d\t%f\n", index, weight);
+					}
+
+					int max = 0;
+					for (int k = 0; k < pointNum; k++) {
+						int index = pointAry[k];
+						if (max < index) {
+							max = index;
+						}
+					}
+					std::cout << max << std::endl;
+				}
+			}
+		}
 
 		int index = 0;
 		FbxSkin* pFbxSkin = (FbxSkin*)mesh->GetDeformer(
@@ -1094,7 +1127,7 @@ bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
 		//			// bool pApplyTarget=false
 		//);          // bool pForceEval=false
 
-		printf("%d %d %s\n", deformer_count, index, clusterLinkName);
+		//printf("%d %d %s\n", deformer_count, index, clusterLinkName);
 		printf("start: %lld stop: %lld sum: %f\n", start, stop, sum_frame);
 		LoadFBXMeshData(mesh);
 	}
