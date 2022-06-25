@@ -8,7 +8,9 @@ Mesh::Mesh(std::string FilePath, std::string ObjFileName, Shader* shader, glm::v
 	:mShader(shader),
 	mVertices(0),
 	mIndices(0),
-	mLightDir(LightDir)
+	mLightDir(LightDir),
+	ObjFilePath(FilePath),
+	ObjFileName(ObjFileName)
 {
 	if (is_fbx) {
 		isFbx = true;
@@ -599,8 +601,18 @@ Texture* Mesh::LoadFBXTexture(FbxFileTexture* texture)
 {
 	std::string file_path = texture->GetRelativeFileName();
 
+	GLUtil glutil;
+	char buffer[512];
+	memset(buffer, 0, 512 * sizeof(char));
+	memcpy(buffer, file_path.c_str(), sizeof(char) * 512);
+	glutil.Replace('\\', '/', buffer);
+	std::vector<std::string> split_list;
+	std::string replace_file_name = buffer;
+	// 「/」で分解
+	glutil.Split('/', buffer, split_list);
 
-	Texture* textureData = new Texture("ab");
+	std::string file_name = ObjFilePath + "Textures/" + split_list[split_list.size() - 1];
+	Texture* textureData = new Texture(file_name);
 
 	return textureData;
 }
@@ -1041,9 +1053,133 @@ bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
 	}
 
 	// Mesh読み込み
-	for (int i = 0; i < fbx_scene->GetSrcObjectCount<FbxMesh>(); i++) {
-		FbxMesh* mesh = fbx_scene->GetSrcObject<FbxMesh>(i);
+	struct BornWeightIndexData {
+		int BornIdx;
+		double weight;
+		int vertexIdx;
+	};
+	struct BornWeightData {
+		int BornIdx;
+		double weight;
+	};
+
+	for (int meshIdx = 0; meshIdx < fbx_scene->GetSrcObjectCount<FbxMesh>(); meshIdx++) {
+		FbxMesh* mesh = fbx_scene->GetSrcObject<FbxMesh>(meshIdx);
+
+		std::map<int, std::vector<BornWeightData>> vertexIdx_Born_map;
+		std::vector<BornWeightIndexData> BornWeightDataArray;
+		std::map<int, glm::mat4> BornIdxMat_map;	// ボーンのindexと初期姿勢の行列の配列
+		int skinCount = mesh->GetDeformerCount(FbxDeformer::eSkin);
+		if (skinCount > 0) {
+			// skinを取得
+			for (int skinIdx = 0; skinIdx < skinCount; skinIdx++) {
+				FbxSkin* skin = static_cast<FbxSkin*>(mesh->GetDeformer(skinIdx, FbxDeformer::eSkin));
+
+				int clusterNum = skin->GetClusterCount();
+				// Cluster取得(ボーン)
+				//std::vector<BornWeightData> BonrWeightDataArray(clusterNum);
+				for (int clusterIdx = 0; clusterIdx < clusterNum; ++clusterIdx) {
+					FbxCluster* cluster = skin->GetCluster(clusterIdx);
+
+					// 対象ボーンが影響を与える頂点、weightを取得
+					int pointNum = cluster->GetControlPointIndicesCount();
+					int* pointAry = cluster->GetControlPointIndices();		// 頂点index配列
+					double* weightAry = cluster->GetControlPointWeights();	// weight配列
+
+					for (int pointIdx = 0; pointIdx < pointNum; ++pointIdx) {
+						BornWeightIndexData bwdi;
+						// 頂点インデックスとウェイトを取得
+						int   index = pointAry[pointIdx];
+						float weight = (float)weightAry[pointIdx];
+						//printf("%d\t%f\n", index, weight);
+
+						bwdi.BornIdx = clusterIdx;
+						bwdi.weight = weight;
+						bwdi.vertexIdx = index;
+						BornWeightDataArray.push_back(bwdi);
+					}
+
+					// 行列所得
+					FbxAMatrix initMat;
+					cluster->GetTransformLinkMatrix(initMat);
+					// FbxAMatrix->glm::mat4に変換
+					glm::mat4 glmInitMat;
+					FbxVector4 Fbxtrans = initMat.GetT();
+					{
+						glm::vec4 c0 = glm::make_vec4((double*)initMat.GetColumn(0).Buffer()); //get the first row of matrix data 
+						glm::vec4 c1 = glm::make_vec4((double*)initMat.GetColumn(1).Buffer());
+						glm::vec4 c2 = glm::make_vec4((double*)initMat.GetColumn(2).Buffer());
+						glm::vec4 c3 = glm::make_vec4((double*)initMat.GetColumn(3).Buffer());
+						glm::mat4 convertMatr = glm::mat4(c0, c1, c2, c3);
+						glmInitMat = glm::transpose(convertMatr);
+					}
+					BornIdxMat_map.insert(std::make_pair(clusterIdx, glmInitMat));
+				}
+			}
+		}
+
+		// 同じ頂点Indexはまとめる
+		for (auto bwda : BornWeightDataArray) {
+			BornWeightData bwd;
+			bwd.BornIdx = bwda.BornIdx;
+			bwd.weight = bwda.weight;
+			auto itr = vertexIdx_Born_map.find(bwda.vertexIdx);
+			if (itr != vertexIdx_Born_map.end()) {	// すでに要素があれば
+				itr->second.push_back(bwd);
+			}
+			else {	// まだ格納されていなければ、作成
+				std::vector<BornWeightData> bwdArray;
+				bwdArray.push_back(bwd);
+				vertexIdx_Born_map.insert(std::make_pair(bwda.vertexIdx, bwdArray));
+			}
+		}
+
+
+		int index = 0;
+		FbxSkin* pFbxSkin = (FbxSkin*)mesh->GetDeformer(
+			index,              // int pIndex
+			FbxDeformer::eSkin  // FbxDeformer::EDeformerType pType
+		);
+
+		int clusterCount = pFbxSkin->GetClusterCount();
+		FbxCluster* pFbxCluster = pFbxSkin->GetCluster(index);// int pIndex
+		const char* clusterLinkName = pFbxCluster->GetLink()->GetName();
+		int controlPointIndicesCount = pFbxCluster->GetControlPointIndicesCount();
+		int* controlPointIndices = pFbxCluster->GetControlPointIndices();
+		double* controlPointWeights = pFbxCluster->GetControlPointWeights();
+		const FbxMatrix& globalTransform = pFbxCluster->GetLink()->EvaluateGlobalTransform();
+
+		//for (int k = 0; k < 4; k++) {
+		//	for (int l = 0; l < 4; l++) {
+		//		printf("%3f ", globalTransform[k][l]);
+		//	}
+		//	std::cout << std::endl;
+		//}
+
+		int animStackCount = fbx_importer->GetAnimStackCount();
+		FbxTakeInfo* pFbxTakeInfo = fbx_importer->GetTakeInfo(index);
+
+		FbxLongLong start = pFbxTakeInfo->mLocalTimeSpan.GetStart().Get();
+		FbxLongLong stop = pFbxTakeInfo->mLocalTimeSpan.GetStop().Get();
+		FbxLongLong oneFrameValue = FbxTime::GetOneFrameValue(FbxTime::eFrames60);// EMode pTimeMode=eDefaultMode
+
+		double sum_frame = (stop - start) / oneFrameValue;
+
+		//FbxMatrix m = pFbxNode->EvaluateGlobalTransform(
+		//	time    // FbxTime pTime=FBXSDK_TIME_INFINITE
+		//			// FbxNode::EPivotSet pPivotSet=FbxNode::eSourcePivot
+		//			// bool pApplyTarget=false
+		//);          // bool pForceEval=false
+
+		//printf("%d %d %s\n", deformer_count, index, clusterLinkName);
+		printf("start: %lld stop: %lld sum: %f\n", start, stop, sum_frame);
 		LoadFBXMeshData(mesh);
+	}
+	int x = 0;
+
+	FbxNode* rootNode = fbx_scene->GetRootNode();
+	if (rootNode) {
+
 	}
 
 
@@ -1165,13 +1301,22 @@ void Mesh::Draw()
 
 			FBXMaterial material = mFBXMaterials[vao.MaterialName];
 			// Set Lightings
-			mShader->SetVectorUniform("uAmbientLight", material.AmbientColor);
+			mShader->SetVectorUniform("uAmbientLight", glm::vec3(0.5f, 0.5f, 0.5f));
 			mShader->SetVectorUniform("uDirLight.mDirection", mLightDir);
 			mShader->SetVectorUniform("uDirLight.mDiffuseColor", material.DiffuseColor);
 			mShader->SetVectorUniform("uDirLight.mSpecColor", material.SpecColor);
 			mShader->SetFloatUniform("uSpecPower", material.SpecPower);
 
+			// Set Texture
+			if (material.Tex != nullptr) {
+				material.Tex->BindTexture();
+			}
+
 			glDrawElements(GL_TRIANGLES, vao.IndicesSize, GL_UNSIGNED_INT, 0);
+
+			if (material.Tex != nullptr) {
+				material.Tex->UnBindTexture();
+			}
 		}
 	}
 

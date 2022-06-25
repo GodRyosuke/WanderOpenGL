@@ -465,32 +465,44 @@ bool YGame::LoadData()
 		mMeshes.push_back(mesh);
 	}
 
+	//{
+	//	Mesh* mesh = new Mesh("./resources/shredder/", "shredder.obj", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707));
+	//	mesh->SetMeshPos(glm::vec3(20.0f, 35.0f, 0.0f));
+	//	glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0, 0.0f, 0.0f));
+	//	mesh->SetMeshRotate(rotMat);
+	//	mesh->SetMeshScale(1.0f);
+	//	mMeshes.push_back(mesh);
+	//}
 	{
-		Mesh* mesh = new Mesh("./resources/shredder/", "shredder.obj", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707));
-		mesh->SetMeshPos(glm::vec3(20.0f, 35.0f, 0.0f));
-		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0, 0.0f, 0.0f));
-		mesh->SetMeshRotate(rotMat);
-		mesh->SetMeshScale(1.0f);
-		mMeshes.push_back(mesh);
-	}
-	{
-		Mesh* mesh = new Mesh("./resources/TreasureBox/", "TreasureBox.obj", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707));
+		Mesh* mesh = new Mesh("./resources/TreasureBox2/", "TreasureBox.fbx", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707), true);
 		mesh->SetMeshPos(glm::vec3(30.0f, 35.0f, 0.0f));
 		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0, 0.0f, 0.0f));
 		mesh->SetMeshRotate(rotMat);
-		mesh->SetMeshScale(1.0f);
-		mMeshes.push_back(mesh);
-	}
-
-	{
-		Mesh* mesh = new Mesh("./resources/TreasureBox/", "Chest.fbx", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707), true);
-		mesh->SetMeshPos(glm::vec3(-30.0f, 35.0f, 0.0f));
-		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0, 0.0f, 0.0f));
-		mesh->SetMeshRotate(rotMat);
-		mesh->SetMeshScale(1.0f);
 		mesh->SetMeshScale(0.01f);
 		mMeshes.push_back(mesh);
 	}
+
+	//{
+	//	Mesh* mesh = new Mesh("./resources/TreasureBox/", "Chest.fbx", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707), true);
+	//	mesh->SetMeshPos(glm::vec3(-30.0f, 35.0f, 0.0f));
+	//	glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0, 0.0f, 0.0f));
+	//	mesh->SetMeshRotate(rotMat);
+	//	mesh->SetMeshScale(1.0f);
+	//	mesh->SetMeshScale(0.01f);
+	//	mMeshes.push_back(mesh);
+	//}
+
+	//{
+	//	Mesh* mesh = new Mesh("./resources/BrickBox/", "BrickBox.fbx", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707), true);
+	//	mesh->SetMeshPos(glm::vec3(20.0f, 35.0f, 0.0f));
+	//	glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0, 0.0f, 0.0f));
+	//	mesh->SetMeshRotate(rotMat);
+	//	mesh->SetMeshScale(1.0f);
+	//	mesh->SetMeshScale(1.0f);
+	//	mMeshes.push_back(mesh);
+	//}
+
+
 
 
 

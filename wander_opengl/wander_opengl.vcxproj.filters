@@ -73,5 +73,6 @@
     <None Include="Shaders\3DText.frag" />
     <None Include="Shaders\SkyBox.vert" />
     <None Include="Shaders\SkyBox.frag" />
+    <None Include="Shaders\FBXPhong.frag" />
   </ItemGroup>
 </Project>

@@ -108,5 +108,8 @@ private:
 	DirectionalLight mDirectionalLight;
 	float mSpecPower;
 
+	std::string ObjFilePath;
+	std::string ObjFileName;
+
 	bool isFbx;
 };

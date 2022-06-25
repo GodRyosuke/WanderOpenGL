@@ -11,7 +11,9 @@
 class Texture {
 public:
 	Texture();
+	// Simple Load Texture
 	Texture(std::string filePath);
+	// For Cube Maps
 	Texture(std::vector<std::string> filePaths);
 
 	void CreateTextTexture(std::string text_data, int* color, TTF_Font* font);
