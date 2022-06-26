@@ -416,6 +416,22 @@ bool YGame::LoadShaders()
 		mSkyBoxShaderProgram->SetMatrixUniform("uTrans", trans);
 	}
 
+	
+	// Skinning Mesh Shader読み込み
+	{
+		std::string vert_file = "./Shaders/Skinning.vert";
+		std::string frag_file = "./Shaders/YPhong.frag";
+		mSkinningShaderProgram = new Shader();
+		if (!mSkinningShaderProgram->CreateShaderProgram(vert_file, frag_file)) {
+			return false;
+		}
+	}
+	mSkinningShaderProgram->UseProgram();
+	mSkinningShaderProgram->SetMatrixUniform("view", view2);
+	mSkinningShaderProgram->SetMatrixUniform("proj", mProjection);
+	mSkinningShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
+
+
 
 	
 	return true;
@@ -474,7 +490,7 @@ bool YGame::LoadData()
 	//	mMeshes.push_back(mesh);
 	//}
 	{
-		Mesh* mesh = new Mesh("./resources/TreasureBox2/", "TreasureBox.fbx", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707), true);
+		Mesh* mesh = new Mesh("./resources/TreasureBox2/", "TreasureBox.fbx", mSkinningShaderProgram, glm::vec3(0, -0.707, -0.707), true);
 		mesh->SetMeshPos(glm::vec3(30.0f, 35.0f, 0.0f));
 		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0, 0.0f, 0.0f));
 		mesh->SetMeshRotate(rotMat);

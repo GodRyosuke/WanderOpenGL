@@ -84,6 +84,7 @@ private:
 	Shader* mTextShaderProgram;
 	Shader* m3DTextShaderProgram;
 	Shader* mSkyBoxShaderProgram;
+	Shader* mSkinningShaderProgram;
 
 
 	// lighting
