@@ -8,6 +8,8 @@
 #include "Texture.hpp"
 #include "fbxsdk.h"
 
+#define MAX_NUM_BONES_PER_VERTEX 4
+
 class Mesh {
 public:
 	Mesh(std::string ObjFilePath, std::string MtlFilePath, Shader* shader, glm::vec3 LightDir, bool is_fbx = false);
@@ -68,6 +70,8 @@ private:
 	};
 
 
+
+
 	std::map<std::string, Material> mMaterials;
 	std::map<std::string, FBXMaterial> mFBXMaterials;
 	std::vector<ObjSubSet> mObjSubSets;
@@ -80,6 +84,7 @@ private:
 	bool LoadFBXFile(std::string FilePath, std::string FBXFileName);
 	void LoadFBXMaterial(FbxMesh* mesh, Material& material, FbxSurfaceMaterial* fbxMaterial, std::string& materialName);
 	void LoadFBXMaterial(FbxSurfaceMaterial* fbxMaterial);
+	void LoadFBXBones(FbxMesh* mesh);
 	Texture* LoadFBXTexture(FbxFileTexture* tex);
 	void LoadFBXMeshData(FbxMesh* lMesh);
 
@@ -96,6 +101,7 @@ private:
 
 	std::vector<float> mVertices;
 	std::vector<unsigned int> mIndices;
+
 
 	glm::vec3 mLightDir;
 	glm::vec3 mMeshPos;
