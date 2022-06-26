@@ -857,7 +857,7 @@ void Mesh::LoadFBXMeshData(FbxMesh* lMesh)
 				// Boneの行列(絶対座標)取得
 				FbxAMatrix initMat;
 				cluster->GetTransformLinkMatrix(initMat);
-				initMat = cluster->GetLink()->transform(0);
+				//initMat = cluster->GetLink()->transform(0);
 				// FbxAMatrix->glm::mat4に変換
 				glm::mat4 glmInitMat;
 				FbxVector4 Fbxtrans = initMat.GetT();
@@ -1169,87 +1169,87 @@ bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
 	for (int meshIdx = 0; meshIdx < fbx_scene->GetSrcObjectCount<FbxMesh>(); meshIdx++) {
 		FbxMesh* mesh = fbx_scene->GetSrcObject<FbxMesh>(meshIdx);
 
-		std::map<int, std::vector<BornWeightData>> vertexIdx_Born_map;
-		std::vector<BornWeightIndexData> BornWeightDataArray;
-		std::map<int, glm::mat4> BornIdxMat_map;	// ボーンのindexと初期姿勢の行列の配列
-		std::vector<glm::mat4> BoneIdtoMatrixArray;
-		std::vector<VertexBoneData> Bones(mesh->GetPolygonCount() * 3);	// 各頂点のBoneIdxとそのWeightの配列
+		//std::map<int, std::vector<BornWeightData>> vertexIdx_Born_map;
+		//std::vector<BornWeightIndexData> BornWeightDataArray;
+		//std::map<int, glm::mat4> BornIdxMat_map;	// ボーンのindexと初期姿勢の行列の配列
+		//std::vector<glm::mat4> BoneIdtoMatrixArray;
+		//std::vector<VertexBoneData> Bones(mesh->GetPolygonCount() * 3);	// 各頂点のBoneIdxとそのWeightの配列
 
-		int skinCount = mesh->GetDeformerCount(FbxDeformer::eSkin);
-		if (skinCount > 0) {
-			// skinを取得
-			for (int skinIdx = 0; skinIdx < skinCount; skinIdx++) {
-				FbxSkin* skin = static_cast<FbxSkin*>(mesh->GetDeformer(skinIdx, FbxDeformer::eSkin));
+		//int skinCount = mesh->GetDeformerCount(FbxDeformer::eSkin);
+		//if (skinCount > 0) {
+		//	// skinを取得
+		//	for (int skinIdx = 0; skinIdx < skinCount; skinIdx++) {
+		//		FbxSkin* skin = static_cast<FbxSkin*>(mesh->GetDeformer(skinIdx, FbxDeformer::eSkin));
 
-				int clusterNum = skin->GetClusterCount();
-				BoneIdtoMatrixArray.resize(clusterNum);
-				// Cluster取得(ボーン)
-				//std::vector<BornWeightData> BonrWeightDataArray(clusterNum);
-				for (int clusterIdx = 0; clusterIdx < clusterNum; ++clusterIdx) {
-					FbxCluster* cluster = skin->GetCluster(clusterIdx);
+		//		int clusterNum = skin->GetClusterCount();
+		//		BoneIdtoMatrixArray.resize(clusterNum);
+		//		// Cluster取得(ボーン)
+		//		//std::vector<BornWeightData> BonrWeightDataArray(clusterNum);
+		//		for (int clusterIdx = 0; clusterIdx < clusterNum; ++clusterIdx) {
+		//			FbxCluster* cluster = skin->GetCluster(clusterIdx);
 
-					// 対象ボーンが影響を与える頂点、weightを取得
-					int pointNum = cluster->GetControlPointIndicesCount();
-					int* pointAry = cluster->GetControlPointIndices();		// 頂点index配列
-					double* weightAry = cluster->GetControlPointWeights();	// weight配列
+		//			// 対象ボーンが影響を与える頂点、weightを取得
+		//			int pointNum = cluster->GetControlPointIndicesCount();
+		//			int* pointAry = cluster->GetControlPointIndices();		// 頂点index配列
+		//			double* weightAry = cluster->GetControlPointWeights();	// weight配列
 
-					for (int pointIdx = 0; pointIdx < pointNum; ++pointIdx) {
-						BornWeightIndexData bwdi;
-						// 頂点インデックスとウェイトを取得
-						int   index = pointAry[pointIdx];
-						float weight = (float)weightAry[pointIdx];
-						//printf("%d\t%f\n", index, weight);
+		//			for (int pointIdx = 0; pointIdx < pointNum; ++pointIdx) {
+		//				BornWeightIndexData bwdi;
+		//				// 頂点インデックスとウェイトを取得
+		//				int   index = pointAry[pointIdx];
+		//				float weight = (float)weightAry[pointIdx];
+		//				//printf("%d\t%f\n", index, weight);
 
-						bwdi.BornIdx = clusterIdx;
-						bwdi.weight = weight;
-						bwdi.vertexIdx = index;
-						BornWeightDataArray.push_back(bwdi);
+		//				bwdi.BornIdx = clusterIdx;
+		//				bwdi.weight = weight;
+		//				bwdi.vertexIdx = index;
+		//				BornWeightDataArray.push_back(bwdi);
 
-						VertexBoneData vbd = Bones[index];
-						for (int i = 0; i < 4; i++) {
-							if (vbd.Weight[i] == 0.0) {
-								vbd.BornIdx[i] = clusterIdx;
-								vbd.Weight[i] = weight;
-								break;
-							}
-						}
-						Bones[index] = vbd;
-					}
+		//				VertexBoneData vbd = Bones[index];
+		//				for (int i = 0; i < 4; i++) {
+		//					if (vbd.Weight[i] == 0.0) {
+		//						vbd.BornIdx[i] = clusterIdx;
+		//						vbd.Weight[i] = weight;
+		//						break;
+		//					}
+		//				}
+		//				Bones[index] = vbd;
+		//			}
 
-					// Boneの行列(絶対座標)取得
-					FbxAMatrix initMat;
-					cluster->GetTransformLinkMatrix(initMat);
-					// FbxAMatrix->glm::mat4に変換
-					glm::mat4 glmInitMat;
-					FbxVector4 Fbxtrans = initMat.GetT();
-					{
-						glm::vec4 c0 = glm::make_vec4((double*)initMat.GetColumn(0).Buffer()); //get the first row of matrix data 
-						glm::vec4 c1 = glm::make_vec4((double*)initMat.GetColumn(1).Buffer());
-						glm::vec4 c2 = glm::make_vec4((double*)initMat.GetColumn(2).Buffer());
-						glm::vec4 c3 = glm::make_vec4((double*)initMat.GetColumn(3).Buffer());
-						glm::mat4 convertMatr = glm::mat4(c0, c1, c2, c3);
-						glmInitMat = glm::transpose(convertMatr);
-					}
-					BoneIdtoMatrixArray[clusterIdx] = glmInitMat;
-				}
-			}
-		}
+		//			// Boneの行列(絶対座標)取得
+		//			FbxAMatrix initMat;
+		//			cluster->GetTransformLinkMatrix(initMat);
+		//			// FbxAMatrix->glm::mat4に変換
+		//			glm::mat4 glmInitMat;
+		//			FbxVector4 Fbxtrans = initMat.GetT();
+		//			{
+		//				glm::vec4 c0 = glm::make_vec4((double*)initMat.GetColumn(0).Buffer()); //get the first row of matrix data 
+		//				glm::vec4 c1 = glm::make_vec4((double*)initMat.GetColumn(1).Buffer());
+		//				glm::vec4 c2 = glm::make_vec4((double*)initMat.GetColumn(2).Buffer());
+		//				glm::vec4 c3 = glm::make_vec4((double*)initMat.GetColumn(3).Buffer());
+		//				glm::mat4 convertMatr = glm::mat4(c0, c1, c2, c3);
+		//				glmInitMat = glm::transpose(convertMatr);
+		//			}
+		//			BoneIdtoMatrixArray[clusterIdx] = glmInitMat;
+		//		}
+		//	}
+		//}
 
-		// 同じ頂点Indexはまとめる
-		for (auto bwda : BornWeightDataArray) {
-			BornWeightData bwd;
-			bwd.BornIdx = bwda.BornIdx;
-			bwd.weight = bwda.weight;
-			auto itr = vertexIdx_Born_map.find(bwda.vertexIdx);
-			if (itr != vertexIdx_Born_map.end()) {	// すでに要素があれば
-				itr->second.push_back(bwd);
-			}
-			else {	// まだ格納されていなければ、作成
-				std::vector<BornWeightData> bwdArray;
-				bwdArray.push_back(bwd);
-				vertexIdx_Born_map.insert(std::make_pair(bwda.vertexIdx, bwdArray));
-			}
-		}
+		//// 同じ頂点Indexはまとめる
+		//for (auto bwda : BornWeightDataArray) {
+		//	BornWeightData bwd;
+		//	bwd.BornIdx = bwda.BornIdx;
+		//	bwd.weight = bwda.weight;
+		//	auto itr = vertexIdx_Born_map.find(bwda.vertexIdx);
+		//	if (itr != vertexIdx_Born_map.end()) {	// すでに要素があれば
+		//		itr->second.push_back(bwd);
+		//	}
+		//	else {	// まだ格納されていなければ、作成
+		//		std::vector<BornWeightData> bwdArray;
+		//		bwdArray.push_back(bwd);
+		//		vertexIdx_Born_map.insert(std::make_pair(bwda.vertexIdx, bwdArray));
+		//	}
+		//}
 
 
 		int index = 0;
