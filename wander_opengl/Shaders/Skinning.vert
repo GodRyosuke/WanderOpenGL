@@ -29,8 +29,16 @@ uniform mat4 uMatrixPalette[96];
 
 void main()
 {
+	mat4 BoneTransform = uMatrixPalette[BoneIDs[0]] * Weights[0];
+		BoneTransform += uMatrixPalette[BoneIDs[1]] * Weights[1];
+		BoneTransform += uMatrixPalette[BoneIDs[2]] * Weights[2];
+		BoneTransform += uMatrixPalette[BoneIDs[3]] * Weights[3];
+
+	vec4 PosL    = BoneTransform * vec4(aPos, 1.0);
+	// vec4 PosL    = vec4(aPos, 1.0);
+
 	// Outputs the positions/coordinates of all vertices
-	gl_Position = proj * view * model * vec4(aPos, 1.0);
+	gl_Position = proj * view * model * PosL;
 	// Assigns the colors from the Vertex Data to "color"
 	// color = aColor;
 	// Assigns the texture coordinates from the Vertex Data to "texCoord"

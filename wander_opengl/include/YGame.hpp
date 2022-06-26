@@ -108,6 +108,7 @@ private:
 
 	// Mesh Vertices
 	std::vector<Mesh*> mMeshes;
+	Mesh* mTreasureBoxMesh;
 	Mesh* mSphareMesh;
 	Mesh* mCubeMesh;
 	Mesh* mDonutMesh;

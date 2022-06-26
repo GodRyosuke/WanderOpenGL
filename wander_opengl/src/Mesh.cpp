@@ -857,6 +857,7 @@ void Mesh::LoadFBXMeshData(FbxMesh* lMesh)
 				// Boneの行列(絶対座標)取得
 				FbxAMatrix initMat;
 				cluster->GetTransformLinkMatrix(initMat);
+				initMat = cluster->GetLink()->transform(0);
 				// FbxAMatrix->glm::mat4に変換
 				glm::mat4 glmInitMat;
 				FbxVector4 Fbxtrans = initMat.GetT();
@@ -890,6 +891,7 @@ void Mesh::LoadFBXMeshData(FbxMesh* lMesh)
 
 	unsigned int VertexArray;
 	unsigned int VertexBuffer;
+	unsigned int BoneBuffer;
 	unsigned int IndexBuffer;
 
 	mShader->UseProgram();
@@ -915,6 +917,11 @@ void Mesh::LoadFBXMeshData(FbxMesh* lMesh)
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
+
+	glGenBuffers(1, &BoneBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, BoneBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Bones[0])* Bones.size(), &Bones[0], GL_STATIC_DRAW);
+
 	glEnableVertexAttribArray(3);
 	glVertexAttribIPointer(3, MAX_NUM_BONES_PER_VERTEX, GL_INT, sizeof(VertexBoneData), (const GLvoid*)0);
 	glEnableVertexAttribArray(4);
@@ -934,6 +941,12 @@ void Mesh::LoadFBXMeshData(FbxMesh* lMesh)
 	vao.IndicesSize = indices.size();
 	vao.MaterialName = MaterialName;
 	mVAOs.push_back(vao);
+
+	// Bone Transform設定
+	for (int i = 0; i < BoneIdtoMatrixArray.size(); i++) {
+		std::string uniformName = "uMatrixPalette[" + std::to_string(i) + ']';
+		mShader->SetMatrixUniform(uniformName, BoneIdtoMatrixArray[i]);
+	}
 }
 
 void Mesh::LoadFBXBones(FbxMesh* mesh)
@@ -941,156 +954,156 @@ void Mesh::LoadFBXBones(FbxMesh* mesh)
 
 }
 
-void Mesh::searchNode(FbxScene* scene, FbxGeometryConverter converter, FbxNode* node)
-{
-	if (node->GetChildCount() == 0) {
-		return;
-	}
-
-	for (int no = 0; no < node->GetChildCount(); no++) {
-		FbxNode* lNode = node->GetChild(no);
-
-		for (int attrIdx = 0; attrIdx < lNode->GetNodeAttributeCount(); attrIdx++) {
-			FbxNodeAttribute* attr = lNode->GetNodeAttributeByIndex(attrIdx);
-			if (attr) {
-				if (attr->GetAttributeType() == FbxNodeAttribute::eMesh) {
-					// mesh作成処理
-
-					FbxMesh* lMesh = lNode->GetMesh();
-					//converter.SplitMeshPerMaterial(lMesh, true);
-
-					const int lVertexCount = lMesh->GetControlPointsCount();
-					std::vector<unsigned int>indices;
-					struct customVert {
-						glm::vec3 vert;
-						glm::vec3 normal;
-						glm::vec2 uv;
-					};
-					std::vector<customVert>vertices;
-
-					// Index取得
-					for (int i = 0; i < lMesh->GetPolygonCount(); i++) {
-						indices.push_back(i * 3);
-						indices.push_back(i * 3 + 1);
-						indices.push_back(i * 3 + 2);
-					}
-
-					// Vertex取得
-					FbxVector4* lVertexArray = NULL;
-					lVertexArray = new FbxVector4[lVertexCount];
-					memcpy(lVertexArray, lMesh->GetControlPoints(), lVertexCount * sizeof(FbxVector4));
-
-					int* polygonIndices = lMesh->GetPolygonVertices();
-					for (int i = 0; i < lMesh->GetPolygonVertexCount(); i++) {
-						int index = polygonIndices[i];
-						customVert point;
-						point.vert.x = lVertexArray[index][0];
-						point.vert.y = lVertexArray[index][1];
-						point.vert.z = lVertexArray[index][2];
-						vertices.push_back(point);
-					}
-
-					// 法線取得
-					FbxArray<FbxVector4> lNormals;
-					lMesh->GetPolygonVertexNormals(lNormals);
-					for (int i = 0; i < lNormals.Size(); i++) {
-						vertices[i].normal.x = lNormals[i][0];
-						vertices[i].normal.y = lNormals[i][1];
-						vertices[i].normal.z = lNormals[i][2];
-					}
-
-					// UV取得
-					FbxStringList lUVNames;
-					lMesh->GetUVSetNames(lUVNames);
-					FbxArray<FbxVector2> lUVs;
-					lMesh->GetPolygonVertexUVs(lUVNames.GetStringAt(0), lUVs);
-					for (int i = 0; i < lUVs.Size(); i++) {
-						vertices[i].uv.x = lUVs[i][0];
-						vertices[i].uv.y = lUVs[i][1];
-					}
-
-					// マテリアル取得
-					Material material;
-					std::string materialName;
-					for (int i = 0; i < scene->GetMaterialCount(); i++) {
-						FbxSurfaceMaterial* surfaceMaterial = scene->GetMaterial(i);
-						//material.AmbientColor.x = surfaceMaterial->sAmbient[0];
-						//material.AmbientColor.y = surfaceMaterial->sAmbient[1];
-						//material.AmbientColor.z = surfaceMaterial->sAmbient[2];
-						//LoadFBXMaterial(lMesh, material, scene->GetMaterial(i), materialName);
-					}
-					//for (int i = 0; i < scene->GetSrcObjectCount<FbxSurfaceMaterial>(); i++) {
-					//	LoadFBXMaterial(lMesh, material, scene->GetSrcObject<FbxSurfaceMaterial>(i), materialName);
-					//}
-
-
-
-					// VAO作成
-					// データを作り変える
-					std::vector<float> vertices_data;
-					for (int i = 0; i < vertices.size(); i++) {
-						vertices_data.push_back(vertices[i].vert.x);
-						vertices_data.push_back(vertices[i].vert.y);
-						vertices_data.push_back(vertices[i].vert.z);
-						vertices_data.push_back(vertices[i].normal.x);
-						vertices_data.push_back(vertices[i].normal.y);
-						vertices_data.push_back(vertices[i].normal.z);
-						vertices_data.push_back(vertices[i].uv.x);
-						vertices_data.push_back(vertices[i].uv.y);
-					}
-
-					unsigned int VertexArray;
-					unsigned int VertexBuffer;
-					unsigned int IndexBuffer;
-
-					mShader->UseProgram();
-					glGenVertexArrays(1, &VertexArray);
-					glBindVertexArray(VertexArray);
-
-					glGenBuffers(1, &VertexBuffer);
-					glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
-					glBufferData(GL_ARRAY_BUFFER, vertices_data.size() * sizeof(float), vertices_data.data(), GL_STATIC_DRAW);
-					//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-					glGenBuffers(1, &IndexBuffer);
-					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
-					glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
-
-					// link attribution
-					glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
-					//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-					//glEnableVertexAttribArray(0);
-					glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-					glEnableVertexAttribArray(0);
-					glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-					glEnableVertexAttribArray(1);
-					glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-					glEnableVertexAttribArray(2);
-
-
-
-					// unbind cube vertex arrays
-					glBindVertexArray(0);
-					glBindBuffer(GL_ARRAY_BUFFER, 0);
-					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-					VAO vao;
-					vao.VertexArray = VertexArray;
-					vao.VertexBuffer = VertexBuffer;
-					vao.IndexBuffer = IndexBuffer;
-					vao.IndicesSize = indices.size();
-					vao.MaterialName = "FBX";
-					mVAOs.push_back(vao);
-
-					int x = 0;
-				}
-			}
-
-		}
-
-		searchNode(scene, converter, lNode);
-	}
-}
+//void Mesh::searchNode(FbxScene* scene, FbxGeometryConverter converter, FbxNode* node)
+//{
+//	if (node->GetChildCount() == 0) {
+//		return;
+//	}
+//
+//	for (int no = 0; no < node->GetChildCount(); no++) {
+//		FbxNode* lNode = node->GetChild(no);
+//
+//		for (int attrIdx = 0; attrIdx < lNode->GetNodeAttributeCount(); attrIdx++) {
+//			FbxNodeAttribute* attr = lNode->GetNodeAttributeByIndex(attrIdx);
+//			if (attr) {
+//				if (attr->GetAttributeType() == FbxNodeAttribute::eMesh) {
+//					// mesh作成処理
+//
+//					FbxMesh* lMesh = lNode->GetMesh();
+//					//converter.SplitMeshPerMaterial(lMesh, true);
+//
+//					const int lVertexCount = lMesh->GetControlPointsCount();
+//					std::vector<unsigned int>indices;
+//					struct customVert {
+//						glm::vec3 vert;
+//						glm::vec3 normal;
+//						glm::vec2 uv;
+//					};
+//					std::vector<customVert>vertices;
+//
+//					// Index取得
+//					for (int i = 0; i < lMesh->GetPolygonCount(); i++) {
+//						indices.push_back(i * 3);
+//						indices.push_back(i * 3 + 1);
+//						indices.push_back(i * 3 + 2);
+//					}
+//
+//					// Vertex取得
+//					FbxVector4* lVertexArray = NULL;
+//					lVertexArray = new FbxVector4[lVertexCount];
+//					memcpy(lVertexArray, lMesh->GetControlPoints(), lVertexCount * sizeof(FbxVector4));
+//
+//					int* polygonIndices = lMesh->GetPolygonVertices();
+//					for (int i = 0; i < lMesh->GetPolygonVertexCount(); i++) {
+//						int index = polygonIndices[i];
+//						customVert point;
+//						point.vert.x = lVertexArray[index][0];
+//						point.vert.y = lVertexArray[index][1];
+//						point.vert.z = lVertexArray[index][2];
+//						vertices.push_back(point);
+//					}
+//
+//					// 法線取得
+//					FbxArray<FbxVector4> lNormals;
+//					lMesh->GetPolygonVertexNormals(lNormals);
+//					for (int i = 0; i < lNormals.Size(); i++) {
+//						vertices[i].normal.x = lNormals[i][0];
+//						vertices[i].normal.y = lNormals[i][1];
+//						vertices[i].normal.z = lNormals[i][2];
+//					}
+//
+//					// UV取得
+//					FbxStringList lUVNames;
+//					lMesh->GetUVSetNames(lUVNames);
+//					FbxArray<FbxVector2> lUVs;
+//					lMesh->GetPolygonVertexUVs(lUVNames.GetStringAt(0), lUVs);
+//					for (int i = 0; i < lUVs.Size(); i++) {
+//						vertices[i].uv.x = lUVs[i][0];
+//						vertices[i].uv.y = lUVs[i][1];
+//					}
+//
+//					// マテリアル取得
+//					Material material;
+//					std::string materialName;
+//					for (int i = 0; i < scene->GetMaterialCount(); i++) {
+//						FbxSurfaceMaterial* surfaceMaterial = scene->GetMaterial(i);
+//						//material.AmbientColor.x = surfaceMaterial->sAmbient[0];
+//						//material.AmbientColor.y = surfaceMaterial->sAmbient[1];
+//						//material.AmbientColor.z = surfaceMaterial->sAmbient[2];
+//						//LoadFBXMaterial(lMesh, material, scene->GetMaterial(i), materialName);
+//					}
+//					//for (int i = 0; i < scene->GetSrcObjectCount<FbxSurfaceMaterial>(); i++) {
+//					//	LoadFBXMaterial(lMesh, material, scene->GetSrcObject<FbxSurfaceMaterial>(i), materialName);
+//					//}
+//
+//
+//
+//					// VAO作成
+//					// データを作り変える
+//					std::vector<float> vertices_data;
+//					for (int i = 0; i < vertices.size(); i++) {
+//						vertices_data.push_back(vertices[i].vert.x);
+//						vertices_data.push_back(vertices[i].vert.y);
+//						vertices_data.push_back(vertices[i].vert.z);
+//						vertices_data.push_back(vertices[i].normal.x);
+//						vertices_data.push_back(vertices[i].normal.y);
+//						vertices_data.push_back(vertices[i].normal.z);
+//						vertices_data.push_back(vertices[i].uv.x);
+//						vertices_data.push_back(vertices[i].uv.y);
+//					}
+//
+//					unsigned int VertexArray;
+//					unsigned int VertexBuffer;
+//					unsigned int IndexBuffer;
+//
+//					mShader->UseProgram();
+//					glGenVertexArrays(1, &VertexArray);
+//					glBindVertexArray(VertexArray);
+//
+//					glGenBuffers(1, &VertexBuffer);
+//					glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+//					glBufferData(GL_ARRAY_BUFFER, vertices_data.size() * sizeof(float), vertices_data.data(), GL_STATIC_DRAW);
+//					//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+//
+//					glGenBuffers(1, &IndexBuffer);
+//					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
+//					glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+//
+//					// link attribution
+//					glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+//					//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+//					//glEnableVertexAttribArray(0);
+//					glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+//					glEnableVertexAttribArray(0);
+//					glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+//					glEnableVertexAttribArray(1);
+//					glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+//					glEnableVertexAttribArray(2);
+//
+//
+//
+//					// unbind cube vertex arrays
+//					glBindVertexArray(0);
+//					glBindBuffer(GL_ARRAY_BUFFER, 0);
+//					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+//
+//					VAO vao;
+//					vao.VertexArray = VertexArray;
+//					vao.VertexBuffer = VertexBuffer;
+//					vao.IndexBuffer = IndexBuffer;
+//					vao.IndicesSize = indices.size();
+//					vao.MaterialName = "FBX";
+//					mVAOs.push_back(vao);
+//
+//					int x = 0;
+//				}
+//			}
+//
+//		}
+//
+//		searchNode(scene, converter, lNode);
+//	}
+//}
 
 bool Mesh::LoadFBXFile(std::string FilePath, std::string FBXFileName)
 {

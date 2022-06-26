@@ -456,6 +456,13 @@ bool YGame::LoadData()
 	mMeshShaderProgram->SetVectorUniform("uDirLight.mDiffuseColor", mDirectionalLight.diffuseColor);
 	mMeshShaderProgram->SetVectorUniform("uDirLight.mSpecColor", mDirectionalLight.specColor);
 
+	mSkinningShaderProgram->SetVectorUniform("uAmbientLight", mAmbientLightColor);
+	mSkinningShaderProgram->SetVectorUniform("uDirLight.mDirection", mDirectionalLight.direction);
+	mSkinningShaderProgram->SetVectorUniform("uDirLight.mDiffuseColor", mDirectionalLight.diffuseColor);
+	mSkinningShaderProgram->SetVectorUniform("uDirLight.mSpecColor", mDirectionalLight.specColor);
+
+
+
 	// Meshを読み込む
 	{
 		Mesh* mesh = new Mesh("./resources/", "cube2.obj", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707));
@@ -495,7 +502,7 @@ bool YGame::LoadData()
 		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0, 0.0f, 0.0f));
 		mesh->SetMeshRotate(rotMat);
 		mesh->SetMeshScale(0.01f);
-		mMeshes.push_back(mesh);
+		mTreasureBoxMesh = mesh;
 	}
 
 	//{
@@ -1609,6 +1616,13 @@ void YGame::Draw()
 		mMeshShaderProgram->UseProgram();
 		mMeshes[i]->Draw();
 	}
+
+	// FBXのSkinning Animation
+	mSkinningShaderProgram->UseProgram();
+	mSkinningShaderProgram->SetVectorUniform("uCameraPos", mCameraPos);
+	mSkinningShaderProgram->SetMatrixUniform("view", CameraView);
+	mTreasureBoxMesh->Draw();
+
 
 	//glBindVertexArray(mCubeVertexArray);
 	//mMeshShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
