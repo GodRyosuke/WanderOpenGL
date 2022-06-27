@@ -190,6 +190,7 @@ XCOPY "$(SolutionDir)dependencies\assimp\lib\Release\*.dll" "$(OutDir)" /e /y</C
     <ClCompile Include="test\Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\AssimpMesh.hpp" />
     <ClInclude Include="include\Game.hpp" />
     <ClInclude Include="include\GLUtil.hpp" />
     <ClInclude Include="include\Mesh.hpp" />

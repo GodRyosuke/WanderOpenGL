@@ -16,6 +16,7 @@
 #define ASSIMP_LOAD_FLAGS (aiProcess_Triangulate | aiProcess_GenSmoothNormals |  aiProcess_JoinIdenticalVertices )
 
 
+
 class Mesh {
 public:
 	Mesh(std::string ObjFilePath, std::string MtlFilePath, Shader* shader, glm::vec3 LightDir, bool is_fbx = false);
