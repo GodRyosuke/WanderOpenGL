@@ -17,9 +17,26 @@ bool AssimpMesh::AssimpLoader(std::string FilePath, std::string ObjFileName)
     const aiScene* pScene = pImporter.ReadFile(FilePath.c_str(), ASSIMP_LOAD_FLAGS);
 
     if (pScene) {
-       aiMatrix4x4  m_GlobalInverseTransform = pScene->mRootNode->mTransformation;
-        m_GlobalInverseTransform = m_GlobalInverseTransform.Inverse();
-        Ret = InitFromScene(m_pScene, Filename);
+        m_Meshes.resize(pScene->mNumMeshes);
+        m_Materials.resize(pScene->mNumMaterials);
+
+        unsigned int NumVertices = 0;
+        unsigned int NumIndices = 0;
+
+
+        CountVerticesAndIndices(pScene, NumVertices, NumIndices);
+
+        ReserveSpace(NumVertices, NumIndices);
+
+        InitAllMeshes(pScene);
+
+        if (!InitMaterials(pScene, Filename)) {
+            return false;
+        }
+
+        PopulateBuffers();
+
+        return GLCheckError();
     }
     else {
         printf("Error parsing '%s': '%s'\n", FilePath.c_str(), pImporter.GetErrorString());
