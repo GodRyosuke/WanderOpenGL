@@ -14,7 +14,11 @@ Mesh::Mesh(std::string FilePath, std::string ObjFileName, Shader* shader, glm::v
 {
 	if (is_fbx) {
 		isFbx = true;
-		if (!LoadFBXFile(FilePath, ObjFileName)) {
+		//if (!LoadFBXFile(FilePath, ObjFileName)) {
+		//	std::cout << "Failed to Load FBX File\n";
+		//	return;
+		//}
+		if (!AssimpLoader(FilePath, ObjFileName)) {
 			std::cout << "Failed to Load FBX File\n";
 			return;
 		}
@@ -750,6 +754,7 @@ void Mesh::LoadFBXMeshData(FbxMesh* lMesh)
 	memcpy(lVertexArray, lMesh->GetControlPoints(), lVertexCount * sizeof(FbxVector4));
 
 	int* polygonIndices = lMesh->GetPolygonVertices();
+	int polygonIndexCount = lMesh->GetPolygonVertexCount();
 	for (int i = 0; i < lMesh->GetPolygonVertexCount(); i++) {
 		int index = polygonIndices[i];
 		customVert point;
@@ -850,6 +855,7 @@ void Mesh::LoadFBXMeshData(FbxMesh* lMesh)
 					// 頂点インデックスとウェイトを取得
 					int   index = pointAry[pointIdx];
 					float weight = (float)weightAry[pointIdx];
+					//std::cout << index << "\t" << polygonIndices[index] << std::endl;
 
 					Bones[index].AddBoneData(clusterIdx, weight);
 				}

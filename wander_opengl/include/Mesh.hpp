@@ -7,8 +7,14 @@
 #include <map>
 #include "Texture.hpp"
 #include "fbxsdk.h"
+#include <assimp/Importer.hpp>      // C++ importer interface
+#include <assimp/scene.h>       // Output data structure
+#include <assimp/postprocess.h> // Post processing flags
+
 
 #define MAX_NUM_BONES_PER_VERTEX 4
+#define ASSIMP_LOAD_FLAGS (aiProcess_Triangulate | aiProcess_GenSmoothNormals |  aiProcess_JoinIdenticalVertices )
+
 
 class Mesh {
 public:
@@ -93,6 +99,10 @@ private:
 	void CreateVAO(std::vector<float>VertexData, std::vector<float>NormalData,
 		std::vector<float>UVData, std::vector<glm::ivec3> FaceVec, std::string mtlName,
 		VAO& vao);
+
+
+	// AssimpÇóòópÇµÇΩì«Ç›çûÇ›
+	bool AssimpLoader(std::string FilePath, std::string ObjFileName);
 
 	unsigned int mVertexArray;
 	unsigned int mVertexBuffer;

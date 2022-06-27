@@ -116,13 +116,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\freetype\include;$(SolutionDir)dependencies\SDL2\include;$(SolutionDir)dependencies\fmod\include;$(SolutionDir)dependencies\json\single_include\nlohmann;$(SolutionDir)dependencies\eigen-3.4.0;$(SolutionDir)wander_opengl\include;$(SolutionDir)dependencies\glew\include;$(SolutionDir)dependencies\glm\glm;$(SolutionDir)dependencies\nlohmann;$(SolutionDir)dependencies\fbxsdk\include;$(SolutionDir)dependencies\STB_Image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\freetype\include;$(SolutionDir)dependencies\SDL2\include;$(SolutionDir)dependencies\fmod\include;$(SolutionDir)dependencies\json\single_include\nlohmann;$(SolutionDir)dependencies\eigen-3.4.0;$(SolutionDir)wander_opengl\include;$(SolutionDir)dependencies\glew\include;$(SolutionDir)dependencies\glm\glm;$(SolutionDir)dependencies\nlohmann;$(SolutionDir)dependencies\fbxsdk\include;$(SolutionDir)dependencies\assimp\include;$(SolutionDir)dependencies\STB_Image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)dependencies\SDL2\lib\x64;$(SolutionDir)dependencies\fmod\lib;$(SolutionDir)dependencies\glew\lib;$(SolutionDir)dependencies\freetype\lib;$(SolutionDir)dependencies\fbxsdk\lib\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>fmod_vc.lib;fmodstudio_vc.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;glew32s.lib;opengl32.lib;freetype.lib;libfbxsdk-md.lib;libxml2-md.lib;zlib-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)dependencies\SDL2\lib\x64;$(SolutionDir)dependencies\fmod\lib;$(SolutionDir)dependencies\glew\lib;$(SolutionDir)dependencies\assimp\lib\Debug;$(SolutionDir)dependencies\freetype\lib;$(SolutionDir)dependencies\fbxsdk\lib\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fmod_vc.lib;fmodstudio_vc.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;glew32s.lib;opengl32.lib;freetype.lib;libfbxsdk-md.lib;libxml2-md.lib;zlib-md.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>COPY "$(SolutionDir)dependencies\SDL2\lib\x64\SDL2.dll" "$(OutDir)"  
@@ -138,7 +139,8 @@ COPY "$(SolutionDir)dependencies\fmod\lib\fmodstudio.dll" "$(OutDir)"
 COPY "$(SolutionDir)dependencies\glew\lib\glew32.dll" "$(OutDir)"
 COPY "$(SolutionDir)dependencies\freetype\lib\freetype.dll" "$(OutDir)"
 COPY "$(SolutionDir)wander_opengl\Shaders" "$(OutDir)"
-XCOPY "$(SolutionDir)dependencies\fbxsdk\lib\debug\*.dll" "$(OutDir)" /e /y</Command>
+XCOPY "$(SolutionDir)dependencies\fbxsdk\lib\debug\*.dll" "$(OutDir)" /e /y
+XCOPY "$(SolutionDir)dependencies\assimp\lib\Debug\*.dll" "$(OutDir)" /e /y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -149,15 +151,15 @@ XCOPY "$(SolutionDir)dependencies\fbxsdk\lib\debug\*.dll" "$(OutDir)" /e /y</Com
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\freetype\include;$(SolutionDir)dependencies\SDL2\include;$(SolutionDir)dependencies\fmod\include;$(SolutionDir)dependencies\json\single_include\nlohmann;$(SolutionDir)dependencies\eigen-3.4.0;$(SolutionDir)wander_opengl\include;$(SolutionDir)dependencies\glew\include;$(SolutionDir)dependencies\glm\glm;$(SolutionDir)dependencies\nlohmann;$(SolutionDir)dependencies\fbxsdk\include;$(SolutionDir)dependencies\STB_Image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\freetype\include;$(SolutionDir)dependencies\SDL2\include;$(SolutionDir)dependencies\fmod\include;$(SolutionDir)dependencies\json\single_include\nlohmann;$(SolutionDir)dependencies\eigen-3.4.0;$(SolutionDir)wander_opengl\include;$(SolutionDir)dependencies\glew\include;$(SolutionDir)dependencies\glm\glm;$(SolutionDir)dependencies\nlohmann;$(SolutionDir)dependencies\fbxsdk\include;$(SolutionDir)dependencies\assimp\include;$(SolutionDir)dependencies\STB_Image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)dependencies\SDL2\lib\x64;$(SolutionDir)dependencies\fmod\lib;$(SolutionDir)dependencies\glew\lib;$(SolutionDir)dependencies\freetype\lib;$(SolutionDir)dependencies\fbxsdk\lib\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>fmod_vc.lib;fmodstudio_vc.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;glew32s.lib;opengl32.lib;freetype.lib;libfbxsdk-md.lib;libxml2-md.lib;zlib-md.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)dependencies\SDL2\lib\x64;$(SolutionDir)dependencies\fmod\lib;$(SolutionDir)dependencies\glew\lib;$(SolutionDir)dependencies\freetype\lib;$(SolutionDir)dependencies\assimp\lib\Release;$(SolutionDir)dependencies\fbxsdk\lib\release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>fmod_vc.lib;fmodstudio_vc.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;glew32s.lib;opengl32.lib;freetype.lib;libfbxsdk-md.lib;libxml2-md.lib;zlib-md.lib;assimp-vc142-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>COPY "$(SolutionDir)dependencies\SDL2\lib\x64\SDL2.dll" "$(OutDir)"  
@@ -173,12 +175,14 @@ COPY "$(SolutionDir)dependencies\fmod\lib\fmodstudio.dll" "$(OutDir)"
 COPY "$(SolutionDir)dependencies\glew\lib\glew32.dll" "$(OutDir)"
 COPY "$(SolutionDir)dependencies\freetype\lib\freetype.dll" "$(OutDir)"
 COPY "$(SolutionDir)wander_opengl\Shaders" "$(OutDir)"
-XCOPY "$(SolutionDir)dependencies\fbxsdk\lib\release\*.dll" "$(OutDir)" /e /y</Command>
+XCOPY "$(SolutionDir)dependencies\fbxsdk\lib\release\*.dll" "$(OutDir)" /e /y
+XCOPY "$(SolutionDir)dependencies\assimp\lib\Release\*.dll" "$(OutDir)" /e /y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
+    <ClCompile Include="src\MeshAssimp.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\YGame.cpp" />
