@@ -826,7 +826,7 @@ void Mesh::LoadFBXMeshData(FbxMesh* lMesh)
 		}
 	};
 	std::vector<glm::mat4> BoneIdtoMatrixArray;
-	std::vector<VertexBoneData> Bones(lMesh->GetPolygonCount() * 3);	// 各頂点のBoneIdxとそのWeightの配列
+	std::vector<VertexBoneData> Bones(lMesh->GetPolygonVertexCount());	// 各頂点のBoneIdxとそのWeightの配列
 
 	int skinCount = lMesh->GetDeformerCount(FbxDeformer::eSkin);
 	if (skinCount > 0) {
@@ -952,6 +952,17 @@ void Mesh::LoadFBXMeshData(FbxMesh* lMesh)
 void Mesh::LoadFBXBones(FbxMesh* mesh)
 {
 
+}
+
+void Mesh::searchNode(FbxScene* scene, FbxNode* node)
+{
+	// このノードでMeshの呼び出しをする
+
+	// 子ノードのMesh呼び出し処理
+	for (int nodeIdx = 0; nodeIdx < node->GetChildCount(); nodeIdx++) {
+		FbxNode* lNode = node->GetChild(nodeIdx);
+		searchNode(scene, lNode);	// 再帰呼び出し
+	}
 }
 
 //void Mesh::searchNode(FbxScene* scene, FbxGeometryConverter converter, FbxNode* node)

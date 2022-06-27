@@ -80,7 +80,7 @@ private:
 	bool LoadObjFile(std::string FilePath, std::string ObjFileName);
 	bool deLoadObjFile(std::string FilePath, std::string ObjFileName);
 
-	void searchNode(FbxScene* scene, FbxGeometryConverter converter, FbxNode* node);
+	void searchNode(FbxScene* scene, FbxNode* node);
 	bool LoadFBXFile(std::string FilePath, std::string FBXFileName);
 	void LoadFBXMaterial(FbxMesh* mesh, Material& material, FbxSurfaceMaterial* fbxMaterial, std::string& materialName);
 	void LoadFBXMaterial(FbxSurfaceMaterial* fbxMaterial);
