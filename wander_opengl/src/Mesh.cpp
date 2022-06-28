@@ -14,14 +14,14 @@ Mesh::Mesh(std::string FilePath, std::string ObjFileName, Shader* shader, glm::v
 {
 	if (is_fbx) {
 		isFbx = true;
-		//if (!LoadFBXFile(FilePath, ObjFileName)) {
-		//	std::cout << "Failed to Load FBX File\n";
-		//	return;
-		//}
-		if (!AssimpLoader(FilePath, ObjFileName)) {
+		if (!LoadFBXFile(FilePath, ObjFileName)) {
 			std::cout << "Failed to Load FBX File\n";
 			return;
 		}
+		//if (!AssimpLoader(FilePath, ObjFileName)) {
+		//	std::cout << "Failed to Load FBX File\n";
+		//	return;
+		//}
 	}
 	else {
 		isFbx = false;

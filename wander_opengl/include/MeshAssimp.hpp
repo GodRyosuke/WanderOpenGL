@@ -49,7 +49,7 @@ private:
         glm::vec3 Emissive;
         glm::vec3 Bump;
         glm::vec3 NormalMap;
-        Texture* Tex;
+        Texture* DiffuseTexture;
     };
 
     std::vector<BasicMeshEntry> m_Meshes;

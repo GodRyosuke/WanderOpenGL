@@ -62,7 +62,7 @@
     <ClInclude Include="include\GLUtil.hpp">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="include\AssimpMesh.hpp">
+    <ClInclude Include="include\MeshAssimp.hpp">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,4 +1,4 @@
-#include "AssimpMesh.hpp"
+#include "MeshAssimp.hpp"
 #include <iostream>
 
 AssimpMesh::AssimpMesh(std::string FilePath, std::string ObjFileName, Shader* shader)
@@ -9,9 +9,9 @@ AssimpMesh::AssimpMesh(std::string FilePath, std::string ObjFileName, Shader* sh
     }
 }
 
-bool AssimpMesh::AssimpLoader(std::string FilePath, std::string ObjFileName)
+bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
 {
-    std::string FilePath = FilePath + ObjFileName;
+    std::string FilePath = RootPath + ObjFileName;
 
     Assimp::Importer pImporter;
     const aiScene* pScene = pImporter.ReadFile(FilePath.c_str(), ASSIMP_LOAD_FLAGS);
@@ -75,25 +75,60 @@ bool AssimpMesh::AssimpLoader(std::string FilePath, std::string ObjFileName)
 
 
         // Material‚ÆTexture“Ç‚Ýž‚Ý
-        string Dir = GetDirFromFilename(Filename);
+        //string Dir = GetDirFromFilename(Filename);
 
         bool Ret = true;
 
         printf("Num materials: %d\n", pScene->mNumMaterials);
 
         // Initialize the materials
-        for (unsigned int i = 0; i < pScene->mNumMaterials; i++) {
-            const aiMaterial* pMaterial = pScene->mMaterials[i];
+        for (int materialIdx = 0; materialIdx < pScene->mNumMaterials; materialIdx++) {
+            const aiMaterial* pMaterial = pScene->mMaterials[materialIdx];
 
-            LoadTextures(Dir, pMaterial, i);
+            // Diffuse Texture‚ð“Ç‚Ýž‚Þ
+            m_Materials[materialIdx].DiffuseTexture = NULL;
 
-            LoadColors(pMaterial, i);
+            if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+                aiString Path;
+
+                if (pMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &Path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+                    std::string texturePath = Path.data;
+                    //string p(Path.data);
+
+                    //for (int i = 0; i < p.length(); i++) {
+                    //    if (p[i] == '\\') {
+                    //        p[i] = '/';
+                    //    }
+                    //}
+
+                    //if (p.substr(0, 2) == ".\\") {
+                    //    p = p.substr(2, p.size() - 2);
+                    //}
+
+                    //string FullPath = Dir + "/" + p;
+
+                    m_Materials[materialIdx].DiffuseTexture = new Texture(texturePath);
+
+                    //m_Materials[materialIdx].pDiffuse = new Texture(GL_TEXTURE_2D, FullPath.c_str());
+
+                    //if (!m_Materials[index].pDiffuse->Load()) {
+                    //    printf("Error loading diffuse texture '%s'\n", FullPath.c_str());
+                    //    exit(0);
+                    //}
+                    //else {
+                    //    printf("Loaded diffuse texture '%s' at index %d\n", FullPath.c_str(), index);
+                    //}
+                }
+            }
+
+            //LoadColors(pMaterial, i);
         }
 
 
-        PopulateBuffers();
+        //PopulateBuffers();
 
-        return GLCheckError();
+          bool checkErr = (glGetError() == GL_NO_ERROR);
+          return checkErr;
     }
     else {
         printf("Error parsing '%s': '%s'\n", FilePath.c_str(), pImporter.GetErrorString());

@@ -19,6 +19,7 @@
 #include "ft2build.h"
 #include "Shader.hpp"
 #include "Mesh.hpp"
+#include "MeshAssimp.hpp"
 #include FT_FREETYPE_H
 
 
@@ -108,7 +109,7 @@ private:
 
 	// Mesh Vertices
 	std::vector<Mesh*> mMeshes;
-	Mesh* mTreasureBoxMesh;
+	AssimpMesh* mTreasureBoxMesh;
 	Mesh* mSphareMesh;
 	Mesh* mCubeMesh;
 	Mesh* mDonutMesh;

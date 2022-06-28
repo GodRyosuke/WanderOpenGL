@@ -497,11 +497,11 @@ bool YGame::LoadData()
 	//	mMeshes.push_back(mesh);
 	//}
 	{
-		Mesh* mesh = new Mesh("./resources/TreasureBox2/", "TreasureBox.fbx", mSkinningShaderProgram, glm::vec3(0, -0.707, -0.707), true);
-		mesh->SetMeshPos(glm::vec3(30.0f, 35.0f, 0.0f));
-		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0, 0.0f, 0.0f));
-		mesh->SetMeshRotate(rotMat);
-		mesh->SetMeshScale(0.01f);
+		AssimpMesh* mesh = new AssimpMesh("./resources/TreasureBox2/", "TreasureBox.fbx", mSkinningShaderProgram);
+		//mesh->SetMeshPos(glm::vec3(30.0f, 35.0f, 0.0f));
+		//glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0, 0.0f, 0.0f));
+		//mesh->SetMeshRotate(rotMat);
+		//mesh->SetMeshScale(0.01f);
 		mTreasureBoxMesh = mesh;
 	}
 
@@ -1621,7 +1621,7 @@ void YGame::Draw()
 	mSkinningShaderProgram->UseProgram();
 	mSkinningShaderProgram->SetVectorUniform("uCameraPos", mCameraPos);
 	mSkinningShaderProgram->SetMatrixUniform("view", CameraView);
-	mTreasureBoxMesh->Draw();
+	//mTreasureBoxMesh->Draw();
 
 
 	//glBindVertexArray(mCubeVertexArray);
