@@ -54,4 +54,8 @@ private:
 
     std::vector<BasicMeshEntry> m_Meshes;
     std::vector<Material> m_Materials;
+    std::vector<glm::vec3> m_Positions;
+    std::vector<glm::vec3> m_Normals;
+    std::vector<glm::vec2> m_TexCoords;
+    std::vector<unsigned int> m_Indices;
 };
