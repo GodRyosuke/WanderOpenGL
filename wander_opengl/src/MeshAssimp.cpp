@@ -46,6 +46,7 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
     m_Normals.reserve(NumVertices);
     m_TexCoords.reserve(NumVertices);
     m_Indices.reserve(NumIndices);
+    m_Bones.resize(NumVertices);
 
     // Mesh(í∏ì_èÓïÒÇ»Ç«)ÇÃì«Ç›çûÇ›
     for (int meshIdx = 0; meshIdx < m_Meshes.size(); meshIdx++) {
@@ -74,7 +75,7 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
         // Index èÓïÒéÊìæ
         for (unsigned int i = 0; i < paiMesh->mNumFaces; i++) {
             const aiFace& Face = paiMesh->mFaces[i];
-            printf("num indices %d\n", Face.mNumIndices);
+            //printf("num indices %d\n", Face.mNumIndices);
             assert(Face.mNumIndices == 3);
             m_Indices.push_back(Face.mIndices[0]);
             m_Indices.push_back(Face.mIndices[1]);
@@ -107,6 +108,7 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
             for (int weightIdx = 0; weightIdx < paiBone->mNumWeights; weightIdx++) {
                 const aiVertexWeight& vw = paiBone->mWeights[i];
                 unsigned int GlobalVertexID = m_Meshes[meshIdx].BaseVertex + paiBone->mWeights[i].mVertexId;
+                printf("vertexID:%d, BoneID:%d, weight: %f\n", GlobalVertexID, BoneIndex, vw.mWeight);
                 m_Bones[GlobalVertexID].AddBoneData(BoneIndex, vw.mWeight);
             }
         }

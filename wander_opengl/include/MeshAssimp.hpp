@@ -70,10 +70,13 @@ private:
         void AddBoneData(unsigned int BoneID, float Weight)
         {
             for (unsigned int i = 0; i < MAX_NUM_BONES_PER_VERTEX; i++) {
+                if ((BoneIDs[i] == BoneID) && (Weights[i] != 0.0)) { // ‚·‚Å‚ÉŠŽ‚µ‚Ä‚¢‚½‚ç’Ç‰Á‚µ‚È‚¢
+                    return;
+                }
                 if (Weights[i] == 0.0) {
                     BoneIDs[i] = BoneID;
                     Weights[i] = Weight;
-                    //printf("Adding bone %d weight %f at index %i\n", BoneID, Weight, i);
+                    printf("Adding bone %d weight %f at index %i\n", BoneID, Weight, i);
                     return;
                 }
             }
