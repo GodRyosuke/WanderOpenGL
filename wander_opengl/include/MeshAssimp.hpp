@@ -58,6 +58,43 @@ private:
         Texture* DiffuseTexture;
     };
 
+    struct VertexBoneData
+    {
+        unsigned int BoneIDs[MAX_NUM_BONES_PER_VERTEX] = { 0 };
+        float Weights[MAX_NUM_BONES_PER_VERTEX] = { 0.0f };
+
+        VertexBoneData()
+        {
+        }
+
+        void AddBoneData(unsigned int BoneID, float Weight)
+        {
+            for (unsigned int i = 0; i < MAX_NUM_BONES_PER_VERTEX; i++) {
+                if (Weights[i] == 0.0) {
+                    BoneIDs[i] = BoneID;
+                    Weights[i] = Weight;
+                    //printf("Adding bone %d weight %f at index %i\n", BoneID, Weight, i);
+                    return;
+                }
+            }
+
+            // should never get here - more bones than we have space for
+            assert(0);
+        }
+    };
+
+    struct BoneInfo
+    {
+        glm::mat4 OffsetMatrix;
+        glm::mat4 FinalTransformation;
+
+        BoneInfo(const glm::mat4& Offset)
+        {
+            OffsetMatrix = Offset;
+            FinalTransformation = glm::mat4(0.0f);
+        }
+    };
+
     void SetMeshTransforms();
 
     unsigned int mVertexArray;
@@ -69,6 +106,10 @@ private:
     std::vector<glm::vec3> m_Normals;
     std::vector<glm::vec2> m_TexCoords;
     std::vector<unsigned int> m_Indices;
+    std::map<std::string, unsigned int> m_BoneNameToIndexMap;
+    std::vector<VertexBoneData> m_Bones;
+    std::vector<BoneInfo> m_BoneInfo;
+
 
     glm::vec3 mMeshPos;
     glm::mat4 mMeshRotate;

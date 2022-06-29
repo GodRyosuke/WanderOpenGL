@@ -80,6 +80,36 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
             m_Indices.push_back(Face.mIndices[1]);
             m_Indices.push_back(Face.mIndices[2]);
         }
+
+        // BoneÇÃì«Ç›çûÇ›
+        for (unsigned int i = 0; i < paiMesh->mNumBones; i++) {
+            aiBone* paiBone = paiMesh->mBones[i];
+
+            // BoneIndexÇÃéÊìæ
+            int BoneIndex = 0;
+            std::string BoneName = paiBone->mName.C_Str(); 
+            if (m_BoneNameToIndexMap.find(BoneName) == m_BoneNameToIndexMap.end()) {
+                // Allocate an index for a new bone
+                BoneIndex = (int)m_BoneNameToIndexMap.size();
+                m_BoneNameToIndexMap[BoneName] = BoneIndex;
+            }
+            else {
+                BoneIndex = m_BoneNameToIndexMap[BoneName];
+            }
+
+            if (BoneIndex == m_BoneInfo.size()) {
+                aiMatrix4x4 offsetMatrix = paiBone->mOffsetMatrix;
+                BoneInfo bi(glm::transpose(glm::make_mat4(&offsetMatrix.a1)));
+                m_BoneInfo.push_back(bi);
+            }
+
+            // BoneÇÃWeightÇéÊìæ
+            for (int weightIdx = 0; weightIdx < paiBone->mNumWeights; weightIdx++) {
+                const aiVertexWeight& vw = paiBone->mWeights[i];
+                unsigned int GlobalVertexID = m_Meshes[meshIdx].BaseVertex + paiBone->mWeights[i].mVertexId;
+                m_Bones[GlobalVertexID].AddBoneData(BoneIndex, vw.mWeight);
+            }
+        }
     }
 
 
