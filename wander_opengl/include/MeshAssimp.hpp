@@ -21,6 +21,12 @@ public:
 	AssimpMesh(std::string ObjFilePath, std::string MtlFilePath, Shader* shader);
 	~AssimpMesh() {}
 	bool AssimpLoader(std::string FilePath, std::string ObjFileName);
+    void Draw();
+
+    void SetMeshPos(glm::vec3 pos) { mMeshPos = pos; }
+    void SetMeshRotate(glm::mat4 rot) { mMeshRotate = rot; }
+    void SetMeshScale(float scale) { mMeshScale = scale; }
+
 
 
 private:
@@ -52,10 +58,22 @@ private:
         Texture* DiffuseTexture;
     };
 
+    void SetMeshTransforms();
+
+    unsigned int mVertexArray;
+    Shader* mShader;
+
     std::vector<BasicMeshEntry> m_Meshes;
     std::vector<Material> m_Materials;
     std::vector<glm::vec3> m_Positions;
     std::vector<glm::vec3> m_Normals;
     std::vector<glm::vec2> m_TexCoords;
     std::vector<unsigned int> m_Indices;
+
+    glm::vec3 mMeshPos;
+    glm::mat4 mMeshRotate;
+    float mMeshScale;
+
+    std::string ObjFileRoot;
+    std::string ObjFileName;
 };

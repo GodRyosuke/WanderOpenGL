@@ -34,8 +34,8 @@ void main()
 		BoneTransform += uMatrixPalette[BoneIDs[2]] * Weights[2];
 		BoneTransform += uMatrixPalette[BoneIDs[3]] * Weights[3];
 
-	vec4 PosL    = BoneTransform * vec4(aPos, 1.0);
-	// vec4 PosL    = vec4(aPos, 1.0);
+	// vec4 PosL    = BoneTransform * vec4(aPos, 1.0);
+	vec4 PosL    = vec4(aPos, 1.0);
 
 	// Outputs the positions/coordinates of all vertices
 	gl_Position = proj * view * model * PosL;
