@@ -17,28 +17,35 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
 {
     std::string FilePath = RootPath + ObjFileName;
 
-    Assimp::Importer pImporter;
-    const aiScene* pScene = pImporter.ReadFile(FilePath.c_str(), ASSIMP_LOAD_FLAGS);
+    m_pScene = m_Importer.ReadFile(FilePath.c_str(), ASSIMP_LOAD_FLAGS);
+    //m_pScene = pScene;
 
-    if (!pScene) {
-        printf("Error parsing '%s': '%s'\n", FilePath.c_str(), pImporter.GetErrorString());
+    if (!m_pScene) {
+        printf("Error parsing '%s': '%s'\n", FilePath.c_str(), m_Importer.GetErrorString());
         return false;
     }
 
-    m_Meshes.resize(pScene->mNumMeshes);
-    m_Materials.resize(pScene->mNumMaterials);
+    {
+        aiMatrix4x4 globalTransform = m_pScene->mRootNode->mTransformation;
+        glm::mat4 globalTransGLM = glm::make_mat4(&globalTransform.a1);
+        m_GlobalInverseTransform = glm::inverse(globalTransGLM);
+    }
+
+
+    m_Meshes.resize(m_pScene->mNumMeshes);
+    m_Materials.resize(m_pScene->mNumMaterials);
 
     unsigned int NumVertices = 0;
     unsigned int NumIndices = 0;
 
     // ’¸“_‚Ì‘”‚È‚Ç‚ğ“Ç‚İ‚Ş
     for (unsigned int i = 0; i < m_Meshes.size(); i++) {
-        m_Meshes[i].MaterialIndex = pScene->mMeshes[i]->mMaterialIndex; // Mesh‚ÆMaterial‚Ì•R‚Ã‚¯
-        m_Meshes[i].NumIndices = pScene->mMeshes[i]->mNumFaces * 3;
+        m_Meshes[i].MaterialIndex = m_pScene->mMeshes[i]->mMaterialIndex; // Mesh‚ÆMaterial‚Ì•R‚Ã‚¯
+        m_Meshes[i].NumIndices = m_pScene->mMeshes[i]->mNumFaces * 3;
         m_Meshes[i].BaseVertex = NumVertices;
         m_Meshes[i].BaseIndex = NumIndices;
 
-        NumVertices += pScene->mMeshes[i]->mNumVertices;
+        NumVertices += m_pScene->mMeshes[i]->mNumVertices;
         NumIndices += m_Meshes[i].NumIndices;
     }
 
@@ -50,7 +57,7 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
 
     // Mesh(’¸“_î•ñ‚È‚Ç)‚Ì“Ç‚İ‚İ
     for (int meshIdx = 0; meshIdx < m_Meshes.size(); meshIdx++) {
-        const aiMesh* paiMesh = pScene->mMeshes[meshIdx];
+        const aiMesh* paiMesh = m_pScene->mMeshes[meshIdx];
         const aiVector3D Zero3D(0.0f, 0.0f, 0.0f);
 
         // Vertex, Normal, UVæ“¾
@@ -116,11 +123,11 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
 
 
     // Material‚ÆTexture“Ç‚İ‚İ
-    printf("Num materials: %d\n", pScene->mNumMaterials);
+    printf("Num materials: %d\n", m_pScene->mNumMaterials);
 
     // Material‚Ì“Ç‚İ‚İ
-    for (int materialIdx = 0; materialIdx < pScene->mNumMaterials; materialIdx++) {
-        const aiMaterial* pMaterial = pScene->mMaterials[materialIdx];
+    for (int materialIdx = 0; materialIdx < m_pScene->mNumMaterials; materialIdx++) {
+        const aiMaterial* pMaterial = m_pScene->mMaterials[materialIdx];
 
         // Diffuse Texture‚ğ“Ç‚İ‚Ş
         m_Materials[materialIdx].DiffuseTexture = NULL;
@@ -233,6 +240,19 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
     return checkErr;
 }
 
+void AssimpMesh::GetBoneTransform(float TimeInSeconds, std::vector<glm::mat4>& Transforms)
+{
+    int num = m_pScene->mNumAnimations;
+    auto k = m_pScene->mAnimations[0];
+    float TicksPerSecond = (float)(m_pScene->mAnimations[0]->mTicksPerSecond != NULL ? m_pScene->mAnimations[0]->mTicksPerSecond : 25.0f);
+    float TimeInTicks = TimeInSeconds * TicksPerSecond;
+    float Duration = 0.0f;  // Animation‚ÌDuration‚Ì®”•”•ª‚ª“ü‚é
+    float fraction = modf((float)m_pScene->mAnimations[0]->mDuration, &Duration);
+    float AnimationTimeTicks = fmod(TimeInTicks, Duration);
+
+    int x = 0;
+}
+
 void AssimpMesh::SetMeshTransforms()
 {
     glm::mat4 ScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(mMeshScale, mMeshScale, mMeshScale));
@@ -244,6 +264,8 @@ void AssimpMesh::SetMeshTransforms()
 
 void AssimpMesh::Draw()
 {
+    //std::vector<glm::mat4>temp;
+    //GetBoneTransform(1.0, temp);
     mShader->UseProgram();
     SetMeshTransforms();
     glBindVertexArray(mVertexArray);

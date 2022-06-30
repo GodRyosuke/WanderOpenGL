@@ -497,7 +497,8 @@ bool YGame::LoadData()
 	//	mMeshes.push_back(mesh);
 	//}
 	{
-		AssimpMesh* mesh = new AssimpMesh("./resources/TreasureBox2/", "TreasureBox.fbx", mSkinningShaderProgram);
+		//AssimpMesh* mesh = new AssimpMesh("./resources/TreasureBox2/", "TreasureBox.fbx", mSkinningShaderProgram);
+		AssimpMesh* mesh = new AssimpMesh("./resources/TreasureBox3/", "scene.gltf", mSkinningShaderProgram);
 		mesh->SetMeshPos(glm::vec3(30.0f, 35.0f, 0.0f));
 		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0, 0.0f, 0.0f));
 		mesh->SetMeshRotate(rotMat);

@@ -99,9 +99,14 @@ private:
     };
 
     void SetMeshTransforms();
+    // 時刻TimeInSecondsにおける各ボーンのTransformを求める
+    void GetBoneTransform(float TimeInSeconds, std::vector<glm::mat4>& Transforms);
 
     unsigned int mVertexArray;
     Shader* mShader;
+
+    const aiScene* m_pScene;
+    Assimp::Importer m_Importer;    // Importer保持せんかったら、Sceneも保持できない!!
 
     std::vector<BasicMeshEntry> m_Meshes;
     std::vector<Material> m_Materials;
@@ -112,6 +117,8 @@ private:
     std::map<std::string, unsigned int> m_BoneNameToIndexMap;
     std::vector<VertexBoneData> m_Bones;
     std::vector<BoneInfo> m_BoneInfo;
+
+    glm::mat4 m_GlobalInverseTransform;
 
 
     glm::vec3 mMeshPos;
