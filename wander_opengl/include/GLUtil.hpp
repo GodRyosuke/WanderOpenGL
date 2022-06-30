@@ -86,5 +86,10 @@ public:
 		}
 	}
 
+	glm::mat4 ToGlmMat4(aiMatrix4x4& aiMat)
+	{
+		return glm::transpose(glm::make_mat4(&aiMat.a1));
+	}
+
 	
 };

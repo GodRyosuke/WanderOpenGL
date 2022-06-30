@@ -101,6 +101,9 @@ private:
     void SetMeshTransforms();
     // 時刻TimeInSecondsにおける各ボーンのTransformを求める
     void GetBoneTransform(float TimeInSeconds, std::vector<glm::mat4>& Transforms);
+    // Nodeの階層構造を読みだす
+    void ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform);
+
 
     unsigned int mVertexArray;
     Shader* mShader;

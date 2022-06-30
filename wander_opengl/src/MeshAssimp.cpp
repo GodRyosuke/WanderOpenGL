@@ -26,9 +26,9 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
     }
 
     {
+        GLUtil glutil;
         aiMatrix4x4 globalTransform = m_pScene->mRootNode->mTransformation;
-        glm::mat4 globalTransGLM = glm::make_mat4(&globalTransform.a1);
-        m_GlobalInverseTransform = glm::inverse(globalTransGLM);
+        m_GlobalInverseTransform = glm::inverse(glutil.ToGlmMat4(globalTransform));
     }
 
 
@@ -106,8 +106,9 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
             }
 
             if (BoneIndex == m_BoneInfo.size()) {
+                GLUtil glutil;
                 aiMatrix4x4 offsetMatrix = paiBone->mOffsetMatrix;
-                BoneInfo bi(glm::transpose(glm::make_mat4(&offsetMatrix.a1)));
+                BoneInfo bi(glutil.ToGlmMat4(offsetMatrix));
                 m_BoneInfo.push_back(bi);
             }
 
@@ -115,7 +116,7 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
             for (int weightIdx = 0; weightIdx < paiBone->mNumWeights; weightIdx++) {
                 const aiVertexWeight& vw = paiBone->mWeights[i];
                 unsigned int GlobalVertexID = m_Meshes[meshIdx].BaseVertex + paiBone->mWeights[i].mVertexId;
-                printf("vertexID:%d, BoneID:%d, weight: %f\n", GlobalVertexID, BoneIndex, vw.mWeight);
+                //printf("vertexID:%d, BoneID:%d, weight: %f\n", GlobalVertexID, BoneIndex, vw.mWeight);
                 m_Bones[GlobalVertexID].AddBoneData(BoneIndex, vw.mWeight);
             }
         }
@@ -240,6 +241,67 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
     return checkErr;
 }
 
+
+void AssimpMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform)
+{
+    GLUtil glutil;
+    std::string NodeName(pNode->mName.data);
+
+    const aiAnimation* pAnimation = m_pScene->mAnimations[0];
+
+    // NodeÇÃéùÇ¬Transform
+    glm::mat4 NodeTransformation;
+    {
+        aiMatrix4x4 trans = pNode->mTransformation;
+        glm::mat4 NodeTransformation = glutil.ToGlmMat4(trans);
+    }
+
+    // åªç›ÇÃNodeÇÃAnimation DataÇì«Ç›ÇæÇ∑
+    const aiNodeAnim* pNodeAnim = NULL;
+    for (unsigned int i = 0; i < pAnimation->mNumChannels; i++) {
+        const aiNodeAnim* nodeAnim = pAnimation->mChannels[i];
+
+        if (std::string(nodeAnim->mNodeName.data) == NodeName) {
+            pNodeAnim = nodeAnim;
+        }
+    }
+
+    // ÇªÇÃNodeÇ…AnimationÇ™Ç†ÇÍÇŒÅA
+    if (pNodeAnim) {
+        // åªç›éûçèÇÃAnimation TransformÇÇ©ÇØÇ†ÇÌÇπÇÈÅB
+        // Interpolate scaling and generate scaling transformation matrix
+        aiVector3D Scaling;
+        CalcInterpolatedScaling(Scaling, AnimationTimeTicks, pNodeAnim);
+        Matrix4f ScalingM;
+        ScalingM.InitScaleTransform(Scaling.x, Scaling.y, Scaling.z);
+
+        // Interpolate rotation and generate rotation transformation matrix
+        aiQuaternion RotationQ;
+        CalcInterpolatedRotation(RotationQ, AnimationTimeTicks, pNodeAnim);
+        Matrix4f RotationM = Matrix4f(RotationQ.GetMatrix());
+
+        // Interpolate translation and generate translation transformation matrix
+        aiVector3D Translation;
+        CalcInterpolatedPosition(Translation, AnimationTimeTicks, pNodeAnim);
+        Matrix4f TranslationM;
+        TranslationM.InitTranslationTransform(Translation.x, Translation.y, Translation.z);
+
+        // Combine the above transformations
+        NodeTransformation = TranslationM * RotationM * ScalingM;
+    }
+
+    Matrix4f GlobalTransformation = ParentTransform * NodeTransformation;
+
+    if (m_BoneNameToIndexMap.find(NodeName) != m_BoneNameToIndexMap.end()) {
+        uint BoneIndex = m_BoneNameToIndexMap[NodeName];
+        m_BoneInfo[BoneIndex].FinalTransformation = m_GlobalInverseTransform * GlobalTransformation * m_BoneInfo[BoneIndex].OffsetMatrix;
+    }
+
+    for (uint i = 0; i < pNode->mNumChildren; i++) {
+        ReadNodeHierarchy(AnimationTimeTicks, pNode->mChildren[i], GlobalTransformation);
+    }
+}
+
 void AssimpMesh::GetBoneTransform(float TimeInSeconds, std::vector<glm::mat4>& Transforms)
 {
     int num = m_pScene->mNumAnimations;
@@ -249,6 +311,16 @@ void AssimpMesh::GetBoneTransform(float TimeInSeconds, std::vector<glm::mat4>& T
     float Duration = 0.0f;  // AnimationÇÃDurationÇÃêÆêîïîï™Ç™ì¸ÇÈ
     float fraction = modf((float)m_pScene->mAnimations[0]->mDuration, &Duration);
     float AnimationTimeTicks = fmod(TimeInTicks, Duration);
+
+
+
+    glm::mat4 Identity = glm::mat4(1);
+    ReadNodeHierarchy(AnimationTimeTicks, m_pScene->mRootNode, Identity);
+    Transforms.resize(m_BoneInfo.size());
+
+    for (unsigned int i = 0; i < m_BoneInfo.size(); i++) {
+        Transforms[i] = m_BoneInfo[i].FinalTransformation;
+    }
 
     int x = 0;
 }
@@ -264,8 +336,8 @@ void AssimpMesh::SetMeshTransforms()
 
 void AssimpMesh::Draw()
 {
-    //std::vector<glm::mat4>temp;
-    //GetBoneTransform(1.0, temp);
+    std::vector<glm::mat4>temp;
+    GetBoneTransform(1.0, temp);
     mShader->UseProgram();
     SetMeshTransforms();
     glBindVertexArray(mVertexArray);
