@@ -498,15 +498,27 @@ bool YGame::LoadData()
 	//}
 	{
 		//AssimpMesh* mesh = new AssimpMesh("./resources/TreasureBox2/", "TreasureBox.fbx", mSkinningShaderProgram);
-		AssimpMesh* mesh = new AssimpMesh("./resources/TreasureBox3/", "scene.gltf", mSkinningShaderProgram);
+		MeshAssimp* mesh = new MeshAssimp("./resources/TreasureBox3/", "scene.gltf", mSkinningShaderProgram);
 		//AssimpMesh* mesh = new AssimpMesh("./resources/boblampclean/", "boblampclean.md5mesh", mSkinningShaderProgram);
+		mesh->SetMeshPos(glm::vec3(20.0f, 35.0f, 0.0f));
+		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(1.0, 0.0f, 0.0f));
+		mesh->SetMeshRotate(rotMat);
+		mesh->SetMeshScale(0.01f);
+		mTreasureBoxMesh = mesh;
+	}
+
+	{
+		//AssimpMesh* mesh = new AssimpMesh("./resources/TreasureBox2/", "TreasureBox.fbx", mSkinningShaderProgram);
+		MeshAssimp* mesh = new MeshAssimp("./resources/boblampclean/", "boblampclean.md5mesh", mSkinningShaderProgram);
 		mesh->SetMeshPos(glm::vec3(30.0f, 35.0f, 0.0f));
-		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0, 0.0f, 0.0f));
+		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(1.0, 0.0f, 0.0f));
 		rotMat = glm::mat4(1.0f);
 		mesh->SetMeshRotate(rotMat);
 		mesh->SetMeshScale(0.1f);
-		mTreasureBoxMesh = mesh;
+		mBoblampclean = mesh;
 	}
+
+
 
 	//{
 	//	Mesh* mesh = new Mesh("./resources/TreasureBox/", "Chest.fbx", mMeshShaderProgram, glm::vec3(0, -0.707, -0.707), true);
@@ -1101,7 +1113,7 @@ void YGame::ProcessInput()
 				mMousePos.x = mWindowWidth / 2;
 				mMousePos.y = mWindowHeight / 2;
 				SDL_ShowCursor(SDL_DISABLE);
-				std::cout << "----------------------------------------------called\n";
+				//std::cout << "----------------------------------------------called\n";
 			}
 		}
 		break;
@@ -1174,13 +1186,13 @@ void YGame::UpdateGame()
 
 		float rotX = mMoveSensitivity * (float)((float)mMousePos.y - ((float)mWindowHeight / 2.0f)) / (float)mWindowHeight;
 		float rotY = mMoveSensitivity * (float)((float)mMousePos.x - ((float)mWindowWidth / 2.0f)) / (float)mWindowWidth;
-		printf("rotX: %f rotY: %f\t", rotX, rotY);
+		//printf("rotX: %f rotY: %f\t", rotX, rotY);
 		// Calculates upcoming vertical change in the Orientation
 		glm::vec3 newOrientation = glm::rotate(mCameraOrientation, glm::radians(-rotX), glm::normalize(glm::cross(mCameraOrientation, mCameraUP)));
 
 		// Decides whether or not the next vertical Orientation is legal or not
 		int rad = abs(glm::angle(newOrientation, mCameraUP) - glm::radians(90.0f));
-		std::cout << rad * 180 / M_PI << std::endl;
+		//std::cout << rad * 180 / M_PI << std::endl;
 		if (abs(glm::angle(newOrientation, mCameraUP) - glm::radians(90.0f)) <= glm::radians(85.0f))
 		{
 			mCameraOrientation = newOrientation;
@@ -1624,7 +1636,8 @@ void YGame::Draw()
 	mSkinningShaderProgram->UseProgram();
 	mSkinningShaderProgram->SetVectorUniform("uCameraPos", mCameraPos);
 	mSkinningShaderProgram->SetMatrixUniform("view", CameraView);
-	mTreasureBoxMesh->Draw();
+	mTreasureBoxMesh->Draw(mTicksCount / 1000.0f);
+	mBoblampclean->Draw(mTicksCount / 1000.0f);
 
 
 	//glBindVertexArray(mCubeVertexArray);

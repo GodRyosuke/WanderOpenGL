@@ -2,7 +2,7 @@
 #include <iostream>
 #include "GLUtil.hpp"
 
-AssimpMesh::AssimpMesh(std::string ObjFileRoot, std::string ObjFileName, Shader* shader)
+MeshAssimp::MeshAssimp(std::string ObjFileRoot, std::string ObjFileName, Shader* shader)
     :ObjFileRoot(ObjFileRoot),
     ObjFileName(ObjFileName),
     mShader(shader)
@@ -15,7 +15,7 @@ AssimpMesh::AssimpMesh(std::string ObjFileRoot, std::string ObjFileName, Shader*
     }
 }
 
-bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
+bool MeshAssimp::AssimpLoader(std::string RootPath, std::string ObjFileName)
 {
     std::string FilePath = RootPath + ObjFileName;
 
@@ -259,7 +259,7 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
     return checkErr;
 }
 
-void AssimpMesh::CalcInterpolatedRotation(aiQuaternion& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim)
+void MeshAssimp::CalcInterpolatedRotation(aiQuaternion& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim)
 {
     // we need at least two values to interpolate...
     if (pNodeAnim->mNumRotationKeys == 1) {
@@ -275,6 +275,7 @@ void AssimpMesh::CalcInterpolatedRotation(aiQuaternion& Out, float AnimationTime
         float t = (float)pNodeAnim->mRotationKeys[i + 1].mTime;
         if (AnimationTimeTicks < t) {
             RotationIndex = i;
+            break;
         }
     }
     unsigned int NextRotationIndex = RotationIndex + 1;
@@ -297,7 +298,7 @@ void AssimpMesh::CalcInterpolatedRotation(aiQuaternion& Out, float AnimationTime
     Out.Normalize();
 }
 
-void AssimpMesh::CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim)
+void MeshAssimp::CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim)
 {
     // we need at least two values to interpolate...
     if (pNodeAnim->mNumScalingKeys == 1) {
@@ -313,6 +314,7 @@ void AssimpMesh::CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTic
         float t = (float)pNodeAnim->mScalingKeys[i + 1].mTime;
         if (AnimationTimeTicks < t) {
             ScalingIndex = i;
+            break;
         }
     }
 
@@ -335,7 +337,7 @@ void AssimpMesh::CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTic
     }
 }
 
-void AssimpMesh::CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim)
+void MeshAssimp::CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim)
 {
     // we need at least two values to interpolate...
     if (pNodeAnim->mNumPositionKeys == 1) {
@@ -350,6 +352,7 @@ void AssimpMesh::CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeTi
         float t = (float)pNodeAnim->mPositionKeys[i + 1].mTime;
         if (AnimationTimeTicks < t) {
             PositionIndex = i;
+            break;
         }
     }
     unsigned int NextPositionIndex = PositionIndex + 1;
@@ -371,7 +374,7 @@ void AssimpMesh::CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeTi
 }
 
 
-void AssimpMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform)
+void MeshAssimp::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform)
 {
     GLUtil glutil;
     std::string NodeName(pNode->mName.data);
@@ -410,6 +413,7 @@ void AssimpMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode
         //Matrix4f RotationM = Matrix4f(RotationQ.GetMatrix());
         aiMatrix3x3 rotationMat = RotationQ.GetMatrix();
         glm::mat4 RotationM = glutil.ToGlmMat4(rotationMat);
+        //std::cout << RotationM[0][0] << '\t' << RotationM[0][1] << '\t' << RotationM[0][2] << '\t' << RotationM[0][3] << '\t' << std::endl;
 
         // Interpolate translation and generate translation transformation matrix
         aiVector3D Translation;
@@ -432,7 +436,7 @@ void AssimpMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode
     }
 }
 
-void AssimpMesh::GetBoneTransform(float TimeInSeconds, std::vector<glm::mat4>& Transforms)
+void MeshAssimp::GetBoneTransform(float TimeInSeconds, std::vector<glm::mat4>& Transforms)
 {
     int num = m_pScene->mNumAnimations;
     auto k = m_pScene->mAnimations[0];
@@ -454,7 +458,7 @@ void AssimpMesh::GetBoneTransform(float TimeInSeconds, std::vector<glm::mat4>& T
     }
 }
 
-void AssimpMesh::UpdateBoneTransform(float TimeInSeconds)
+void MeshAssimp::UpdateBoneTransform(float TimeInSeconds)
 {
     // åªç›éûçèÇÃBone TransformÇéÊìæ
     std::vector<glm::mat4> BoneMatrixPalete;
@@ -467,7 +471,7 @@ void AssimpMesh::UpdateBoneTransform(float TimeInSeconds)
     }
 }
 
-void AssimpMesh::SetMeshTransforms()
+void MeshAssimp::SetMeshTransforms()
 {
     glm::mat4 ScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(mMeshScale, mMeshScale, mMeshScale));
     glm::mat4 TranslateMat = glm::translate(glm::mat4(1.0f), mMeshPos);
@@ -477,10 +481,10 @@ void AssimpMesh::SetMeshTransforms()
 }
 
 
-void AssimpMesh::Draw()
+void MeshAssimp::Draw(float timeInSeconds)
 {
     mShader->UseProgram();
-    UpdateBoneTransform(ticksCount += 1.0f);
+    UpdateBoneTransform(timeInSeconds);
     SetMeshTransforms();
     glBindVertexArray(mVertexArray);
 

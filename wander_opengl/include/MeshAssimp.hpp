@@ -16,12 +16,12 @@
 #define ASSIMP_LOAD_FLAGS (aiProcess_Triangulate | aiProcess_GenSmoothNormals |  aiProcess_JoinIdenticalVertices )
 #define INVALID_MATERIAL 0xFFFFFFFF
 
-class AssimpMesh {
+class MeshAssimp {
 public:
-	AssimpMesh(std::string ObjFilePath, std::string MtlFilePath, Shader* shader);
-	~AssimpMesh() {}
+	MeshAssimp(std::string ObjFilePath, std::string MtlFilePath, Shader* shader);
+	~MeshAssimp() {}
 	bool AssimpLoader(std::string FilePath, std::string ObjFileName);
-    void Draw();
+    void Draw(float timeInSeconds);
 
     void SetMeshPos(glm::vec3 pos) { mMeshPos = pos; }
     void SetMeshRotate(glm::mat4 rot) { mMeshRotate = rot; }
@@ -76,7 +76,7 @@ private:
                 if (Weights[i] == 0.0) {
                     BoneIDs[i] = BoneID;
                     Weights[i] = Weight;
-                    printf("Adding bone %d weight %f at index %i\n", BoneID, Weight, i);
+                    //printf("Adding bone %d weight %f at index %i\n", BoneID, Weight, i);
                     return;
                 }
             }
@@ -139,4 +139,13 @@ private:
     std::string ObjFileName;
 
     double ticksCount;
+};
+
+class MeshSkinningAssimp : public MeshAssimp {
+public:
+    MeshSkinningAssimp();
+    ~MeshSkinningAssimp();
+
+private:
+
 };
