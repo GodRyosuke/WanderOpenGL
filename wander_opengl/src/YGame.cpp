@@ -502,7 +502,7 @@ bool YGame::LoadData()
 		mesh->SetMeshPos(glm::vec3(30.0f, 35.0f, 0.0f));
 		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0, 0.0f, 0.0f));
 		mesh->SetMeshRotate(rotMat);
-		mesh->SetMeshScale(1.0f);
+		mesh->SetMeshScale(0.01f);
 		mTreasureBoxMesh = mesh;
 	}
 
