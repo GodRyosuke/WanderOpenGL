@@ -137,4 +137,6 @@ private:
 
     std::string ObjFileRoot;
     std::string ObjFileName;
+
+    double ticksCount;
 };

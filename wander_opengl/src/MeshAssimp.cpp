@@ -7,6 +7,8 @@ AssimpMesh::AssimpMesh(std::string ObjFileRoot, std::string ObjFileName, Shader*
     ObjFileName(ObjFileName),
     mShader(shader)
 {
+    ticksCount = 0.0f;
+
     if (!AssimpLoader(ObjFileRoot, ObjFileName)) {
         std::cout << "Failed to Load FBX File\n";
         return;
@@ -478,7 +480,7 @@ void AssimpMesh::SetMeshTransforms()
 void AssimpMesh::Draw()
 {
     mShader->UseProgram();
-    UpdateBoneTransform(0.1f);
+    UpdateBoneTransform(ticksCount += 1.0f);
     SetMeshTransforms();
     glBindVertexArray(mVertexArray);
 
