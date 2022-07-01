@@ -114,8 +114,8 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
 
             // Bone‚ÌWeight‚ðŽæ“¾
             for (int weightIdx = 0; weightIdx < paiBone->mNumWeights; weightIdx++) {
-                const aiVertexWeight& vw = paiBone->mWeights[i];
-                unsigned int GlobalVertexID = m_Meshes[meshIdx].BaseVertex + paiBone->mWeights[i].mVertexId;
+                const aiVertexWeight& vw = paiBone->mWeights[weightIdx];
+                unsigned int GlobalVertexID = m_Meshes[meshIdx].BaseVertex + paiBone->mWeights[weightIdx].mVertexId;
                 //printf("vertexID:%d, BoneID:%d, weight: %f\n", GlobalVertexID, BoneIndex, vw.mWeight);
                 m_Bones[GlobalVertexID].AddBoneData(BoneIndex, vw.mWeight);
             }
