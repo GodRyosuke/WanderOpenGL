@@ -1,7 +1,11 @@
 #pragma once
 
 #include "glew.h"
+#include "glm.hpp"
+#include "gtc/matrix_transform.hpp"
+#include "gtc/type_ptr.hpp"
 #include <iostream>
+#include <assimp/postprocess.h> // Post processing flags
 
 class GLUtil {
 public:
@@ -91,5 +95,14 @@ public:
 		return glm::transpose(glm::make_mat4(&aiMat.a1));
 	}
 
+	glm::mat4 ToGlmMat4(aiMatrix3x3& aiMat)
+	{
+		return glm::transpose(glm::make_mat3(&aiMat.a1));
+	}
+
+
+
 	
 };
+
+

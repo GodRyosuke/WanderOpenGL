@@ -99,10 +99,17 @@ private:
     };
 
     void SetMeshTransforms();
+
+    // 時刻が変化するにしたがってBoneの行列を更新する
+    void UpdateBoneTransform(float TimeInSeconds);
     // 時刻TimeInSecondsにおける各ボーンのTransformを求める
     void GetBoneTransform(float TimeInSeconds, std::vector<glm::mat4>& Transforms);
     // Nodeの階層構造を読みだす
     void ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform);
+    // AnimationTimeTicks時刻におけるAnimationを求める
+    void CalcInterpolatedRotation(aiQuaternion& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim);
+    void CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim);
+    void CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim);
 
 
     unsigned int mVertexArray;
