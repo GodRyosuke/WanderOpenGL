@@ -4,7 +4,7 @@
 
 class MeshSkinningAssimp : public MeshAssimp {
 public:
-    MeshSkinningAssimp(std::string ObjFilePath, std::string MtlFilePath, Shader* shader);
+    MeshSkinningAssimp(Shader* shader);
     ~MeshSkinningAssimp(){}
 
 private:
@@ -48,9 +48,10 @@ private:
         }
     };
 
-    void ReserveVertexSpace() override;
-    void PopulateBuffers() override;
-    void LoadMesh(const aiMesh* pMesh, unsigned int meshIdx) override;
+    virtual void ReserveVertexSpace() override;
+    virtual void PopulateBuffers() override;
+    virtual void LoadMesh(const aiMesh* pMesh, unsigned int meshIdx) override;
+    virtual void GetGlobalInvTrans() override;
 
 
     // ‚ª•Ï‰»‚·‚é‚É‚µ‚½‚ª‚Á‚ÄBone‚Ìs—ñ‚ğXV‚·‚é
@@ -64,7 +65,7 @@ private:
     void CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim);
     void CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim);
 
-    void UpdateTransform(float timeInSeconds) override;
+    virtual void UpdateTransform(float timeInSeconds) override;
 
 
 

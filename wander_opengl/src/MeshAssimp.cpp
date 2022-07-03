@@ -2,19 +2,27 @@
 #include <iostream>
 #include "GLUtil.hpp"
 
-MeshAssimp::MeshAssimp(std::string ObjFileRoot, std::string ObjFileName, Shader* shader)
-    :ObjFileRoot(ObjFileRoot),
-    ObjFileName(ObjFileName),
-    mShader(shader)
+//MeshAssimp::MeshAssimp(std::string ObjFileRoot, std::string ObjFileName, Shader* shader)
+//    :ObjFileRoot(ObjFileRoot),
+//    ObjFileName(ObjFileName),
+//    mShader(shader)
+//{
+//    if (!Load(ObjFileRoot, ObjFileName)) {
+//        std::cout << "Failed to Load FBX File\n";
+//        return;
+//    }
+//}
+
+MeshAssimp::MeshAssimp(Shader* shader)
+    :mShader(shader)
 {
-    if (!Load(ObjFileRoot, ObjFileName)) {
-        std::cout << "Failed to Load FBX File\n";
-        return;
-    }
+
 }
 
 bool MeshAssimp::Load(std::string RootPath, std::string ObjFileName)
 {
+    this->ObjFileRoot = RootPath;
+    this->ObjFileName = ObjFileName;
     std::string FilePath = RootPath + ObjFileName;
 
     m_pScene = m_Importer.ReadFile(FilePath.c_str(), ASSIMP_LOAD_FLAGS);
@@ -26,7 +34,7 @@ bool MeshAssimp::Load(std::string RootPath, std::string ObjFileName)
     }
 
 
-
+    GetGlobalInvTrans();
 
     m_Meshes.resize(m_pScene->mNumMeshes);
     m_Materials.resize(m_pScene->mNumMaterials);

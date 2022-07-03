@@ -18,8 +18,9 @@
 
 class MeshAssimp {
 public:
-	MeshAssimp(std::string ObjFilePath, std::string MtlFilePath, Shader* shader);
+	MeshAssimp(Shader* shader);
 	~MeshAssimp() {}
+    bool Load(std::string FilePath, std::string ObjFileName);
     void Draw(float timeInSeconds);
 
     void SetMeshPos(glm::vec3 pos) { mMeshPos = pos; }
@@ -45,7 +46,7 @@ protected:
     virtual void PopulateBuffers();
     virtual void ReserveVertexSpace();
     virtual void LoadMesh(const aiMesh* pMesh, unsigned int meshIdx);
-
+    virtual void GetGlobalInvTrans() {}
     virtual void UpdateTransform(float timeInSeconds);
 
     const aiScene* m_pScene;
@@ -74,7 +75,6 @@ private:
     };
 
   
-    bool Load(std::string FilePath, std::string ObjFileName);
     void SetMeshTransforms();
 
 

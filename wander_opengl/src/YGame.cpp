@@ -498,24 +498,36 @@ bool YGame::LoadData()
 	//}
 	{
 		//AssimpMesh* mesh = new AssimpMesh("./resources/TreasureBox2/", "TreasureBox.fbx", mSkinningShaderProgram);
-		MeshSkinningAssimp* mesh = new MeshSkinningAssimp("./resources/TreasureBox3/", "scene.gltf", mSkinningShaderProgram);
+		//MeshSkinningAssimp* mesh = new MeshSkinningAssimp("./resources/TreasureBox3/", "scene.gltf", mSkinningShaderProgram);
+		MeshSkinningAssimp* mesh = new MeshSkinningAssimp(mSkinningShaderProgram);
+		if (mesh->Load("./resources/TreasureBox3/", "scene.gltf")) {
+			mesh->SetMeshPos(glm::vec3(20.0f, 35.0f, 0.0f));
+			glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(1.0, 0.0f, 0.0f));
+			mesh->SetMeshRotate(rotMat);
+			mesh->SetMeshScale(0.01f);
+			mTreasureBoxMesh = mesh;
+		}
+		else {
+			mTreasureBoxMesh = NULL;
+		}
 		//AssimpMesh* mesh = new AssimpMesh("./resources/boblampclean/", "boblampclean.md5mesh", mSkinningShaderProgram);
-		mesh->SetMeshPos(glm::vec3(20.0f, 35.0f, 0.0f));
-		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(1.0, 0.0f, 0.0f));
-		mesh->SetMeshRotate(rotMat);
-		mesh->SetMeshScale(0.01f);
-		mTreasureBoxMesh = mesh;
 	}
 
 	{
 		//AssimpMesh* mesh = new AssimpMesh("./resources/TreasureBox2/", "TreasureBox.fbx", mSkinningShaderProgram);
-		MeshSkinningAssimp* mesh = new MeshSkinningAssimp("./resources/boblampclean/", "boblampclean.md5mesh", mSkinningShaderProgram);
-		mesh->SetMeshPos(glm::vec3(30.0f, 35.0f, 0.0f));
-		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(1.0, 0.0f, 0.0f));
-		rotMat = glm::mat4(1.0f);
-		mesh->SetMeshRotate(rotMat);
-		mesh->SetMeshScale(0.1f);
-		mBoblampclean = mesh;
+		MeshSkinningAssimp* mesh = new MeshSkinningAssimp(mSkinningShaderProgram);
+		//MeshSkinningAssimp* mesh = new MeshSkinningAssimp("./resources/boblampclean/", "boblampclean.md5mesh", mSkinningShaderProgram);
+		if (mesh->Load("./resources/boblampclean/", "boblampclean.md5mesh")) {
+			mesh->SetMeshPos(glm::vec3(30.0f, 35.0f, 0.0f));
+			glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(1.0, 0.0f, 0.0f));
+			rotMat = glm::mat4(1.0f);
+			mesh->SetMeshRotate(rotMat);
+			mesh->SetMeshScale(0.1f);
+			mBoblampclean = mesh;
+		}
+		else {
+			mBoblampclean = NULL;
+		}
 	}
 
 

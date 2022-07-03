@@ -2,12 +2,24 @@
 #include <iostream>
 #include <GLUtil.hpp>
 
-MeshSkinningAssimp::MeshSkinningAssimp(std::string ObjFilePath, std::string MtlFilePath, Shader* shader)
-    :MeshAssimp(ObjFilePath, MtlFilePath, shader)
+//MeshSkinningAssimp::MeshSkinningAssimp(std::string ObjFilePath, std::string MtlFilePath, Shader* shader)
+//    :MeshAssimp(ObjFilePath, MtlFilePath, shader)
+//{
+//
+//}
+
+MeshSkinningAssimp::MeshSkinningAssimp(Shader* shader)
+    :MeshAssimp(shader)
 {
 
 }
 
+void MeshSkinningAssimp::GetGlobalInvTrans()
+{
+    GLUtil glutil;
+    m_GlobalInverseTransform = glutil.ToGlmMat4(m_pScene->mRootNode->mTransformation);
+    m_GlobalInverseTransform = glm::inverse(m_GlobalInverseTransform);
+}
 
 void MeshSkinningAssimp::ReserveVertexSpace()
 {
