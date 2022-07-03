@@ -20,6 +20,7 @@
 #include "Shader.hpp"
 #include "Mesh.hpp"
 #include "MeshAssimp.hpp"
+#include "MeshSkinningAssimp.hpp"
 #include FT_FREETYPE_H
 
 
@@ -109,8 +110,8 @@ private:
 
 	// Mesh Vertices
 	std::vector<Mesh*> mMeshes;
-	MeshAssimp* mTreasureBoxMesh;
-	MeshAssimp* mBoblampclean;
+	MeshSkinningAssimp* mTreasureBoxMesh;
+	MeshSkinningAssimp* mBoblampclean;
 	Mesh* mSphareMesh;
 	Mesh* mCubeMesh;
 	Mesh* mDonutMesh;
