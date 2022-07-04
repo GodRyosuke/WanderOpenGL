@@ -183,6 +183,7 @@ XCOPY "$(SolutionDir)dependencies\assimp\lib\Release\*.dll" "$(OutDir)" /e /y</C
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\MeshAssimp.cpp" />
+    <ClCompile Include="src\MeshSkinningAssimp.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\YGame.cpp" />
@@ -194,6 +195,7 @@ XCOPY "$(SolutionDir)dependencies\assimp\lib\Release\*.dll" "$(OutDir)" /e /y</C
     <ClInclude Include="include\Game.hpp" />
     <ClInclude Include="include\GLUtil.hpp" />
     <ClInclude Include="include\Mesh.hpp" />
+    <ClInclude Include="include\MeshSkinningAssimp.hpp" />
     <ClInclude Include="include\Shader.hpp" />
     <ClInclude Include="include\Texture.hpp" />
     <ClInclude Include="include\YGame.hpp" />

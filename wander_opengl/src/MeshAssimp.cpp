@@ -2,21 +2,27 @@
 #include <iostream>
 #include "GLUtil.hpp"
 
-AssimpMesh::AssimpMesh(std::string ObjFileRoot, std::string ObjFileName, Shader* shader)
-    :ObjFileRoot(ObjFileRoot),
-    ObjFileName(ObjFileName),
-    mShader(shader)
-{
-    ticksCount = 0.0f;
+//MeshAssimp::MeshAssimp(std::string ObjFileRoot, std::string ObjFileName, Shader* shader)
+//    :ObjFileRoot(ObjFileRoot),
+//    ObjFileName(ObjFileName),
+//    mShader(shader)
+//{
+//    if (!Load(ObjFileRoot, ObjFileName)) {
+//        std::cout << "Failed to Load FBX File\n";
+//        return;
+//    }
+//}
 
-    if (!AssimpLoader(ObjFileRoot, ObjFileName)) {
-        std::cout << "Failed to Load FBX File\n";
-        return;
-    }
+MeshAssimp::MeshAssimp(Shader* shader)
+    :mShader(shader)
+{
+
 }
 
-bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
+bool MeshAssimp::Load(std::string RootPath, std::string ObjFileName)
 {
+    this->ObjFileRoot = RootPath;
+    this->ObjFileName = ObjFileName;
     std::string FilePath = RootPath + ObjFileName;
 
     m_pScene = m_Importer.ReadFile(FilePath.c_str(), ASSIMP_LOAD_FLAGS);
@@ -27,101 +33,32 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
         return false;
     }
 
-    {
-        GLUtil glutil;
-        aiMatrix4x4 globalTransform = m_pScene->mRootNode->mTransformation;
-        m_GlobalInverseTransform = glm::inverse(glutil.ToGlmMat4(globalTransform));
-    }
 
+    GetGlobalInvTrans();
 
     m_Meshes.resize(m_pScene->mNumMeshes);
     m_Materials.resize(m_pScene->mNumMaterials);
 
-    unsigned int NumVertices = 0;
-    unsigned int NumIndices = 0;
+    mNumVertices = 0;
+    mNumIndices = 0;
 
     // 頂点の総数などを読み込む
     for (unsigned int i = 0; i < m_Meshes.size(); i++) {
         m_Meshes[i].MaterialIndex = m_pScene->mMeshes[i]->mMaterialIndex; // MeshとMaterialの紐づけ
         m_Meshes[i].NumIndices = m_pScene->mMeshes[i]->mNumFaces * 3;
-        m_Meshes[i].BaseVertex = NumVertices;
-        m_Meshes[i].BaseIndex = NumIndices;
+        m_Meshes[i].BaseVertex = mNumVertices;
+        m_Meshes[i].BaseIndex = mNumIndices;
 
-        NumVertices += m_pScene->mMeshes[i]->mNumVertices;
-        NumIndices += m_Meshes[i].NumIndices;
+        mNumVertices += m_pScene->mMeshes[i]->mNumVertices;
+        mNumIndices += m_Meshes[i].NumIndices;
     }
 
-    m_Positions.reserve(NumVertices);
-    m_Normals.reserve(NumVertices);
-    m_TexCoords.reserve(NumVertices);
-    m_Indices.reserve(NumIndices);
-    m_Bones.resize(NumVertices);
+    ReserveVertexSpace();
 
     // Mesh(頂点情報など)の読み込み
     for (int meshIdx = 0; meshIdx < m_Meshes.size(); meshIdx++) {
         const aiMesh* paiMesh = m_pScene->mMeshes[meshIdx];
-        const aiVector3D Zero3D(0.0f, 0.0f, 0.0f);
-
-        // Vertex, Normal, UV取得
-        for (unsigned int i = 0; i < paiMesh->mNumVertices; i++) {
-
-            const aiVector3D& pPos = paiMesh->mVertices[i];
-            m_Positions.push_back(glm::vec3(pPos.x, pPos.y, pPos.z));
-
-            if (paiMesh->mNormals) {
-                const aiVector3D& pNormal = paiMesh->mNormals[i];
-                m_Normals.push_back(glm::vec3(pNormal.x, pNormal.y, pNormal.z));
-            }
-            else {
-                aiVector3D Normal(0.0f, 1.0f, 0.0f);
-                m_Normals.push_back(glm::vec3(Normal.x, Normal.y, Normal.z));
-            }
-
-            const aiVector3D& pTexCoord = paiMesh->HasTextureCoords(0) ? paiMesh->mTextureCoords[0][i] : Zero3D;
-            m_TexCoords.push_back(glm::vec2(pTexCoord.x, pTexCoord.y));
-        }
-
-        // Index 情報取得
-        for (unsigned int i = 0; i < paiMesh->mNumFaces; i++) {
-            const aiFace& Face = paiMesh->mFaces[i];
-            //printf("num indices %d\n", Face.mNumIndices);
-            assert(Face.mNumIndices == 3);
-            m_Indices.push_back(Face.mIndices[0]);
-            m_Indices.push_back(Face.mIndices[1]);
-            m_Indices.push_back(Face.mIndices[2]);
-        }
-
-        // Boneの読み込み
-        for (unsigned int i = 0; i < paiMesh->mNumBones; i++) {
-            aiBone* paiBone = paiMesh->mBones[i];
-
-            // BoneIndexの取得
-            int BoneIndex = 0;
-            std::string BoneName = paiBone->mName.C_Str(); 
-            if (m_BoneNameToIndexMap.find(BoneName) == m_BoneNameToIndexMap.end()) {
-                // Allocate an index for a new bone
-                BoneIndex = (int)m_BoneNameToIndexMap.size();
-                m_BoneNameToIndexMap[BoneName] = BoneIndex;
-            }
-            else {
-                BoneIndex = m_BoneNameToIndexMap[BoneName];
-            }
-
-            if (BoneIndex == m_BoneInfo.size()) {
-                GLUtil glutil;
-                aiMatrix4x4 offsetMatrix = paiBone->mOffsetMatrix;
-                BoneInfo bi(glutil.ToGlmMat4(offsetMatrix));
-                m_BoneInfo.push_back(bi);
-            }
-
-            // BoneのWeightを取得
-            for (int weightIdx = 0; weightIdx < paiBone->mNumWeights; weightIdx++) {
-                const aiVertexWeight& vw = paiBone->mWeights[weightIdx];
-                unsigned int GlobalVertexID = m_Meshes[meshIdx].BaseVertex + paiBone->mWeights[weightIdx].mVertexId;
-                //printf("vertexID:%d, BoneID:%d, weight: %f\n", GlobalVertexID, BoneIndex, vw.mWeight);
-                m_Bones[GlobalVertexID].AddBoneData(BoneIndex, vw.mWeight);
-            }
-        }
+        LoadMesh(paiMesh, meshIdx);
     }
 
 
@@ -196,57 +133,16 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
     }
 
     // Vertex Array Object作成
-    enum BUFFER_TYPE {
-        INDEX_BUFFER = 0,
-        POS_VB       = 1,
-        TEXCOORD_VB  = 2,
-        NORMAL_VB    = 3,
-        NUM_BUFFERS  = 4,  // required only for instancing
-    };
-    GLuint m_Buffers[NUM_BUFFERS] = { 0 };
-    GLuint m_boneBuffer;
-
     unsigned int VertexArray;
 
     mShader->UseProgram();
     glGenVertexArrays(1, &VertexArray);
     glBindVertexArray(VertexArray);
 
-    glGenBuffers(NUM_BUFFERS, m_Buffers);
+    // Vertex Bufferの作成
+    PopulateBuffers();
 
-    // Vertex Data
-    glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[POS_VB]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Positions[0])* m_Positions.size(), &m_Positions[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    // Normal Map
-    glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[NORMAL_VB]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Normals[0])* m_Normals.size(), &m_Normals[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    // UV
-    glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[TEXCOORD_VB]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_TexCoords[0])* m_TexCoords.size(), &m_TexCoords[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-    // Bone and Weights
-    glGenBuffers(1, &m_boneBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, m_boneBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Bones[0])* m_Bones.size(), &m_Bones[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(3);
-    glVertexAttribIPointer(3, MAX_NUM_BONES_PER_VERTEX, GL_INT, sizeof(VertexBoneData), (const GLvoid*)0);
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, MAX_NUM_BONES_PER_VERTEX, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData),
-        (const GLvoid*)(MAX_NUM_BONES_PER_VERTEX * sizeof(int32_t)));   // 後半4ByteがWeight
-
-
-    // Indef Buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[INDEX_BUFFER]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_Indices[0])* m_Indices.size(), &m_Indices[0], GL_STATIC_DRAW);
-
+ 
     // unbind cube vertex arrays
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -256,218 +152,90 @@ bool AssimpMesh::AssimpLoader(std::string RootPath, std::string ObjFileName)
 
 
     bool checkErr = (glGetError() == GL_NO_ERROR);
+    return true;
     return checkErr;
 }
 
-void AssimpMesh::CalcInterpolatedRotation(aiQuaternion& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim)
+void MeshAssimp::ReserveVertexSpace()
 {
-    // we need at least two values to interpolate...
-    if (pNodeAnim->mNumRotationKeys == 1) {
-        Out = pNodeAnim->mRotationKeys[0].mValue;
-        return;
-    }
+    m_Positions.reserve(mNumVertices);
+    m_Normals.reserve(mNumVertices);
+    m_TexCoords.reserve(mNumVertices);
+    m_Indices.reserve(mNumIndices);
+}
 
-    assert(pNodeAnim->mNumRotationKeys > 0);
+void MeshAssimp::LoadMesh(const aiMesh* pMesh, unsigned int meshIdx)
+{
+    const aiVector3D Zero3D(0.0f, 0.0f, 0.0f);
 
-    // 現在のフレームのRtation Matrixを読みだす
-    unsigned int RotationIndex = 0;
-    for (unsigned int i = 0; i < pNodeAnim->mNumRotationKeys - 1; i++) {
-        float t = (float)pNodeAnim->mRotationKeys[i + 1].mTime;
-        if (AnimationTimeTicks < t) {
-            RotationIndex = i;
+    // Vertex, Normal, UV取得
+    for (unsigned int i = 0; i < pMesh->mNumVertices; i++) {
+
+        const aiVector3D& pPos = pMesh->mVertices[i];
+        m_Positions.push_back(glm::vec3(pPos.x, pPos.y, pPos.z));
+
+        if (pMesh->mNormals) {
+            const aiVector3D& pNormal = pMesh->mNormals[i];
+            m_Normals.push_back(glm::vec3(pNormal.x, pNormal.y, pNormal.z));
         }
-    }
-    unsigned int NextRotationIndex = RotationIndex + 1;
-    assert(NextRotationIndex < pNodeAnim->mNumRotationKeys);
-    float t1 = (float)pNodeAnim->mRotationKeys[RotationIndex].mTime;
-    if (t1 > AnimationTimeTicks) {
-        Out = pNodeAnim->mRotationKeys[RotationIndex].mValue;
-    }
-    else {
-        float t2 = (float)pNodeAnim->mRotationKeys[NextRotationIndex].mTime;
-        float DeltaTime = t2 - t1;
-        float Factor = (AnimationTimeTicks - t1) / DeltaTime;
-        assert(Factor >= 0.0f && Factor <= 1.0f);
-        const aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[RotationIndex].mValue;
-        const aiQuaternion& EndRotationQ = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;
-        aiQuaternion::Interpolate(Out, StartRotationQ, EndRotationQ, Factor);
-        Out = StartRotationQ;
-    }
-
-    Out.Normalize();
-}
-
-void AssimpMesh::CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim)
-{
-    // we need at least two values to interpolate...
-    if (pNodeAnim->mNumScalingKeys == 1) {
-        Out = pNodeAnim->mScalingKeys[0].mValue;
-        return;
-    }
-
-    assert(pNodeAnim->mNumScalingKeys > 0);
-
-    // 現在のフレームのScaling Matrixを読みだす
-    unsigned int ScalingIndex = 0;
-    for (unsigned int i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++) {
-        float t = (float)pNodeAnim->mScalingKeys[i + 1].mTime;
-        if (AnimationTimeTicks < t) {
-            ScalingIndex = i;
+        else {
+            aiVector3D Normal(0.0f, 1.0f, 0.0f);
+            m_Normals.push_back(glm::vec3(Normal.x, Normal.y, Normal.z));
         }
+
+        const aiVector3D& pTexCoord = pMesh->HasTextureCoords(0) ? pMesh->mTextureCoords[0][i] : Zero3D;
+        m_TexCoords.push_back(glm::vec2(pTexCoord.x, pTexCoord.y));
     }
 
-    unsigned int NextScalingIndex = ScalingIndex + 1;
-    assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
-    float t1 = (float)pNodeAnim->mScalingKeys[ScalingIndex].mTime;
-    if (t1 > AnimationTimeTicks) {
-        Out = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
-    }
-    else {
-        // 現在時刻がフレームとフレームの間であれば補完処理
-        float t2 = (float)pNodeAnim->mScalingKeys[NextScalingIndex].mTime;
-        float DeltaTime = t2 - t1;
-        float Factor = (AnimationTimeTicks - (float)t1) / DeltaTime;
-        assert(Factor >= 0.0f && Factor <= 1.0f);
-        const aiVector3D& Start = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
-        const aiVector3D& End = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
-        aiVector3D Delta = End - Start;
-        Out = Start + Factor * Delta;
+    // Index 情報取得
+    for (unsigned int i = 0; i < pMesh->mNumFaces; i++) {
+        const aiFace& Face = pMesh->mFaces[i];
+        //printf("num indices %d\n", Face.mNumIndices);
+        assert(Face.mNumIndices == 3);
+        m_Indices.push_back(Face.mIndices[0]);
+        m_Indices.push_back(Face.mIndices[1]);
+        m_Indices.push_back(Face.mIndices[2]);
     }
 }
 
-void AssimpMesh::CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim)
+void MeshAssimp::PopulateBuffers()
 {
-    // we need at least two values to interpolate...
-    if (pNodeAnim->mNumPositionKeys == 1) {
-        Out = pNodeAnim->mPositionKeys[0].mValue;
-        return;
-    }
+    enum BUFFER_TYPE {
+        INDEX_BUFFER = 0,
+        POS_VB = 1,
+        TEXCOORD_VB = 2,
+        NORMAL_VB = 3,
+        NUM_BUFFERS = 4,  // required only for instancing
+    };
+    GLuint m_Buffers[NUM_BUFFERS] = { 0 };
+    glGenBuffers(NUM_BUFFERS, m_Buffers);
+
+    // Vertex Data
+    glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[POS_VB]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Positions[0]) * m_Positions.size(), &m_Positions[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    // Normal Map
+    glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[NORMAL_VB]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(m_Normals[0]) * m_Normals.size(), &m_Normals[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    // UV
+    glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[TEXCOORD_VB]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(m_TexCoords[0]) * m_TexCoords.size(), &m_TexCoords[0], GL_STATIC_DRAW);
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 
-    // 現在のフレームのPosition Matrixを読みだす
-    unsigned int PositionIndex = 0;
-    for (unsigned int i = 0; i < pNodeAnim->mNumPositionKeys - 1; i++) {
-        float t = (float)pNodeAnim->mPositionKeys[i + 1].mTime;
-        if (AnimationTimeTicks < t) {
-            PositionIndex = i;
-        }
-    }
-    unsigned int NextPositionIndex = PositionIndex + 1;
-    assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
-    float t1 = (float)pNodeAnim->mPositionKeys[PositionIndex].mTime;
-    if (t1 > AnimationTimeTicks) {
-        Out = pNodeAnim->mPositionKeys[PositionIndex].mValue;
-    }
-    else {
-        float t2 = (float)pNodeAnim->mPositionKeys[NextPositionIndex].mTime;
-        float DeltaTime = t2 - t1;
-        float Factor = (AnimationTimeTicks - t1) / DeltaTime;
-        assert(Factor >= 0.0f && Factor <= 1.0f);
-        const aiVector3D& Start = pNodeAnim->mPositionKeys[PositionIndex].mValue;
-        const aiVector3D& End = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
-        aiVector3D Delta = End - Start;
-        Out = Start + Factor * Delta;
-    }
+    // Indef Buffer
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[INDEX_BUFFER]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_Indices[0]) * m_Indices.size(), &m_Indices[0], GL_STATIC_DRAW);
 }
 
 
-void AssimpMesh::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform)
-{
-    GLUtil glutil;
-    std::string NodeName(pNode->mName.data);
-
-    const aiAnimation* pAnimation = m_pScene->mAnimations[0];
-
-    // Nodeの持つTransform
-    glm::mat4 NodeTransformation;
-    {
-        aiMatrix4x4 trans = pNode->mTransformation;
-        NodeTransformation = glutil.ToGlmMat4(trans);
-    }
-
-    // 現在のNodeのAnimation Dataを読みだす
-    const aiNodeAnim* pNodeAnim = NULL;
-    for (unsigned int i = 0; i < pAnimation->mNumChannels; i++) {
-        const aiNodeAnim* nodeAnim = pAnimation->mChannels[i];
-
-        if (std::string(nodeAnim->mNodeName.data) == NodeName) {
-            pNodeAnim = nodeAnim;
-        }
-    }
-
-    // そのNodeにAnimationがあれば、
-    if (pNodeAnim) {
-        // 現在時刻のAnimation Transformをかけあわせる。
-        // Interpolate scaling and generate scaling transformation matrix
-        aiVector3D Scaling;
-        CalcInterpolatedScaling(Scaling, AnimationTimeTicks, pNodeAnim);
-        glm::vec3 scaleVec = glm::vec3(Scaling.x, Scaling.y, Scaling.z);
-        glm::mat4 ScalingM = glm::scale(glm::mat4(1.0f), scaleVec);
-
-        // Interpolate rotation and generate rotation transformation matrix
-        aiQuaternion RotationQ;
-        CalcInterpolatedRotation(RotationQ, AnimationTimeTicks, pNodeAnim);
-        //Matrix4f RotationM = Matrix4f(RotationQ.GetMatrix());
-        aiMatrix3x3 rotationMat = RotationQ.GetMatrix();
-        glm::mat4 RotationM = glutil.ToGlmMat4(rotationMat);
-
-        // Interpolate translation and generate translation transformation matrix
-        aiVector3D Translation;
-        CalcInterpolatedPosition(Translation, AnimationTimeTicks, pNodeAnim);
-        glm::mat4 TranslationM = glm::translate(glm::mat4(1.0f), glm::vec3(Translation.x, Translation.y, Translation.z));
-
-        // Combine the above transformations
-        NodeTransformation = TranslationM * RotationM * ScalingM;
-    }
-
-    glm::mat4 GlobalTransformation = ParentTransform * NodeTransformation;
-
-    if (m_BoneNameToIndexMap.find(NodeName) != m_BoneNameToIndexMap.end()) {
-        unsigned int BoneIndex = m_BoneNameToIndexMap[NodeName];
-        m_BoneInfo[BoneIndex].FinalTransformation = m_GlobalInverseTransform * GlobalTransformation * m_BoneInfo[BoneIndex].OffsetMatrix;
-    }
-
-    for (unsigned int i = 0; i < pNode->mNumChildren; i++) {
-        ReadNodeHierarchy(AnimationTimeTicks, pNode->mChildren[i], GlobalTransformation);
-    }
-}
-
-void AssimpMesh::GetBoneTransform(float TimeInSeconds, std::vector<glm::mat4>& Transforms)
-{
-    int num = m_pScene->mNumAnimations;
-    auto k = m_pScene->mAnimations[0];
-    float TicksPerSecond = (float)(m_pScene->mAnimations[0]->mTicksPerSecond != NULL ? m_pScene->mAnimations[0]->mTicksPerSecond : 25.0f);
-    float TimeInTicks = TimeInSeconds * TicksPerSecond;
-    float Duration = 0.0f;  // AnimationのDurationの整数部分が入る
-    float fraction = modf((float)m_pScene->mAnimations[0]->mDuration, &Duration);
-    float AnimationTimeTicks = fmod(TimeInTicks, Duration);
-
-
-
-    glm::mat4 Identity = glm::mat4(1);
-    // Nodeの階層構造にしたがって、AnimationTicks時刻における各BoneのTransformを求める
-    ReadNodeHierarchy(AnimationTimeTicks, m_pScene->mRootNode, Identity);
-    Transforms.resize(m_BoneInfo.size());
-
-    for (unsigned int i = 0; i < m_BoneInfo.size(); i++) {
-        Transforms[i] = m_BoneInfo[i].FinalTransformation;
-    }
-}
-
-void AssimpMesh::UpdateBoneTransform(float TimeInSeconds)
-{
-    // 現在時刻のBone Transformを取得
-    std::vector<glm::mat4> BoneMatrixPalete;
-    GetBoneTransform(TimeInSeconds, BoneMatrixPalete);
-
-    // Shaderに渡す
-    for (int i = 0; i < BoneMatrixPalete.size(); i++) {
-        std::string uniformName = "uMatrixPalette[" + std::to_string(i) + ']';
-        mShader->SetMatrixUniform(uniformName, BoneMatrixPalete[i]);
-    }
-}
-
-void AssimpMesh::SetMeshTransforms()
+void MeshAssimp::SetMeshTransforms()
 {
     glm::mat4 ScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(mMeshScale, mMeshScale, mMeshScale));
     glm::mat4 TranslateMat = glm::translate(glm::mat4(1.0f), mMeshPos);
@@ -476,12 +244,15 @@ void AssimpMesh::SetMeshTransforms()
     mShader->SetMatrixUniform("model", TransformMat);
 }
 
+void MeshAssimp::UpdateTransform(float timeInSeconds)
+{
+    SetMeshTransforms();
+}
 
-void AssimpMesh::Draw()
+void MeshAssimp::Draw(float timeInSeconds)
 {
     mShader->UseProgram();
-    UpdateBoneTransform(ticksCount += 1.0f);
-    SetMeshTransforms();
+    UpdateTransform(timeInSeconds);
     glBindVertexArray(mVertexArray);
 
     for (unsigned int i = 0; i < m_Meshes.size(); i++) {
