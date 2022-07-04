@@ -112,7 +112,7 @@ private:
 	std::vector<Mesh*> mMeshes;
 	MeshSkinningAssimp* mTreasureBoxMesh;
 	MeshSkinningAssimp* mBoblampclean;
-	MeshAssimp* mTerrain;
+	std::vector<MeshAssimp*> mTerrains;
 	Mesh* mSphareMesh;
 	Mesh* mCubeMesh;
 	Mesh* mDonutMesh;

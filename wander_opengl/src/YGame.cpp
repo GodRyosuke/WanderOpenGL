@@ -501,10 +501,10 @@ bool YGame::LoadData()
 		//MeshSkinningAssimp* mesh = new MeshSkinningAssimp("./resources/TreasureBox3/", "scene.gltf", mSkinningShaderProgram);
 		MeshSkinningAssimp* mesh = new MeshSkinningAssimp(mSkinningShaderProgram);
 		if (mesh->Load("./resources/TreasureBox3/", "scene.gltf")) {
-			mesh->SetMeshPos(glm::vec3(20.0f, 35.0f, 0.0f));
+			mesh->SetMeshPos(glm::vec3(5.0f / 2.0f, 35.0f, 0.0f));
 			glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(1.0, 0.0f, 0.0f));
 			mesh->SetMeshRotate(rotMat);
-			mesh->SetMeshScale(0.01f);
+			mesh->SetMeshScale(0.01f / 2.0f);
 			mTreasureBoxMesh = mesh;
 		}
 		else {
@@ -518,11 +518,11 @@ bool YGame::LoadData()
 		MeshSkinningAssimp* mesh = new MeshSkinningAssimp(mSkinningShaderProgram);
 		//MeshSkinningAssimp* mesh = new MeshSkinningAssimp("./resources/boblampclean/", "boblampclean.md5mesh", mSkinningShaderProgram);
 		if (mesh->Load("./resources/boblampclean/", "boblampclean.md5mesh")) {
-			mesh->SetMeshPos(glm::vec3(30.0f, 35.0f, 0.0f));
+			mesh->SetMeshPos(glm::vec3(-5.0f / 2.0f, 35.0f, 0.0f));
 			glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(1.0, 0.0f, 0.0f));
 			rotMat = glm::mat4(1.0f);
 			mesh->SetMeshRotate(rotMat);
-			mesh->SetMeshScale(0.1f);
+			mesh->SetMeshScale(0.1f / 2.0f);
 			mBoblampclean = mesh;
 		}
 		else {
@@ -530,20 +530,71 @@ bool YGame::LoadData()
 		}
 	}
 
-	{
-		MeshAssimp* mesh = new MeshAssimp(mMeshShaderProgram);
-		if (mesh->Load("./resources/brickTerrain/", "brickTerrain.fbx")) {
-			mesh->SetMeshPos(glm::vec3(0.0f));
-			glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(1.0, 0.0f, 0.0f));
-			rotMat = glm::mat4(1.0f);
-			mesh->SetMeshRotate(rotMat);
-			mesh->SetMeshScale(1.0f);
-			mTerrain = mesh;
-		}
-		else {
-			mTerrain = NULL;
+	// レンガの床追加
+	for (int i = 0; i <= 4; i++) {
+		for (int j = 0; j <= 0; j++) {
+			MeshAssimp* mesh = new MeshAssimp(mMeshShaderProgram);
+			if (mesh->Load("./resources/brickTerrain/", "brickTerrain.fbx")) {
+				mesh->SetMeshPos(glm::vec3((i - 2) * 2, 35.0f, 0.0f));
+				glm::mat4 rotMat = glm::mat4(1.0f);
+				mesh->SetMeshRotate(rotMat);
+				mesh->SetMeshScale(1.0f);
+				mTerrains.push_back(mesh);
+			}
 		}
 	}
+
+	// コンクリートの壁追加
+	{
+		MeshAssimp* mesh = new MeshAssimp(mMeshShaderProgram);
+		if (mesh->Load("./resources/concreteWall/", "concreteWall.obj")) {	// wavefontじゃないと、垂直でうまく表示されないww
+			mesh->SetMeshPos(glm::vec3(5.0f, 35.0f, 1.0f));
+			glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+			//mesh->SetMeshRotate(glm::mat4(1.0f));
+			mesh->SetMeshRotate(rotMat);
+			mesh->SetMeshScale(1.0f);
+			mTerrains.push_back(mesh);
+		}
+	}
+	{
+		MeshAssimp* mesh = new MeshAssimp(mMeshShaderProgram);
+		if (mesh->Load("./resources/concreteWall/", "concreteWall.obj")) {	// wavefontじゃないと、垂直でうまく表示されないww
+			mesh->SetMeshPos(glm::vec3(5.0f, 35.0f, 3.0f));
+			glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+			//mesh->SetMeshRotate(glm::mat4(1.0f));
+			mesh->SetMeshRotate(rotMat);
+			mesh->SetMeshScale(1.0f);
+			mTerrains.push_back(mesh);
+		}
+	}
+
+
+	//{
+	//	MeshAssimp* mesh = new MeshAssimp(mMeshShaderProgram);
+	//	if (mesh->Load("./resources/brickTerrain/", "brickTerrain.fbx")) {
+	//		mesh->SetMeshPos(glm::vec3(0.0f, 35.0f, 0.0f));
+	//		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(1.0, 0.0f, 0.0f));
+	//		rotMat = glm::mat4(1.0f);
+	//		mesh->SetMeshRotate(rotMat);
+	//		mesh->SetMeshScale(1.0f);
+	//		mTerrains.push_back(mesh);
+	//	}
+	//}
+
+	//{
+	//	MeshAssimp* mesh = new MeshAssimp(mMeshShaderProgram);
+	//	if (mesh->Load("./resources/brickTerrain/", "brickTerrain.fbx")) {
+	//		mesh->SetMeshPos(glm::vec3(2.0f, 35.0f, 0.0f));
+	//		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(1.0, 0.0f, 0.0f));
+	//		rotMat = glm::mat4(1.0f);
+	//		mesh->SetMeshRotate(rotMat);
+	//		mesh->SetMeshScale(1.0f);
+	//		mTerrains.push_back(mesh);
+	//	}
+	//}
+
+
+
 
 
 
@@ -612,7 +663,7 @@ bool YGame::LoadData()
 
 	
 	// Camera Settings
-	mCameraPos = glm::vec3(0.0f);
+	mCameraPos = glm::vec3(0.0f, 25.0f, 1.0f);
 	mCameraUP = glm::vec3(0.0f, 0.0f, 1.0f);
 	mCameraOrientation = glm::vec3(0, 0.5f, 0);
 
@@ -1658,7 +1709,9 @@ void YGame::Draw()
 		mMeshShaderProgram->UseProgram();
 		mMeshes[i]->Draw();
 	}
-	mTerrain->Draw(mTicksCount / 1000.0f);
+	for (auto terrain : mTerrains) {
+		terrain->Draw(mTicksCount / 1000.0f);
+	}
 
 	// FBXのSkinning Animation
 	mSkinningShaderProgram->UseProgram();
