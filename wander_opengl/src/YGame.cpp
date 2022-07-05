@@ -431,7 +431,19 @@ bool YGame::LoadShaders()
 	mSkinningShaderProgram->SetMatrixUniform("proj", mProjection);
 	mSkinningShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
 
-
+	// Shadow Map Shaderの読み込み
+	{
+		std::string vert_file = "./Shaders/YPhong.vert";
+		std::string frag_file = "./Shaders/ShadowMap.frag";
+		mShadowMapShaderProgram = new Shader();
+		if (!mShadowMapShaderProgram->CreateShaderProgram(vert_file, frag_file)) {
+			return false;
+		}
+	}
+	mShadowMapShaderProgram->UseProgram();
+	mShadowMapShaderProgram->SetMatrixUniform("view", view2);
+	mShadowMapShaderProgram->SetMatrixUniform("proj", mProjection);
+	mShadowMapShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
 
 	
 	return true;
@@ -1710,6 +1722,7 @@ void YGame::Draw()
 		mMeshShaderProgram->UseProgram();
 		mMeshes[i]->Draw();
 	}
+	// Draw Assimp Meshes
 	for (auto terrain : mTerrains) {
 		terrain->Draw(mTicksCount / 1000.0f);
 	}

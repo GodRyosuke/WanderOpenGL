@@ -93,5 +93,6 @@
     <None Include="Shaders\SkyBox.frag" />
     <None Include="Shaders\FBXPhong.frag" />
     <None Include="Shaders\Skinning.vert" />
+    <None Include="Shaders\ShadowMap.frag" />
   </ItemGroup>
 </Project>

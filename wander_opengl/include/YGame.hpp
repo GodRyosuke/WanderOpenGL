@@ -87,7 +87,9 @@ private:
 	Shader* m3DTextShaderProgram;
 	Shader* mSkyBoxShaderProgram;
 	Shader* mSkinningShaderProgram;
-
+	// Shadow
+	Shader* mShadowMapShaderProgram;
+	Shader* mShadowLightingShaderProgram;
 
 	// lighting
 	glm::vec3 mAmbientLightColor;
