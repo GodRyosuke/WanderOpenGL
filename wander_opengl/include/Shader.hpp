@@ -14,6 +14,7 @@ public:
 	void SetMatrixUniform(std::string uniformName, glm::mat4 mat);
 	void SetVectorUniform(std::string uniformName, glm::vec3 vec);
 	void SetFloatUniform(std::string uniformName, float data);
+	void SetSamplerUniform(std::string uniformName, GLuint tex);
 
 private:
 	GLuint mShaderProgram;

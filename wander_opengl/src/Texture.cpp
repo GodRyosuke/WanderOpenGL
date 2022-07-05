@@ -149,7 +149,7 @@ void Texture::createFromSurf(SDL_Surface* surf)
 	glBindTexture(texture_data, 0);		// unbind
 }
 
-void Texture::BindTexture()
+void Texture::BindTexture(GLenum TextureUnit)
 {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture_data);
@@ -165,3 +165,5 @@ void Texture::UnBindTexture()
 {
 	glBindTexture(texture_data, 0);
 }
+
+

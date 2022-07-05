@@ -110,3 +110,7 @@ void Shader::SetFloatUniform(std::string uniformName, float data)
 	glUniform1f(glGetUniformLocation(mShaderProgram, uniformName.c_str()), data);
 }
 
+void Shader::SetSamplerUniform(std::string uniformName, GLuint tex)
+{
+	glUniform1i(glGetUniformLocation(mShaderProgram, uniformName.c_str()), tex);
+}
