@@ -21,11 +21,12 @@ public:
 	MeshAssimp(Shader* shader);
 	~MeshAssimp() {}
     bool Load(std::string FilePath, std::string ObjFileName);
-    void Draw(float timeInSeconds);
+    void Draw(Shader* shader, float timeInSeconds);
 
     void SetMeshPos(glm::vec3 pos) { mMeshPos = pos; }
     void SetMeshRotate(glm::mat4 rot) { mMeshRotate = rot; }
     void SetMeshScale(float scale) { mMeshScale = scale; }
+    glm::mat4 GetWorldMat();
 
 protected:
     struct BasicMeshEntry {
@@ -47,12 +48,12 @@ protected:
     virtual void ReserveVertexSpace();
     virtual void LoadMesh(const aiMesh* pMesh, unsigned int meshIdx);
     virtual void GetGlobalInvTrans() {}
-    virtual void UpdateTransform(float timeInSeconds);
+    virtual void UpdateTransform(Shader* shader, float timeInSeconds);
 
     const aiScene* m_pScene;
     Assimp::Importer m_Importer;    // Importerï€éùÇπÇÒÇ©Ç¡ÇΩÇÁÅASceneÇ‡ï€éùÇ≈Ç´Ç»Ç¢!!
 
-    Shader* mShader;
+    //Shader* mShader;
 
     unsigned int mNumVertices;
     unsigned int mNumIndices;
@@ -74,8 +75,6 @@ private:
         Texture* DiffuseTexture;
     };
 
-  
-    void SetMeshTransforms();
 
 
     unsigned int mVertexArray;

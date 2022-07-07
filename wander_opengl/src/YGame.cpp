@@ -459,12 +459,16 @@ bool YGame::LoadShaders()
 	mShadowLightingShaderProgram->SetMatrixUniform("proj", mProjection);
 	mShadowLightingShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
 	// Lighting のVP Mat作成
+	mSpotLight.Direction = glm::vec3(1.0f, 0.0f, -1.0f);
+	mSpotLight.Position = glm::vec3(-5.0f, 35.0f, 2.0f);
+	mSpotLight.Up = glm::vec3(0.0f, 0.0f, 1.0f);
 	{
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
 		glm::mat4 view = glm::lookAt(
-			glm::vec3(-5.0f, 35.0f, 2.0f),
-			glm::vec3(1.0f, 0.0f, -1.0f),
-			glm::vec3(0.0f, 0.0f, 1.0f));
+			mSpotLight.Position,
+			mSpotLight.Direction,
+			mSpotLight.Up
+		);
 		glm::mat4 vp = projection * view;
 		mShadowLightingShaderProgram->SetMatrixUniform("LightVP", vp);
 	}
@@ -531,14 +535,30 @@ bool YGame::LoadData()
 	//	mesh->SetMeshScale(1.0f);
 	//	mMeshes.push_back(mesh);
 	//}
+	//{
+	//	//AssimpMesh* mesh = new AssimpMesh("./resources/TreasureBox2/", "TreasureBox.fbx", mSkinningShaderProgram);
+	//	//MeshSkinningAssimp* mesh = new MeshSkinningAssimp("./resources/TreasureBox3/", "scene.gltf", mSkinningShaderProgram);
+	//	MeshSkinningAssimp* mesh = new MeshSkinningAssimp(mSkinningShaderProgram);
+	//	if (mesh->Load("./resources/TreasureBox3/", "scene.gltf")) {
+	//		mesh->SetMeshPos(glm::vec3(5.0f / 2.0f, 35.0f, 0.0f));
+	//		glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(1.0, 0.0f, 0.0f));
+	//		mesh->SetMeshRotate(rotMat);
+	//		mesh->SetMeshScale(0.01f / 2.0f);
+	//		mTreasureBoxMesh = mesh;
+	//	}
+	//	else {
+	//		mTreasureBoxMesh = NULL;
+	//	}
+	//	//AssimpMesh* mesh = new AssimpMesh("./resources/boblampclean/", "boblampclean.md5mesh", mSkinningShaderProgram);
+	//}
+
 	{
 		//AssimpMesh* mesh = new AssimpMesh("./resources/TreasureBox2/", "TreasureBox.fbx", mSkinningShaderProgram);
 		//MeshSkinningAssimp* mesh = new MeshSkinningAssimp("./resources/TreasureBox3/", "scene.gltf", mSkinningShaderProgram);
-		MeshSkinningAssimp* mesh = new MeshSkinningAssimp(mSkinningShaderProgram);
+		MeshAssimp* mesh = new MeshAssimp(mMeshShaderProgram);
 		if (mesh->Load("./resources/TreasureBox3/", "scene.gltf")) {
 			mesh->SetMeshPos(glm::vec3(5.0f / 2.0f, 35.0f, 0.0f));
-			glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI, glm::vec3(1.0, 0.0f, 0.0f));
-			mesh->SetMeshRotate(rotMat);
+			mesh->SetMeshRotate(glm::mat4(1.0f));
 			mesh->SetMeshScale(0.01f / 2.0f);
 			mTreasureBoxMesh = mesh;
 		}
@@ -606,7 +626,12 @@ bool YGame::LoadData()
 
 
 	// Shadow Mapの読み込み処理
-
+	mTextureShadowMapFBO = new TextureShadowMap();
+	if (!mTextureShadowMapFBO->Load(mWindowWidth, mWindowHeight)) {
+		std::cout << "error: Failed to load shadwo map fbo\n";
+		return false;
+	}
+	mSkinningShaderProgram->SetSamplerUniform("gShadowMap", 0);
 
 	//{
 	//	MeshAssimp* mesh = new MeshAssimp(mMeshShaderProgram);
@@ -1715,6 +1740,30 @@ void YGame::Draw3DUTF(std::u16string text, glm::vec3 pos, glm::vec3 color, float
 
 void YGame::Draw()
 {
+	// Frame Bufferに描画
+	mTextureShadowMapFBO->WriteBind();
+
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	mShadowMapShaderProgram->UseProgram();
+
+	{
+		// Spot LightのView Projectionを設定
+		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
+		glm::mat4 view = glm::lookAt(
+			mSpotLight.Position,
+			mSpotLight.Direction,
+			mSpotLight.Up
+		);
+		glm::mat4 vp = projection * view;
+		mShadowMapShaderProgram->SetMatrixUniform("view", view);
+		mShadowMapShaderProgram->SetMatrixUniform("proj", projection);
+	}
+	mTreasureBoxMesh->Draw(mShadowMapShaderProgram, mTicksCount / 1000.0f);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
 	// Set the clear color to light grey
 	//glClearColor(0.6f, 0.2f, 0.7f, 1.0f);
 	glClearColor(0, 0.5, 0.7, 1.0f);
@@ -1748,17 +1797,37 @@ void YGame::Draw()
 		mMeshShaderProgram->UseProgram();
 		mMeshes[i]->Draw();
 	}
+
+
+	// Shadow Map Render
+	mShadowLightingShaderProgram->UseProgram();
+	mShadowLightingShaderProgram->SetVectorUniform("gEyeWorldPos", mCameraPos);
+	mShadowLightingShaderProgram->SetSamplerUniform("gShadowMap", 1);
+	mTextureShadowMapFBO->BindTexture(GL_TEXTURE1);
+	mShadowLightingShaderProgram->SetMatrixUniform("view", CameraView);
+	{
+		// Spot LightのView Projectionを設定
+		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
+		glm::mat4 view = glm::lookAt(
+			mSpotLight.Position,
+			mSpotLight.Direction,
+			mSpotLight.Up
+		);
+		glm::mat4 vp = projection * view;
+		mShadowLightingShaderProgram->SetMatrixUniform("LightVP", vp);
+	}
+
 	// Draw Assimp Meshes
 	for (auto terrain : mTerrains) {
-		terrain->Draw(mTicksCount / 1000.0f);
+		terrain->Draw(mMeshShaderProgram, mTicksCount / 1000.0f);
 	}
+	mTreasureBoxMesh->Draw(mMeshShaderProgram, mTicksCount / 1000.0f);
 
 	// FBXのSkinning Animation
 	mSkinningShaderProgram->UseProgram();
 	mSkinningShaderProgram->SetVectorUniform("uCameraPos", mCameraPos);
 	mSkinningShaderProgram->SetMatrixUniform("view", CameraView);
-	mTreasureBoxMesh->Draw(mTicksCount / 1000.0f);
-	mBoblampclean->Draw(mTicksCount / 1000.0f);
+	mBoblampclean->Draw(mSkinningShaderProgram, mTicksCount / 1000.0f);
 
 
 	//glBindVertexArray(mCubeVertexArray);

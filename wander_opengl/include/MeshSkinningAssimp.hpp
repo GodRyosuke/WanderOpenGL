@@ -55,7 +55,7 @@ private:
 
 
     // 時刻が変化するにしたがってBoneの行列を更新する
-    void UpdateBoneTransform(float TimeInSeconds);
+    void UpdateBoneTransform(Shader* shader, float TimeInSeconds);
     // 時刻TimeInSecondsにおける各ボーンのTransformを求める
     void GetBoneTransform(float TimeInSeconds, std::vector<glm::mat4>& Transforms);
     // Nodeの階層構造を読みだす
@@ -65,7 +65,7 @@ private:
     void CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim);
     void CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim);
 
-    virtual void UpdateTransform(float timeInSeconds) override;
+    virtual void UpdateTransform(Shader* shader, float timeInSeconds) override;
 
 
 

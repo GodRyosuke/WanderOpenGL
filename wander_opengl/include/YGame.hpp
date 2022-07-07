@@ -15,6 +15,7 @@
 #include "gtx/rotate_vector.hpp"
 #include "gtx/vector_angle.hpp"
 #include "Texture.hpp"
+#include "TextureShadowMap.hpp"
 #include "json.hpp"
 #include "ft2build.h"
 #include "Shader.hpp"
@@ -100,6 +101,13 @@ private:
 	};
 	DirectionalLight mDirectionalLight;
 
+	struct SpotLight {
+		glm::vec3 Position;
+		glm::vec3 Direction;
+		glm::vec3 Up;
+	};
+	SpotLight mSpotLight;
+
 	// cube object
 	// transforms
 	glm::mat4 mCubeWorldTrans;
@@ -112,7 +120,8 @@ private:
 
 	// Mesh Vertices
 	std::vector<Mesh*> mMeshes;
-	MeshSkinningAssimp* mTreasureBoxMesh;
+	MeshSkinningAssimp* mTreasureBoxSkinningMesh;
+	MeshAssimp* mTreasureBoxMesh;
 	MeshSkinningAssimp* mBoblampclean;
 	std::vector<MeshAssimp*> mTerrains;
 	Mesh* mSphareMesh;
@@ -127,6 +136,9 @@ private:
 	Texture* mTestTexture;
 	Texture* mHouseWallTexture;
 	Texture* mSkyBoxTexture;
+	// Shadow Map Frame Buffer
+	TextureShadowMap* mTextureShadowMapFBO;
+
 
 	int test_w;
 	int test_h;

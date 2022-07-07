@@ -281,7 +281,7 @@ void MeshSkinningAssimp::GetBoneTransform(float TimeInSeconds, std::vector<glm::
     }
 }
 
-void MeshSkinningAssimp::UpdateBoneTransform(float TimeInSeconds)
+void MeshSkinningAssimp::UpdateBoneTransform(Shader* shader, float TimeInSeconds)
 {
     // Œ»ÝŽž‚ÌBone Transform‚ðŽæ“¾
     std::vector<glm::mat4> BoneMatrixPalete;
@@ -290,13 +290,13 @@ void MeshSkinningAssimp::UpdateBoneTransform(float TimeInSeconds)
     // Shader‚É“n‚·
     for (int i = 0; i < BoneMatrixPalete.size(); i++) {
         std::string uniformName = "uMatrixPalette[" + std::to_string(i) + ']';
-        mShader->SetMatrixUniform(uniformName, BoneMatrixPalete[i]);
+        shader->SetMatrixUniform(uniformName, BoneMatrixPalete[i]);
     }
 }
 
-void MeshSkinningAssimp::UpdateTransform(float timeInSeconds)
+void MeshSkinningAssimp::UpdateTransform(Shader* shader, float timeInSeconds)
 {
-	MeshAssimp::UpdateTransform(timeInSeconds);
-	UpdateBoneTransform(timeInSeconds);
+	MeshAssimp::UpdateTransform(shader, timeInSeconds);
+	UpdateBoneTransform(shader, timeInSeconds);
 }
 

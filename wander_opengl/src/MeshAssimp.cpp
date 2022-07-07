@@ -14,7 +14,6 @@
 //}
 
 MeshAssimp::MeshAssimp(Shader* shader)
-    :mShader(shader)
 {
 
 }
@@ -135,7 +134,7 @@ bool MeshAssimp::Load(std::string RootPath, std::string ObjFileName)
     // Vertex Array Objectì¬
     unsigned int VertexArray;
 
-    mShader->UseProgram();
+    //mShader->UseProgram();
     glGenVertexArrays(1, &VertexArray);
     glBindVertexArray(VertexArray);
 
@@ -235,35 +234,33 @@ void MeshAssimp::PopulateBuffers()
 }
 
 
-void MeshAssimp::SetMeshTransforms()
+
+void MeshAssimp::UpdateTransform(Shader* shader, float timeInSeconds)
 {
     glm::mat4 ScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(mMeshScale, mMeshScale, mMeshScale));
     glm::mat4 TranslateMat = glm::translate(glm::mat4(1.0f), mMeshPos);
     glm::mat4 TransformMat = TranslateMat * mMeshRotate * ScaleMat;
 
-    mShader->SetMatrixUniform("model", TransformMat);
+    shader->SetMatrixUniform("model", TransformMat);
 }
 
-void MeshAssimp::UpdateTransform(float timeInSeconds)
+void MeshAssimp::Draw(Shader* shader, float timeInSeconds)
 {
-    SetMeshTransforms();
-}
+    shader->UseProgram();
+    UpdateTransform(shader, timeInSeconds);
 
-void MeshAssimp::Draw(float timeInSeconds)
-{
-    mShader->UseProgram();
-    UpdateTransform(timeInSeconds);
+
     glBindVertexArray(mVertexArray);
 
     for (unsigned int i = 0; i < m_Meshes.size(); i++) {
         unsigned int MaterialIndex = m_Meshes[i].MaterialIndex;
         assert(MaterialIndex < m_Materials.size());
 
-        mShader->SetVectorUniform("uAmbientLight", m_Materials[MaterialIndex].AmbientColor);
-        mShader->SetVectorUniform("uDirLight.mDirection", glm::vec3(0, -0.707, -0.707));
-        mShader->SetVectorUniform("uDirLight.mDiffuseColor", m_Materials[MaterialIndex].DiffuseColor);
-        mShader->SetVectorUniform("uDirLight.mSpecColor", m_Materials[MaterialIndex].SpecColor);
-        mShader->SetFloatUniform("uSpecPower", 0.3f);
+        shader->SetVectorUniform("uAmbientLight", m_Materials[MaterialIndex].AmbientColor);
+        shader->SetVectorUniform("uDirLight.mDirection", glm::vec3(0, -0.707, -0.707));
+        shader->SetVectorUniform("uDirLight.mDiffuseColor", m_Materials[MaterialIndex].DiffuseColor);
+        shader->SetVectorUniform("uDirLight.mSpecColor", m_Materials[MaterialIndex].SpecColor);
+        shader->SetFloatUniform("uSpecPower", 0.3f);
 
         if (m_Materials[MaterialIndex].DiffuseTexture) {
             m_Materials[MaterialIndex].DiffuseTexture->BindTexture();
@@ -295,4 +292,12 @@ void MeshAssimp::Draw(float timeInSeconds)
     }
 
     glBindVertexArray(0);
+}
+
+glm::mat4 MeshAssimp::GetWorldMat()
+{
+    glm::mat4 ScaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(mMeshScale, mMeshScale, mMeshScale));
+    glm::mat4 TranslateMat = glm::translate(glm::mat4(1.0f), mMeshPos);
+    glm::mat4 TransformMat = TranslateMat * mMeshRotate * ScaleMat;
+    return TransformMat;
 }
