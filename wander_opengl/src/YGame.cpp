@@ -445,6 +445,29 @@ bool YGame::LoadShaders()
 	mShadowMapShaderProgram->SetMatrixUniform("proj", mProjection);
 	mShadowMapShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
 
+	// Shadow Map Lighting Shader読み込み
+	{
+		std::string vert_file = "./Shaders/ShadowLighting.vert";
+		std::string frag_file = "./Shaders/ShadowLighting.frag";
+		mShadowLightingShaderProgram = new Shader();
+		if (!mShadowLightingShaderProgram->CreateShaderProgram(vert_file, frag_file)) {
+			return false;
+		}
+	}
+	mShadowLightingShaderProgram->UseProgram();
+	mShadowLightingShaderProgram->SetMatrixUniform("view", view2);
+	mShadowLightingShaderProgram->SetMatrixUniform("proj", mProjection);
+	mShadowLightingShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
+	// Lighting のVP Mat作成
+	{
+		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
+		glm::mat4 view = glm::lookAt(
+			glm::vec3(-5.0f, 35.0f, 2.0f),
+			glm::vec3(1.0f, 0.0f, -1.0f),
+			glm::vec3(0.0f, 0.0f, 1.0f));
+		glm::mat4 vp = projection * view;
+		mShadowLightingShaderProgram->SetMatrixUniform("LightVP", vp);
+	}
 	
 	return true;
 }
@@ -580,6 +603,9 @@ bool YGame::LoadData()
 			mTerrains.push_back(mesh);
 		}
 	}
+
+
+	// Shadow Mapの読み込み処理
 
 
 	//{
