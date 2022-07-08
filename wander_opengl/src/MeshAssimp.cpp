@@ -263,7 +263,7 @@ void MeshAssimp::Draw(Shader* shader, float timeInSeconds)
         shader->SetFloatUniform("uSpecPower", 0.3f);
 
         if (m_Materials[MaterialIndex].DiffuseTexture) {
-            m_Materials[MaterialIndex].DiffuseTexture->BindTexture();
+            m_Materials[MaterialIndex].DiffuseTexture->BindTexture(GL_TEXTURE0);
         }
 
         //if (m_Materials[MaterialIndex].pSpecularExponent) {

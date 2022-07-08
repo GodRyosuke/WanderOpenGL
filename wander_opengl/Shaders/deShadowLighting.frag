@@ -128,40 +128,17 @@ vec4 CalcSpotLight(SpotLight l, vec3 Normal, vec4 LightSpacePos)
 }                                                                                           
                                                                                             
 void main()                                                                                 
-{           
-	// Surface normal
-	// vec3 N = normalize(Normal0);
-	// // Vector from surface to light
-	// vec3 L = normalize(-gSpotLights[0].Direction);
-	// // Vector from surface to camera
-	// vec3 V = normalize(gEyeWorldPos - WorldPos0);
-	// // Reflection of -L about N
-	// vec3 R = normalize(reflect(-L, N));
-    // 
-	// // Compute phong reflection
-	// vec3 Phong = gSpotLights[0].Base.Base.Color;
-	// float NdotL = dot(N, L);
-	// if (NdotL > 0)
-	// {
-	// 	vec3 Diffuse = vec3(0.8f, 0.8f, 0.8f) * NdotL;
-	// 	vec3 Specular = vec3(0.8f, 0.8f, 0.8f) * pow(max(0.0, dot(R, V)), 323.0f);
-	// 	Phong += Diffuse + Specular;
-	// }
-    // 
-	// // FragColor = texture(tex0, texCoord);
-	// FragColor = texture(gSampler, TexCoord0) * vec4(Phong, 1.0f);
-
-    // -------------------------------
+{                                                                                           
     vec3 Normal = normalize(Normal0);                                                       
     vec4 TotalLight = CalcDirectionalLight(Normal);                                         
                                                                                             
-    // for (int i = 0 ; i < gNumPointLights ; i++) {                                           
-    //     TotalLight += CalcPointLight(gPointLights[i], Normal, LightSpacePos);               
-    // }                                                                                       
-    //                                                                                         
-    // for (int i = 0 ; i < gNumSpotLights ; i++) {                                            
-    //     TotalLight += CalcSpotLight(gSpotLights[i], Normal, LightSpacePos);                 
-    // }                                                                                       
+    for (int i = 0 ; i < gNumPointLights ; i++) {                                           
+        TotalLight += CalcPointLight(gPointLights[i], Normal, LightSpacePos);               
+    }                                                                                       
+                                                                                            
+    for (int i = 0 ; i < gNumSpotLights ; i++) {                                            
+        TotalLight += CalcSpotLight(gSpotLights[i], Normal, LightSpacePos);                 
+    }                                                                                       
                                                                                             
     vec4 SampledColor = texture2D(gSampler, TexCoord0.xy);                                  
     FragColor = SampledColor * TotalLight;                                                  

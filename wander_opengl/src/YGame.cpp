@@ -463,7 +463,7 @@ bool YGame::LoadShaders()
 	mSpotLight.Position = glm::vec3(-5.0f, 35.0f, 2.0f);
 	mSpotLight.Up = glm::vec3(0.0f, 0.0f, 1.0f);
 	{
-		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
+		glm::mat4 projection = glm::perspective(glm::radians(20.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
 		glm::mat4 view = glm::lookAt(
 			mSpotLight.Position,
 			mSpotLight.Direction,
@@ -586,20 +586,26 @@ bool YGame::LoadData()
 	}
 
 	// レンガの床追加
-	for (int i = 0; i <= 4; i++) {
-		for (int j = 0; j <= 0; j++) {
-			MeshAssimp* mesh = new MeshAssimp(mMeshShaderProgram);
-			if (mesh->Load("./resources/brickTerrain/", "brickTerrain.fbx")) {
-				mesh->SetMeshPos(glm::vec3((i - 2) * 2, 35.0f, 0.0f));
-				//glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-				glm::mat4 rotMat = glm::mat4(1.0f);
-				mesh->SetMeshRotate(rotMat);
-				mesh->SetMeshScale(1.0f);
-				mTerrains.push_back(mesh);
+	{
+		const int maxI = 4;
+		const int maxJ = 0;
+		for (int i = 0; i <= maxI; i++) {
+			for (int j = 0; j <= maxJ; j++) {
+				MeshAssimp* mesh = new MeshAssimp(mMeshShaderProgram);
+				if (mesh->Load("./resources/brickTerrain/", "brickTerrain.fbx")) {
+					mesh->SetMeshPos(glm::vec3((i - maxI/2) * 2, (j - maxJ/2) * 2 + 35.0f, 0.0f));
+					//glm::mat4 rotMat = glm::rotate(glm::mat4(1.0f), (float)M_PI / 2.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+					glm::mat4 rotMat = glm::mat4(1.0f);
+					mesh->SetMeshRotate(rotMat);
+					mesh->SetMeshScale(1.0f);
+					mTerrains.push_back(mesh);
+
+					std::cout << "process: " << j + i * maxJ << std::endl;
+				}
 			}
 		}
-	}
 
+	}
 	// コンクリートの壁追加
 	{
 		MeshAssimp* mesh = new MeshAssimp(mMeshShaderProgram);
@@ -1749,7 +1755,7 @@ void YGame::Draw()
 
 	{
 		// Spot LightのView Projectionを設定
-		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
+		glm::mat4 projection = glm::perspective(glm::radians(20.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
 		glm::mat4 view = glm::lookAt(
 			mSpotLight.Position,
 			mSpotLight.Direction,
@@ -1803,11 +1809,13 @@ void YGame::Draw()
 	mShadowLightingShaderProgram->UseProgram();
 	mShadowLightingShaderProgram->SetVectorUniform("gEyeWorldPos", mCameraPos);
 	mShadowLightingShaderProgram->SetSamplerUniform("gShadowMap", 1);
+	mShadowLightingShaderProgram->SetSamplerUniform("gSampler", 0);
 	mTextureShadowMapFBO->BindTexture(GL_TEXTURE1);
 	mShadowLightingShaderProgram->SetMatrixUniform("view", CameraView);
+	mShadowLightingShaderProgram->SetSamplerUniform("gNumSpotLights", 1);
 	{
 		// Spot LightのView Projectionを設定
-		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
+		glm::mat4 projection = glm::perspective(glm::radians(20.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
 		glm::mat4 view = glm::lookAt(
 			mSpotLight.Position,
 			mSpotLight.Direction,
@@ -1816,12 +1824,34 @@ void YGame::Draw()
 		glm::mat4 vp = projection * view;
 		mShadowLightingShaderProgram->SetMatrixUniform("LightVP", vp);
 	}
+	// Lightingの設定
+
+	for (int i = 0; i < 1; i++) {
+		std::string uniformName;
+		std::string pD = std::to_string(i);
+		uniformName = "gSpotLights[" + pD + "].Base.Base.Color";
+		mShadowLightingShaderProgram->SetVectorUniform(uniformName, glm::vec3(1.0f, 1.0f, 1.0f));
+		uniformName = "gSpotLights[" + pD + "].Base.Base.AmbientIntensity";
+		mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.1f);
+		uniformName = "gSpotLights[" + pD + "].Base.Position";
+		mShadowLightingShaderProgram->SetVectorUniform(uniformName, mSpotLight.Position);
+		uniformName = "gSpotLights[" + pD + "].Direction";
+		mShadowLightingShaderProgram->SetVectorUniform(uniformName, mSpotLight.Direction);
+		uniformName = "gSpotLights[" + pD + "].Cutoff";
+		mShadowLightingShaderProgram->SetFloatUniform(uniformName, 20.0f);
+		uniformName = "gSpotLights[" + pD + "].Base.Base.DiffuseIntensity";
+		mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.9f);
+		uniformName = "gSpotLights[" + pD + "].Base.Atten.Constant";
+		uniformName = "gSpotLights[" + pD + "].Base.Atten.Linear";
+		mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.01f);
+		uniformName = "gSpotLights[" + pD + "].Base.Atten.Exp";
+	}
 
 	// Draw Assimp Meshes
 	for (auto terrain : mTerrains) {
-		terrain->Draw(mMeshShaderProgram, mTicksCount / 1000.0f);
+		terrain->Draw(mShadowLightingShaderProgram, mTicksCount / 1000.0f);
 	}
-	mTreasureBoxMesh->Draw(mMeshShaderProgram, mTicksCount / 1000.0f);
+	mTreasureBoxMesh->Draw(mShadowLightingShaderProgram, mTicksCount / 1000.0f);
 
 	// FBXのSkinning Animation
 	mSkinningShaderProgram->UseProgram();

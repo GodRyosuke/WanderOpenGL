@@ -209,7 +209,7 @@ XCOPY "$(SolutionDir)dependencies\assimp\lib\Release\*.dll" "$(OutDir)" /e /y</C
     <None Include="Shaders\FBXPhong.frag" />
     <None Include="Shaders\Phong.frag" />
     <None Include="Shaders\Phong.vert" />
-    <None Include="Shaders\ShadowLighting.frag">
+    <None Include="Shaders\deShadowLighting.frag">
       <FileType>Document</FileType>
     </None>
     <None Include="Shaders\ShadowLighting.vert" />
@@ -223,6 +223,7 @@ XCOPY "$(SolutionDir)dependencies\assimp\lib\Release\*.dll" "$(OutDir)" /e /y</C
     <None Include="Shaders\Text.vert" />
     <None Include="Shaders\YPhong.frag" />
     <None Include="Shaders\YPhong.vert" />
+    <None Include="Shaders\ShadowLighting.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

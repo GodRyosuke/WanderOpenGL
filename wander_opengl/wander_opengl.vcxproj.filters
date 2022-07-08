@@ -95,6 +95,7 @@
     <None Include="Shaders\Skinning.vert" />
     <None Include="Shaders\ShadowMap.frag" />
     <None Include="Shaders\ShadowLighting.vert" />
+    <None Include="Shaders\deShadowLighting.frag" />
     <None Include="Shaders\ShadowLighting.frag" />
   </ItemGroup>
 </Project>
