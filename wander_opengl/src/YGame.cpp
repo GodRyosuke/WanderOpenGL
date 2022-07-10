@@ -441,8 +441,8 @@ bool YGame::LoadShaders()
 		}
 	}
 	mShadowMapShaderProgram->UseProgram();
-	mShadowMapShaderProgram->SetMatrixUniform("view", view2);
-	mShadowMapShaderProgram->SetMatrixUniform("proj", mProjection);
+	//mShadowMapShaderProgram->SetMatrixUniform("view", view2);
+	//mShadowMapShaderProgram->SetMatrixUniform("proj", mProjection);
 	mShadowMapShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
 
 	// Shadow Map Lighting Shader読み込み
@@ -459,8 +459,8 @@ bool YGame::LoadShaders()
 	mShadowLightingShaderProgram->SetMatrixUniform("proj", mProjection);
 	mShadowLightingShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
 	// Lighting のVP Mat作成
-	mSpotLight.Direction = glm::vec3(1.0f, 0.0f, 0.0f);
-	mSpotLight.Position = glm::vec3(-10.0f, 35.0f, 1.0f);
+	mSpotLight.Direction = glm::vec3(1.0f, 0.0f, -1.0f);
+	mSpotLight.Position = glm::vec3(-5.0f, 35.0f, 1.0f);
 	mSpotLight.Up = glm::vec3(0.0f, 0.0f, 1.0f);
 	{
 		glm::mat4 projection = glm::perspective(glm::radians(20.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
@@ -470,8 +470,13 @@ bool YGame::LoadShaders()
 			mSpotLight.Up
 		);
 		glm::mat4 vp = projection * view;
+		mShadowLightingShaderProgram->UseProgram();
 		mShadowLightingShaderProgram->SetMatrixUniform("LightVP", vp);
+		mSkinningShaderProgram->UseProgram();
 		mSkinningShaderProgram->SetMatrixUniform("LightVP", vp);
+		mShadowMapShaderProgram->UseProgram();
+		mShadowMapShaderProgram->SetMatrixUniform("view", view);
+		mShadowMapShaderProgram->SetMatrixUniform("proj", projection);
 	}
 	
 	return true;
@@ -1839,7 +1844,7 @@ void YGame::Draw()
 			uniformName = "gSpotLights[" + pD + "].Base.Base.Color";
 			shader->SetVectorUniform(uniformName, glm::vec3(1.0f, 1.0f, 1.0f));
 			uniformName = "gSpotLights[" + pD + "].Base.Base.AmbientIntensity";
-			shader->SetFloatUniform(uniformName, 0.01f);
+			shader->SetFloatUniform(uniformName, 0.1f);
 			uniformName = "gSpotLights[" + pD + "].Base.Position";
 			shader->SetVectorUniform(uniformName, mSpotLight.Position);
 			uniformName = "gSpotLights[" + pD + "].Direction";
@@ -1847,7 +1852,7 @@ void YGame::Draw()
 			uniformName = "gSpotLights[" + pD + "].Cutoff";
 			shader->SetFloatUniform(uniformName, cosf(20.0f * M_PI / 180.0f));
 			uniformName = "gSpotLights[" + pD + "].Base.Base.DiffuseIntensity";
-			shader->SetFloatUniform(uniformName, 0.05f);
+			shader->SetFloatUniform(uniformName, 0.5f);
 			uniformName = "gSpotLights[" + pD + "].Base.Atten.Constant";
 			uniformName = "gSpotLights[" + pD + "].Base.Atten.Linear";
 			shader->SetFloatUniform(uniformName, 0.01f);
@@ -1855,46 +1860,46 @@ void YGame::Draw()
 		}
 	}
 
-	//mShadowLightingShaderProgram->UseProgram();
-	//mShadowLightingShaderProgram->SetVectorUniform("gEyeWorldPos", mCameraPos);
-	//mShadowLightingShaderProgram->SetSamplerUniform("gShadowMap", 1);
-	//mShadowLightingShaderProgram->SetSamplerUniform("gSampler", 0);
-	//mTextureShadowMapFBO->BindTexture(GL_TEXTURE1);
-	//mShadowLightingShaderProgram->SetMatrixUniform("view", CameraView);
-	//mShadowLightingShaderProgram->SetSamplerUniform("gNumSpotLights", 1);
-	//{
-	//	// Spot LightのView Projectionを設定
-	//	glm::mat4 projection = glm::perspective(glm::radians(20.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
-	//	glm::mat4 view = glm::lookAt(
-	//		mSpotLight.Position,
-	//		mSpotLight.Direction,
-	//		mSpotLight.Up
-	//	);
-	//	glm::mat4 vp = projection * view;
-	//	mShadowLightingShaderProgram->SetMatrixUniform("LightVP", vp);
-	//}
-	//// Lightingの設定
+	mShadowLightingShaderProgram->UseProgram();
+	mShadowLightingShaderProgram->SetVectorUniform("gEyeWorldPos", mCameraPos);
+	mShadowLightingShaderProgram->SetSamplerUniform("gShadowMap", 1);
+	mShadowLightingShaderProgram->SetSamplerUniform("gSampler", 0);
+	mTextureShadowMapFBO->BindTexture(GL_TEXTURE1);
+	mShadowLightingShaderProgram->SetMatrixUniform("view", CameraView);
+	mShadowLightingShaderProgram->SetSamplerUniform("gNumSpotLights", 1);
+	{
+		// Spot LightのView Projectionを設定
+		glm::mat4 projection = glm::perspective(glm::radians(20.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
+		glm::mat4 view = glm::lookAt(
+			mSpotLight.Position,
+			mSpotLight.Direction,
+			mSpotLight.Up
+		);
+		glm::mat4 vp = projection * view;
+		mShadowLightingShaderProgram->SetMatrixUniform("LightVP", vp);
+	}
+	// Lightingの設定
 
-	//for (int i = 0; i < 1; i++) {
-	//	std::string uniformName;
-	//	std::string pD = std::to_string(i);
-	//	uniformName = "gSpotLights[" + pD + "].Base.Base.Color";
-	//	mShadowLightingShaderProgram->SetVectorUniform(uniformName, glm::vec3(1.0f, 1.0f, 1.0f));
-	//	uniformName = "gSpotLights[" + pD + "].Base.Base.AmbientIntensity";
-	//	mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.01f);
-	//	uniformName = "gSpotLights[" + pD + "].Base.Position";
-	//	mShadowLightingShaderProgram->SetVectorUniform(uniformName, mSpotLight.Position);
-	//	uniformName = "gSpotLights[" + pD + "].Direction";
-	//	mShadowLightingShaderProgram->SetVectorUniform(uniformName, mSpotLight.Direction);
-	//	uniformName = "gSpotLights[" + pD + "].Cutoff";
-	//	mShadowLightingShaderProgram->SetFloatUniform(uniformName, cosf(20.0f * M_PI / 180.0f));
-	//	uniformName = "gSpotLights[" + pD + "].Base.Base.DiffuseIntensity";
-	//	mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.05f);
-	//	uniformName = "gSpotLights[" + pD + "].Base.Atten.Constant";
-	//	uniformName = "gSpotLights[" + pD + "].Base.Atten.Linear";
-	//	mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.01f);
-	//	uniformName = "gSpotLights[" + pD + "].Base.Atten.Exp";
-	//}
+	for (int i = 0; i < 1; i++) {
+		std::string uniformName;
+		std::string pD = std::to_string(i);
+		uniformName = "gSpotLights[" + pD + "].Base.Base.Color";
+		mShadowLightingShaderProgram->SetVectorUniform(uniformName, glm::vec3(1.0f, 1.0f, 1.0f));
+		uniformName = "gSpotLights[" + pD + "].Base.Base.AmbientIntensity";
+		mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.01f);
+		uniformName = "gSpotLights[" + pD + "].Base.Position";
+		mShadowLightingShaderProgram->SetVectorUniform(uniformName, mSpotLight.Position);
+		uniformName = "gSpotLights[" + pD + "].Direction";
+		mShadowLightingShaderProgram->SetVectorUniform(uniformName, mSpotLight.Direction);
+		uniformName = "gSpotLights[" + pD + "].Cutoff";
+		mShadowLightingShaderProgram->SetFloatUniform(uniformName, cosf(glm::radians(20.0f)));
+		uniformName = "gSpotLights[" + pD + "].Base.Base.DiffuseIntensity";
+		mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.05f);
+		uniformName = "gSpotLights[" + pD + "].Base.Atten.Constant";
+		uniformName = "gSpotLights[" + pD + "].Base.Atten.Linear";
+		mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.01f);
+		uniformName = "gSpotLights[" + pD + "].Base.Atten.Exp";
+	}
 	//for (int i = 0; i < 1; i++) {
 	//	std::string uniformName;
 	//	std::string pD = std::to_string(i);
@@ -1916,20 +1921,22 @@ void YGame::Draw()
 	//	uniformName = "gSpotLights[" + pD + "].Base.Atten.Exp";
 	//}
 
-	//{
-	//	std::string uniformName;
-	//	uniformName = "gDirectionalLight.Base.Color";
-	//	mShadowLightingShaderProgram->SetVectorUniform(uniformName, glm::vec3(1.0f, 1.0f, 1.0f));
-	//	uniformName = "gDirectionalLight.Base.AmbientIntensity";
-	//	mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.1f);
-	//	uniformName = "gDirectionalLight.Base.DiffuseIntensity";
-	//	mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.9f);
-	//	uniformName = "gDirectionalLight.Direction";
-	//	mShadowLightingShaderProgram->SetVectorUniform(uniformName, mSpotLight.Direction);
-	//}
+	{
+		mShadowLightingShaderProgram->UseProgram();
+		std::string uniformName;
+		uniformName = "gDirectionalLight.Base.Color";
+		mShadowLightingShaderProgram->SetVectorUniform(uniformName, glm::vec3(1.0f, 1.0f, 1.0f));
+		uniformName = "gDirectionalLight.Base.AmbientIntensity";
+		mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.1f);
+		uniformName = "gDirectionalLight.Base.DiffuseIntensity";
+		mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.9f);
+		uniformName = "gDirectionalLight.Direction";
+		mShadowLightingShaderProgram->SetVectorUniform(uniformName, mSpotLight.Direction);
+	}
 
 	// Draw Assimp Meshes
 	mShadowLightingShaderProgram->UseProgram();
+	mTextureShadowMapFBO->BindTexture(GL_TEXTURE1);
 	for (auto terrain : mTerrains) {
 		terrain->Draw(mShadowLightingShaderProgram, mTicksCount / 1000.0f);
 	}
@@ -1937,6 +1944,7 @@ void YGame::Draw()
 
 	// FBXのSkinning Animation
 	mSkinningShaderProgram->UseProgram();
+	mTextureShadowMapFBO->BindTexture(GL_TEXTURE1);
 	mSkinningShaderProgram->SetVectorUniform("uCameraPos", mCameraPos);
 	mSkinningShaderProgram->SetMatrixUniform("view", CameraView);
 	mBoblampclean->Draw(mSkinningShaderProgram, mTicksCount / 1000.0f);
