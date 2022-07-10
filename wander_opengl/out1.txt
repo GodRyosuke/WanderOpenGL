@@ -1,20 +1,53 @@
-458	0.001000
-474	0.002000
-555	0.003000
-570	0.004000
-586	0.005000
-602	0.006000
-618	0.007000
-634	0.008000
-650	0.009000
-666	0.010000
-682	0.011000
-698	0.012000
-714	0.013000
-730	0.014000
-746	0.015000
-762	0.016000
-778	0.017000
+COPY "$(SolutionDir)dependencies\SDL2\lib\x64\SDL2.dll" "$(OutDir)"  
+COPY "$(SolutionDir)dependencies\SDL2\lib\x64\SDL2_image.dll" "$(OutDir)"  
+COPY "$(SolutionDir)dependencies\SDL2\lib\x64\libjpeg-9.dll" "$(OutDir)"  
+COPY "$(SolutionDir)dependencies\SDL2\lib\x64\libpng16-16.dll" "$(OutDir)"  
+COPY "$(SolutionDir)dependencies\SDL2\lib\x64\libtiff-5.dll" "$(OutDir)"  
+COPY "$(SolutionDir)dependencies\SDL2\lib\x64\libwebp-7.dll" "$(OutDir)"
+COPY "$(SolutionDir)dependencies\SDL2\lib\x64\zlib1.dll" "$(OutDir)"
+COPY "$(SolutionDir)dependencies\SDL2\lib\x64\SDL2_ttf.dll" "$(OutDir)"
+COPY "$(SolutionDir)dependencies\fmod\lib\fmod.dll" "$(OutDir)"
+COPY "$(SolutionDir)dependencies\fmod\lib\fmodstudio.dll" "$(OutDir)"
+COPY "$(SolutionDir)dependencies\glew\lib\glew32.dll" "$(OutDir)"
+COPY "$(SolutionDir)dependencies\freetype\lib\freetype.dll" "$(OutDir)"
+COPY "$(SolutionDir)wander_opengl\Shaders" "$(OutDir)"
+XCOPY "$(SolutionDir)dependencies\fbxsdk\lib\debug\*.dll" "$(OutDir)" /e /y
+XCOPY "$(SolutionDir)dependencies\assimp\lib\Debug\*.dll" "$(OutDir)" /e /y
+
+
+
+XCOPY "$(SolutionDir)dependencies\assimp\lib\Debug\*.dll" "$(OutDir)" /e /y
+
+// STAR WARS
+XCOPY "$(SolutionDir)dependencies\SDL2\lib\x64\*.dll" "$(OutDir)" /e /y  
+XCOPY "$(SolutionDir)dependencies\fmod\lib\*.dll" "$(OutDir)" /e /y
+XCOPY "$(SolutionDir)dependencies\glew\lib\*.dll" "$(OutDir)" /e /y
+XCOPY "$(SolutionDir)dependencies\freetype\lib\freetype.dll" "$(OutDir)" /e /y
+
+set OUTPUT_DIRECTORY="$(OutDir)Shaders"
+if not exist %OUTPUT_DIRECTORY% mkdir %OUTPUT_DIRECTORY%
+XCOPY "$(SolutionDir)StarWarsOP\Shaders" %OUTPUT_DIRECTORY% /e /y
+
+set OUTPUT_DIRECTORY="$(OutDir)resources"
+if not exist %OUTPUT_DIRECTORY% mkdir %OUTPUT_DIRECTORY%
+XCOPY "$(SolutionDir)StarWarsOP\resources" %OUTPUT_DIRECTORY% /e /y
+
+// Unity Chan
+XCOPY "$(SolutionDir)dependencies\SDL2\lib\x64\*.dll" "$(OutDir)" /e /y  
+XCOPY "$(SolutionDir)dependencies\fmod\lib\*.dll" "$(OutDir)" /e /y
+XCOPY "$(SolutionDir)dependencies\glew\lib\*.dll" "$(OutDir)" /e /y
+
+set OUTPUT_DIRECTORY="$(OutDir)shaders"
+if not exist %OUTPUT_DIRECTORY% mkdir %OUTPUT_DIRECTORY%
+XCOPY "$(SolutionDir)WanderUnityChan\shaders" %OUTPUT_DIRECTORY% /e /y
+
+set OUTPUT_DIRECTORY="$(OutDir)resources"
+if not exist %OUTPUT_DIRECTORY% mkdir %OUTPUT_DIRECTORY%
+XCOPY "$(SolutionDir)WanderUnityChan\resources" %OUTPUT_DIRECTORY% /e /y
+
+
+
+
 794	0.018000
 810	0.019000
 826	0.020000
