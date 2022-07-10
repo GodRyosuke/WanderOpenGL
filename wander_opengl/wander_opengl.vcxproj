@@ -214,6 +214,7 @@ XCOPY "$(SolutionDir)dependencies\assimp\lib\Release\*.dll" "$(OutDir)" /e /y</C
     </None>
     <None Include="Shaders\ShadowLighting.vert" />
     <None Include="Shaders\ShadowMap.frag" />
+    <None Include="Shaders\ShadowSkinning.vert" />
     <None Include="Shaders\Skinning.vert" />
     <None Include="Shaders\SkyBox.frag" />
     <None Include="Shaders\SkyBox.vert" />
