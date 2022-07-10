@@ -106,12 +106,23 @@ vec4 CalcPointLight(PointLight l, vec3 Normal, vec4 LightSpacePos)
     LightDirection = normalize(LightDirection);                                             
     float ShadowFactor = CalcShadowFactor(LightSpacePos);                                   
     
-    // ShadowFactor = 1.0f;
-    vec4 Color = CalcLightInternal(l.Base, LightDirection, Normal, ShadowFactor);           
+    ShadowFactor = 1.0f;
+// struct BaseLight                                                                    
+// {                                                                                   
+//     vec3 Color;                                                                     
+//     float AmbientIntensity;                                                         
+//     float DiffuseIntensity;                                                         
+// }; 
+
+    BaseLight Base;
+    Base.Color = vec3(1.0f, 1.0f, 1.0f);
+    Base.AmbientIntensity = 0.1f;
+    Base.DiffuseIntensity = 0.9f;
+    vec4 Color = CalcLightInternal(Base, vec3(1.0f, 0.0f, -1.0f), Normal, ShadowFactor);           
     float AttenuationFactor =  l.Atten.Constant +                                                 
                          l.Atten.Linear * Distance +                                        
                          l.Atten.Exp * Distance * Distance;                                 
-    // return Color;
+    return Color;
     return Color / AttenuationFactor;                                                             
 }                                                                                           
                                                                                             
@@ -119,7 +130,12 @@ vec4 CalcSpotLight(SpotLight l, vec3 Normal, vec4 LightSpacePos)
 {                                                                                           
     vec3 LightToPixel = normalize(WorldPos0 - l.Base.Position);                             
     float SpotFactor = dot(LightToPixel, l.Direction);                                      
-                                                                                            
+
+    vec4 Color = CalcPointLight(l.Base, Normal, LightSpacePos);       
+    return Color;
+    return Color * (1.0 - (1.0 - SpotFactor) * 1.0/(1.0 - l.Cutoff));                   
+    
+                                                                                      
     if (SpotFactor > l.Cutoff) {                                                            
         vec4 Color = CalcPointLight(l.Base, Normal, LightSpacePos);                         
         return Color * (1.0 - (1.0 - SpotFactor) * 1.0/(1.0 - l.Cutoff));                   
@@ -155,7 +171,7 @@ void main()
 
     // -------------------------------
     vec3 Normal = normalize(Normal0);                                                       
-    vec4 TotalLight;
+    vec4 TotalLight = vec4(0,0,0,0);
     // TotalLight = CalcDirectionalLight(Normal);  
     
                                                                                             

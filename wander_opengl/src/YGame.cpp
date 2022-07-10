@@ -459,8 +459,8 @@ bool YGame::LoadShaders()
 	mShadowLightingShaderProgram->SetMatrixUniform("proj", mProjection);
 	mShadowLightingShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
 	// Lighting のVP Mat作成
-	mSpotLight.Direction = glm::vec3(1.0f, 0.0f, -1.0f);
-	mSpotLight.Position = glm::vec3(-5.0f, 35.0f, 2.0f);
+	mSpotLight.Direction = glm::vec3(0.0f, 0.0f, -1.0f);
+	mSpotLight.Position = glm::vec3(0.0f, 35.0f, 20.0f);
 	mSpotLight.Up = glm::vec3(0.0f, 0.0f, 1.0f);
 	{
 		glm::mat4 projection = glm::perspective(glm::radians(20.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
@@ -1886,7 +1886,7 @@ void YGame::Draw()
 		uniformName = "gSpotLights[" + pD + "].Base.Base.Color";
 		mShadowLightingShaderProgram->SetVectorUniform(uniformName, glm::vec3(1.0f, 1.0f, 1.0f));
 		uniformName = "gSpotLights[" + pD + "].Base.Base.AmbientIntensity";
-		mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.01f);
+		mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.1f);
 		uniformName = "gSpotLights[" + pD + "].Base.Position";
 		mShadowLightingShaderProgram->SetVectorUniform(uniformName, mSpotLight.Position);
 		uniformName = "gSpotLights[" + pD + "].Direction";
@@ -1894,7 +1894,7 @@ void YGame::Draw()
 		uniformName = "gSpotLights[" + pD + "].Cutoff";
 		mShadowLightingShaderProgram->SetFloatUniform(uniformName, cosf(glm::radians(20.0f)));
 		uniformName = "gSpotLights[" + pD + "].Base.Base.DiffuseIntensity";
-		mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.05f);
+		mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.9f);
 		uniformName = "gSpotLights[" + pD + "].Base.Atten.Constant";
 		uniformName = "gSpotLights[" + pD + "].Base.Atten.Linear";
 		mShadowLightingShaderProgram->SetFloatUniform(uniformName, 0.01f);
