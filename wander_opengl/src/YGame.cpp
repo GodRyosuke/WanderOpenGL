@@ -441,8 +441,8 @@ bool YGame::LoadShaders()
 		}
 	}
 	mShadowMapShaderProgram->UseProgram();
-	//mShadowMapShaderProgram->SetMatrixUniform("view", view2);
-	//mShadowMapShaderProgram->SetMatrixUniform("proj", mProjection);
+	mShadowMapShaderProgram->SetMatrixUniform("view", view2);
+	mShadowMapShaderProgram->SetMatrixUniform("proj", mProjection);
 	mShadowMapShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
 
 	// Shadow Map Lighting Shader読み込み
@@ -460,7 +460,7 @@ bool YGame::LoadShaders()
 	mShadowLightingShaderProgram->SetMatrixUniform("model", mCubeWorldTrans);
 	// Lighting のVP Mat作成
 	mSpotLight.Direction = glm::vec3(1.0f, 0.0f, -1.0f);
-	mSpotLight.Position = glm::vec3(-5.0f, 35.0f, 1.0f);
+	mSpotLight.Position = glm::vec3(-5.0f, 35.0f, 2.0f);
 	mSpotLight.Up = glm::vec3(0.0f, 0.0f, 1.0f);
 	{
 		glm::mat4 projection = glm::perspective(glm::radians(20.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
@@ -474,9 +474,9 @@ bool YGame::LoadShaders()
 		mShadowLightingShaderProgram->SetMatrixUniform("LightVP", vp);
 		mSkinningShaderProgram->UseProgram();
 		mSkinningShaderProgram->SetMatrixUniform("LightVP", vp);
-		mShadowMapShaderProgram->UseProgram();
-		mShadowMapShaderProgram->SetMatrixUniform("view", view);
-		mShadowMapShaderProgram->SetMatrixUniform("proj", projection);
+		//mShadowMapShaderProgram->UseProgram();
+		//mShadowMapShaderProgram->SetMatrixUniform("view", view);
+		//mShadowMapShaderProgram->SetMatrixUniform("proj", projection);
 	}
 	
 	return true;
@@ -1761,7 +1761,7 @@ void YGame::Draw()
 
 	{
 		// Spot LightのView Projectionを設定
-		glm::mat4 projection = glm::perspective(glm::radians(20.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
+		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
 		glm::mat4 view = glm::lookAt(
 			mSpotLight.Position,
 			mSpotLight.Direction,
@@ -1827,7 +1827,7 @@ void YGame::Draw()
 		shader->SetSamplerUniform("gNumSpotLights", 1);
 		{
 			// Spot LightのView Projectionを設定
-			glm::mat4 projection = glm::perspective(glm::radians(20.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
+			glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)mWindowWidth / mWindowHeight, 0.1f, 100.0f);
 			glm::mat4 view = glm::lookAt(
 				mSpotLight.Position,
 				mSpotLight.Direction,
