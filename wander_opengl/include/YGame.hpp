@@ -1,6 +1,6 @@
 #include "SDL.h"
 #include "glew.h"
-#include <Eigen/Dense>
+//#include <Eigen/Dense>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -17,7 +17,7 @@
 #include "Texture.hpp"
 #include "TextureShadowMap.hpp"
 #include "json.hpp"
-#include "ft2build.h"
+//#include "ft2build.h"
 #include "Shader.hpp"
 #include "Mesh.hpp"
 #include "MeshAssimp.hpp"
@@ -112,8 +112,8 @@ private:
 	// transforms
 	glm::mat4 mCubeWorldTrans;
 	double mCubeScale;
-	Eigen::Vector3d mCubePos;
-	Eigen::Quaterniond mCubeRot;
+	//Eigen::Vector3d mCubePos;
+	//Eigen::Quaterniond mCubeRot;
 
 	float mCubeRotation;
 	double mCubeRotateVel;

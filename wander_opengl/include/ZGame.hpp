@@ -1,6 +1,6 @@
 #include "SDL.h"
 #include "glew.h"
-#include <Eigen/Dense>
+//#include <Eigen/Dense>
 #include <string>
 #include <fstream>
 #include <sstream>

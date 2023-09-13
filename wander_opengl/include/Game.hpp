@@ -1,6 +1,6 @@
 #include "SDL.h"
 #include "glew.h"
-#include <Eigen/Dense>
+//#include <Eigen/Dense>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -41,24 +41,24 @@ private:
 	GLuint mFragShader;
 	GLuint mShaderProgram;
 
-	Eigen::Matrix4d mView;
-	Eigen::Matrix4d mProjection;
+	//Eigen::Matrix4d mView;
+	//Eigen::Matrix4d mProjection;
 
-	// lighting
-	Eigen::Vector3d mAmbientLightColor;
-	struct DirectionalLight {
-		Eigen::Vector3d direction;
-		Eigen::Vector3d diffuseColor;
-		Eigen::Vector3d specColor;
-	};
-	DirectionalLight mDirectionalLight;
-	
-	// cube object
-	// transforms
-	Eigen::Matrix4d mCubeWorldTrans;
-	double mCubeScale;
-	Eigen::Vector3d mCubePos;
-	Eigen::Quaterniond mCubeRot;
+	//// lighting
+	//Eigen::Vector3d mAmbientLightColor;
+	//struct DirectionalLight {
+	//	Eigen::Vector3d direction;
+	//	Eigen::Vector3d diffuseColor;
+	//	Eigen::Vector3d specColor;
+	//};
+	//DirectionalLight mDirectionalLight;
+	//
+	//// cube object
+	//// transforms
+	//Eigen::Matrix4d mCubeWorldTrans;
+	//double mCubeScale;
+	//Eigen::Vector3d mCubePos;
+	//Eigen::Quaterniond mCubeRot;
 
 	// vertices
 	unsigned int mCubeVertexArray;

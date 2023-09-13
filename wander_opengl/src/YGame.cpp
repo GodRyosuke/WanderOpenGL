@@ -4,6 +4,8 @@
 #include "YGame.hpp"
 #include <time.h>
 #include "GLUtil.hpp"
+#include <iostream>
+#include <stdio.h>
 
 // Vertices coordinates
 GLfloat vertices[] =
